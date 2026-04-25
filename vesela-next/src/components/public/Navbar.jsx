@@ -8,7 +8,7 @@ export default function PublicNavbar() {
       position="fixed"
       elevation={0}
       sx={{
-        bgcolor: "rgba(242, 251, 255, 0.7)",
+        bgcolor: "rgba(242, 251, 255, 0.99)",
         backdropFilter: "blur(20px)",
         borderBottom: "1px solid rgba(0,0,0,0.05)",
       }}
@@ -27,10 +27,9 @@ export default function PublicNavbar() {
 
         <Stack direction="row" spacing={3} alignItems="center">
           <Button
-            color="inherit"
             component={Link}
             href="/chat"
-            sx={{ fontWeight: 600 }}
+            sx={{ color: "#000", fontWeight: 600 }}
           >
             Try Chat
           </Button>

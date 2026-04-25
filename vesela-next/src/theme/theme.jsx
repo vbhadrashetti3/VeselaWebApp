@@ -4,7 +4,7 @@ import { createTheme } from "@mui/material/styles";
 export const theme = createTheme({
   palette: {
     primary: {
-      main: "#250514", // Your deep burgundy
+      main: "#3e1929", // Your deep burgundy
     },
     background: {
       default: "#f2fbff", // Soft light blue background
@@ -23,7 +23,6 @@ export const theme = createTheme({
     },
     button: {
       textTransform: "none", // Keeps buttons from being all caps
-      fontWeight: 700,
     },
   },
   shape: {

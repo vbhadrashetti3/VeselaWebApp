@@ -41,6 +41,7 @@ export default function EcosystemSection() {
       component="section"
       sx={{
         py: { xs: 8, md: 12 },
+        background: "#fff",
       }}
     >
       <Container maxWidth="lg">
