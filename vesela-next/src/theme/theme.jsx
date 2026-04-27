@@ -1,9 +1,6 @@
 "use client";
 import { createTheme } from "@mui/material/styles";
 
-/**
- * 🔹 Separate configs (no inline conditions)
- */
 const themes = {
   light: {
     palette: {
@@ -40,29 +37,21 @@ const themes = {
   },
 };
 
-/**
- * 🔹 Common config (shared across all themes)
- */
 const common = {
   typography: {
-    fontFamily: "Manrope, sans-serif",
+    fontFamily: "var(--font-urbanist), sans-serif", // ✅ FIXED HERE
+
     h1: {
       fontWeight: 800,
       letterSpacing: "-0.04em",
     },
+
     button: {
       textTransform: "none",
     },
   },
-
-  shape: {
-    borderRadius: 12,
-  },
 };
 
-/**
- * 🔧 Theme factory
- */
 export const getTheme = (mode = "light") => {
   return createTheme({
     ...common,

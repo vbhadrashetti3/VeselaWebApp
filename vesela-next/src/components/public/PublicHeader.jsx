@@ -1,8 +1,16 @@
 "use client";
 import { AppBar, Toolbar, Typography, Button, Stack, Box } from "@mui/material";
 import Link from "next/link";
+import { useModal } from "@/context/ModalContext";
+import { MODALS } from "../modals/modalConstants";
 
-export default function PublicNavbar() {
+export default function PublicHeader() {
+  const { openModal } = useModal();
+  const handleSignIn = () => {
+    openModal(MODALS.LOGIN);
+    // Implement sign-in logic here
+  };
+
   return (
     <AppBar
       position="fixed"
@@ -35,8 +43,8 @@ export default function PublicNavbar() {
           </Button>
           <Button
             variant="contained"
-            component={Link}
-            href="/login"
+            onClick={handleSignIn}
+            type="button"
             sx={{ borderRadius: "50px", px: 4 }}
           >
             Sign In

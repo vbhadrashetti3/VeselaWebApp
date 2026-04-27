@@ -6,9 +6,9 @@ import { ThemeProvider } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import { getTheme } from "./theme";
 
-/**
- * 🔹 Context for toggle
- */
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+
 export const ColorModeContext = createContext({
   toggleColorMode: () => {},
 });
@@ -16,17 +16,11 @@ export const ColorModeContext = createContext({
 export default function ThemeRegistry({ children }) {
   const [mode, setMode] = useState("light");
 
-  /**
-   * 🔹 Load saved theme (optional but recommended)
-   */
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     if (saved) setMode(saved);
   }, []);
 
-  /**
-   * 🔹 Toggle function
-   */
   const colorMode = useMemo(
     () => ({
       toggleColorMode: () => {
@@ -40,9 +34,6 @@ export default function ThemeRegistry({ children }) {
     [],
   );
 
-  /**
-   * 🔹 Generate theme dynamically
-   */
   const theme = useMemo(() => getTheme(mode), [mode]);
 
   return (
@@ -50,7 +41,11 @@ export default function ThemeRegistry({ children }) {
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          {children}
+
+          {/* ✅ ONLY ONCE */}
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            {children}
+          </LocalizationProvider>
         </ThemeProvider>
       </ColorModeContext.Provider>
     </AppRouterCacheProvider>

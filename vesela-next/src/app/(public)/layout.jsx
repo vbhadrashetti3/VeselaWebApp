@@ -1,13 +1,12 @@
-import PublicNavbar from "@/components/public/Navbar";
 import PublicFooter from "@/components/public/PublicFooter";
+import PublicHeader from "@/components/public/PublicHeader";
 import { Box } from "@mui/material";
 
 export default function PublicLayout({ children }) {
   return (
     <Box>
-      <PublicNavbar />
+      <PublicHeader />
       {children}
-      {/* Add your footer here */}
       <PublicFooter />
     </Box>
   );
