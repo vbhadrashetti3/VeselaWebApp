@@ -1,6 +1,8 @@
 "use client";
 
-import { useTheme } from "@mui/material/styles";
+import { useState } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import {
   Box,
   Checkbox,
@@ -8,102 +10,45 @@ import {
   FormControlLabel,
   Typography,
 } from "@mui/material";
-import EmailIcon from "@mui/icons-material/Email";
-import LockIcon from "@mui/icons-material/Lock";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 
 import LabeledInput from "../ui/LabeledInput";
 import ModalHeader from "../modals/ModalHeader";
-
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { useState } from "react";
-
-import { postData } from "../../API/apiService";
-
-import { useRouter } from "next/navigation"; // ✅ FIX
 import CustomButton from "../ui/CustomButton";
 import { MODALS } from "../modals/modalConstants";
 
+import { useLogin } from "@/hooks/useLogin";
+
 const validationSchema = Yup.object({
-  email: Yup.string()
-    .email("Invalid email format")
-    .required("Email is required"),
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
+  email: Yup.string().email().required(),
+  password: Yup.string().min(6).required(),
 });
 
 const LoginForm = ({ handleNext }) => {
-  const router = useRouter(); // ✅ FIX
-  const theme = useTheme();
-
   const [show, setShow] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [showErrors, setShowErrors] = useState(false);
 
-  const handleSubmit = async (values, { setSubmitting }) => {
-    try {
-      setErrorMsg("");
-
-      const response = await postData("/dj-rest-auth/login/", values);
-
-      if (!response.error && response.status === 200) {
-        localStorage.setItem("token", response.data.access);
-        localStorage.setItem("userdetails", JSON.stringify(response.data.user));
-
-        handleNext(MODALS.SUCCESS_MODAL, "Log in Successful!");
-
-        const redirectTo = localStorage.getItem("postLoginNavigateTo");
-
-        if (redirectTo) {
-          router.push(redirectTo); // ✅ FIX
-        }
-      } else {
-        const backendMsg =
-          response?.data?.detail ||
-          response?.data?.non_field_errors?.[0] ||
-          "Login failed. Please try again.";
-
-        setErrorMsg(backendMsg);
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setErrorMsg("An unexpected error occurred.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const { login, errorMsg } = useLogin(handleNext);
 
   const formik = useFormik({
     initialValues: { email: "", password: "" },
     validationSchema,
-    onSubmit: handleSubmit,
-    validateOnChange: true,
-    validateOnBlur: false,
+    onSubmit: (values, { setSubmitting }) => login(values, setSubmitting),
   });
 
-  const handlePasswordToggle = () => setShow((prev) => !prev);
-
-  const handleLoginClick = (e) => {
-    e.preventDefault();
-    setShowErrors(true);
-    formik.handleSubmit(e);
-  };
-
   return (
-    <div style={{ minHeight: "480px" }}>
+    <form onSubmit={formik.handleSubmit}>
       <ModalHeader
         title="Welcome"
-        subtitle="Please enter your email & password to sign in."
+        subtitle="Please enter your email & password"
       />
 
       {errorMsg && (
-        <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1, color: "red" }}>
-          {errorMsg}
-        </Typography>
+        <Typography sx={{ color: "red", mb: 1 }}>{errorMsg}</Typography>
       )}
 
       <LabeledInput
@@ -111,9 +56,8 @@ const LoginForm = ({ handleNext }) => {
         name="email"
         value={formik.values.email}
         onChange={formik.handleChange}
-        error={showErrors && Boolean(formik.errors.email)}
-        helperText={showErrors && formik.errors.email}
-        startIcon={<EmailIcon sx={{ fontSize: 16 }} />}
+        error={formik.touched.email && formik.errors.email}
+        startIcon={<EmailOutlinedIcon />}
       />
 
       <LabeledInput
@@ -122,33 +66,31 @@ const LoginForm = ({ handleNext }) => {
         name="password"
         value={formik.values.password}
         onChange={formik.handleChange}
-        error={showErrors && Boolean(formik.errors.password)}
-        helperText={showErrors && formik.errors.password}
-        startIcon={<LockIcon sx={{ fontSize: 16 }} />}
+        error={formik.touched.password && formik.errors.password}
+        startIcon={<LockOutlinedIcon />}
         endIcon={
-          <div onClick={handlePasswordToggle} style={{ cursor: "pointer" }}>
-            {show ? <VisibilityOffIcon /> : <VisibilityIcon />}
+          <div style={{ cursor: "pointer" }} onClick={() => setShow(!show)}>
+            {show ? <VisibilityOffOutlinedIcon /> : <VisibilityOutlinedIcon />}
           </div>
         }
       />
 
-      <Box
-        sx={{
-          mb: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
         <FormControlLabel
           control={
             <Checkbox
+              size="medium"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
             />
           }
-          sx={{ fontSize: 14 }}
           label="Remember me"
+          sx={{
+            "& .MuiFormControlLabel-label": {
+              fontSize: "14px",
+              fontWeight: 500,
+            },
+          }}
         />
 
         <Typography
@@ -164,8 +106,9 @@ const LoginForm = ({ handleNext }) => {
         </Typography>
       </Box>
 
-      <Divider sx={{ mb: 2 }} />
-      <Box sx={{ mt: 3, textAlign: "center" }}>
+      <Divider sx={{ my: 2 }} />
+
+      <Box sx={{ textAlign: "center" }}>
         <Typography>
           Don’t have an account?{" "}
           <span
@@ -176,19 +119,20 @@ const LoginForm = ({ handleNext }) => {
           </span>
         </Typography>
       </Box>
+
       <Box sx={{ textAlign: "center", mt: 2 }}>
         <CustomButton
           style={{
             width: "200px",
             borderRadius: "26px",
           }}
+          type="submit"
           loading={formik.isSubmitting}
-          onClick={handleLoginClick}
         >
-          {formik.isSubmitting ? "Logging in..." : "Login"}
+          Login
         </CustomButton>
       </Box>
-    </div>
+    </form>
   );
 };
 

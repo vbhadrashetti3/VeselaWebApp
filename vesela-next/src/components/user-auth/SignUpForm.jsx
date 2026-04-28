@@ -10,10 +10,10 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
-import EmailIcon from "@mui/icons-material/Email";
-import LockIcon from "@mui/icons-material/Lock";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -21,10 +21,10 @@ import * as Yup from "yup";
 import LabeledInput from "../ui/LabeledInput";
 import ModalHeader from "../modals/ModalHeader";
 
-import { postData } from "../../API/apiService";
 import CustomButton from "../ui/CustomButton";
 import { MODALS } from "../modals/modalConstants";
 import FormikDatePicker from "../ui/FormikDatePicker";
+import { useSignUp } from "@/hooks/useSignUp";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -43,11 +43,10 @@ const validationSchema = Yup.object({
 });
 
 const SignUpForm = ({ handleNext }) => {
-  const theme = useTheme();
-
   const [showPwd, setShowPwd] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const [showErrors, setShowErrors] = useState(false);
+
+  const { errorMsg, signUp } = useSignUp(handleNext);
 
   const formik = useFormik({
     initialValues: {
@@ -58,42 +57,14 @@ const SignUpForm = ({ handleNext }) => {
     },
     validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
-      try {
-        setErrorMsg("");
+      const body = {
+        username: values.email,
+        password1: values.password,
+        password2: values.password,
+        email: values.email,
+      };
 
-        const body = {
-          username: values.email,
-          password1: values.password,
-          password2: values.password,
-          email: values.email,
-        };
-
-        const response = await postData("/dj-rest-auth/registration/", body);
-
-        if (!response.error && response.status === 201) {
-          localStorage.setItem("token", response.data.access);
-          localStorage.setItem(
-            "userdetails",
-            JSON.stringify(response.data.user),
-          );
-
-          // refreshPlan();
-
-          handleNext(MODALS.UPDATE_INFO);
-        } else {
-          const backendMsg =
-            response?.data?.username?.[0] ||
-            response?.data?.password1?.[0] ||
-            "Signup failed. Please try again.";
-
-          setErrorMsg(backendMsg);
-        }
-      } catch (error) {
-        console.error("Signup error:", error);
-        setErrorMsg("Something went wrong. Try again.");
-      } finally {
-        setSubmitting(false);
-      }
+      signUp(body, setSubmitting);
     },
     validateOnChange: true,
     validateOnBlur: false,
@@ -130,7 +101,7 @@ const SignUpForm = ({ handleNext }) => {
         onChange={formik.handleChange}
         error={showErrors && Boolean(formik.errors.email)}
         helperText={showErrors && formik.errors.email}
-        startIcon={<EmailIcon sx={{ fontSize: 16 }} />}
+        startIcon={<EmailOutlinedIcon sx={{ fontSize: 16 }} />}
       />
 
       <LabeledInput
@@ -141,10 +112,14 @@ const SignUpForm = ({ handleNext }) => {
         onChange={formik.handleChange}
         error={showErrors && Boolean(formik.errors.password)}
         helperText={showErrors && formik.errors.password}
-        startIcon={<LockIcon sx={{ fontSize: 16 }} />}
+        startIcon={<LockOutlinedIcon sx={{ fontSize: 16 }} />}
         endIcon={
           <div onClick={handlePasswordToggle} style={{ cursor: "pointer" }}>
-            {showPwd ? <VisibilityOffIcon /> : <VisibilityIcon />}
+            {showPwd ? (
+              <VisibilityOffOutlinedIcon />
+            ) : (
+              <VisibilityOutlinedIcon />
+            )}
           </div>
         }
       />
@@ -157,20 +132,34 @@ const SignUpForm = ({ handleNext }) => {
         onChange={formik.handleChange}
         error={showErrors && Boolean(formik.errors.confirmPassword)}
         helperText={showErrors && formik.errors.confirmPassword}
-        startIcon={<LockIcon sx={{ fontSize: 16 }} />}
+        startIcon={<LockOutlinedIcon sx={{ fontSize: 16 }} />}
+        endIcon={
+          <div onClick={handlePasswordToggle} style={{ cursor: "pointer" }}>
+            {showPwd ? (
+              <VisibilityOffOutlinedIcon />
+            ) : (
+              <VisibilityOutlinedIcon />
+            )}
+          </div>
+        }
       />
-
-      <FormikDatePicker formik={formik} name="dob" label="Date of Birth" />
 
       <FormControlLabel
         control={
           <Checkbox
+            size="medium"
             name="agreeToTerms"
             checked={formik.values.agreeToTerms}
             onChange={formik.handleChange}
           />
         }
         label="I agree to Terms & Privacy Policy"
+        sx={{
+          "& .MuiFormControlLabel-label": {
+            fontSize: "14px",
+            fontWeight: 500,
+          },
+        }}
       />
 
       {showErrors && formik.errors.agreeToTerms && (

@@ -44,6 +44,7 @@ const LabeledInput = ({
             fontWeight: 600,
             mb: 0.5,
             color: theme.palette.text.primary,
+            fontSize: 13,
           }}
         >
           {label}
@@ -68,10 +69,10 @@ const LabeledInput = ({
           borderRadius: 1.5,
           backgroundColor: theme.palette.background.modalBackground,
           color: theme.palette.text.primary,
-          minHeight: multiline ? "auto" : 40,
+          minHeight: multiline ? "auto" : 38,
 
           "& .MuiOutlinedInput-input": {
-            padding: "10px 10px",
+            padding: "8px 10px",
           },
 
           "& .MuiOutlinedInput-notchedOutline": {
@@ -85,7 +86,7 @@ const LabeledInput = ({
           },
 
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: theme.palette.primary.main,
+         
             borderWidth: 1,
           },
 
@@ -93,11 +94,31 @@ const LabeledInput = ({
         }}
         startAdornment={
           startIcon && (
-            <InputAdornment position="start">{startIcon}</InputAdornment>
+            <InputAdornment
+              sx={{
+                "& svg": {
+                  fontSize: 16,
+                },
+              }}
+              position="start"
+            >
+              {startIcon}
+            </InputAdornment>
           )
         }
         endAdornment={
-          endIcon && <InputAdornment position="end">{endIcon}</InputAdornment>
+          endIcon && (
+            <InputAdornment
+              sx={{
+                "& svg": {
+                  fontSize: 16,
+                },
+              }}
+              position="end"
+            >
+              {endIcon}
+            </InputAdornment>
+          )
         }
       />
 

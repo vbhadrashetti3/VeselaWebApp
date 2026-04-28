@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,115 +13,144 @@ import CheckIcon from "@mui/icons-material/Check";
 
 const plans = [
   {
-    title: "Nirvana",
-    price: "$18.99",
-    period: "month",
+    id: "free",
+    name: "Grace 2 Mini",
+    price: "Free",
+    period: "/month",
     features: [
-      "Trained on real counseling sessions",
-      "Available 24/7 with thoughtful support",
-      "No waitlists. No pressure. Just presence",
-      "Unlimited access",
+      "Limited to 20 messages per day",
+      "No day to day memory",
+      "Smaller model",
+      "Human connection expert",
+    ],
+    disabled: true,
+  },
+  {
+    id: "pro",
+    name: "Grace 2 Pro",
+    price: "$19.99",
+    period: "/month",
+    features: [
+      "Unlimited usage",
+      "Memory included",
+      "State of the Art Grace 2 model",
+      "Leader on humanitybench.org",
     ],
     link: "https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007",
   },
 ];
 
-const PricingPlansContent = ({ isSettingModal = false }) => {
+const PricingPlansContent = () => {
   const theme = useTheme();
 
-  const [userDetails, setUserDetails] = useState(() => {
-    if (typeof window !== "undefined") {
-      const user = localStorage.getItem("userdetails");
-      return user ? JSON.parse(user) : null;
-    }
-    return null;
-  });
-  const [planDetails, setPlanDetails] = useState(() => {
-    if (typeof window !== "undefined") {
-      const plan = localStorage.getItem("plan_details");
-      return plan ? JSON.parse(plan) : null;
-    }
-    return null;
-  });
-
-  // ✅ Safe localStorage access (client only)
-  // useEffect(() => {
-  //   const user = localStorage.getItem("userdetails");
-  //   const plan = localStorage.getItem("plan_details");
-
-  //   if (user) setUserDetails(JSON.parse(user));
-  //   if (plan) setPlanDetails(JSON.parse(plan));
-  // }, []);
-
-  const handleSelectPlan = (baseUrl) => {
-    if (!userDetails) {
-      console.error("User details not found");
-      return;
-    }
-
-    const params = new URLSearchParams({
-      prefilled_email: userDetails.email,
-      client_reference_id: userDetails.pk,
-    });
-
-    const finalUrl = `${baseUrl}?${params.toString()}`;
-    window.open(finalUrl, "_blank");
+  const handleSelectPlan = (link) => {
+    if (!link) return;
+    window.open(link, "_blank");
   };
-
-  const planSelected = planDetails?.plan && planDetails?.plan !== "free";
 
   return (
     <Box pt={2}>
-      <Grid container spacing={2}>
-        {plans.map((plan, index) => (
-          <Grid item xs={12} md={isSettingModal ? 4 : 12} key={index}>
+      <Grid container spacing={2} alignItems="stretch">
+        {plans.map((plan) => (
+          <Grid
+            item
+            xs={12}
+            md={6}
+            key={plan.id}
+            sx={{ display: "flex" }} // 🔥 important for equal height
+          >
             <Card
               sx={{
-                borderRadius: 2,
-                textAlign: "center",
+                width: "100%",
+                borderRadius: 3,
                 bgcolor: theme.palette.background.modalBackground,
                 color: theme.palette.text.primary,
                 boxShadow: 4,
-                height: "100%",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                transition: "0.2s",
+                p: 2,
+                transition: "0.25s",
+                "&:hover": {
+                  transform: "translateY(-4px)",
+                },
               }}
             >
-              <CardContent>
-                <Typography variant="h6" sx={{ mb: 2, fontSize: 14 }}>
-                  {plan.title}
+              <CardContent
+                sx={{
+                  p: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  flexGrow: 1,
+                }}
+              >
+                {/* Plan Name */}
+                <Typography
+                  sx={{
+                    textAlign: "center",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    mb: 1,
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {plan.name}
                 </Typography>
 
-                <Typography
-                  variant="h4"
+                {/* Price */}
+                <Box
                   sx={{
-                    fontWeight: "bold",
-                    mb: 1,
-                    pb: 1,
+                    textAlign: "center",
+                    pb: 2,
                     borderBottom: `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  {plan.price}
                   <Typography
-                    component="span"
-                    variant="body1"
-                    sx={{ ml: 1, color: theme.palette.text.secondary }}
+                    sx={{
+                      fontSize: 30,
+                      fontWeight: 700,
+                    }}
                   >
-                    /{plan.period}
+                    {plan.price}
+                    <Typography
+                      component="span"
+                      sx={{
+                        fontSize: 14,
+                        ml: 0.5,
+                        color: theme.palette.text.secondary,
+                      }}
+                    >
+                      {plan.period}
+                    </Typography>
                   </Typography>
-                </Typography>
+                </Box>
 
                 {/* Features */}
-                <Box sx={{ textAlign: "left", mt: 2 }}>
+                <Box sx={{ mt: 2, flexGrow: 1 }}>
                   {plan.features.map((feature, idx) => (
                     <Box
                       key={idx}
-                      sx={{ display: "flex", alignItems: "center", mb: 1 }}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        mb: 1,
+                      }}
                     >
-                      <CheckIcon sx={{ mr: 1, fontSize: 16 }} />
-                      <Typography variant="body2">{feature}</Typography>
+                      <CheckIcon
+                        sx={{
+                          fontSize: 16,
+                          mr: 1,
+                          color: theme.palette.primary.main,
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          fontSize: 13,
+                          color: theme.palette.text.secondary,
+                        }}
+                      >
+                        {feature}
+                      </Typography>
                     </Box>
                   ))}
                 </Box>
@@ -130,23 +158,27 @@ const PricingPlansContent = ({ isSettingModal = false }) => {
                 {/* Button */}
                 <Box
                   sx={{
-                    pt: 3,
-                    mt: 2,
+                    pt: 2,
                     borderTop: `1px solid ${theme.palette.divider}`,
                   }}
                 >
                   <Button
+                    fullWidth
                     variant="contained"
-                    sx={{
-                      borderRadius: "30px",
-                      px: 4,
-                      py: 1,
-                      fontWeight: 600,
-                    }}
+                    disabled={plan.disabled}
                     onClick={() => handleSelectPlan(plan.link)}
-                    disabled={planSelected}
+                    sx={{
+                      borderRadius: "25px",
+                      py: 1.2,
+                      fontWeight: 600,
+
+                      ...(plan.disabled && {
+                        bgcolor: "#cbd5e1",
+                        color: "#fff",
+                      }),
+                    }}
                   >
-                    {planSelected ? "Your Plan Selected" : "Select Plan"}
+                    Select Plan
                   </Button>
                 </Box>
               </CardContent>

@@ -7,9 +7,7 @@ import ModalHeader from "../modals/ModalHeader";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import SentimentVerySatisfiedIcon from "@mui/icons-material/SentimentVerySatisfied";
 import { useRouter } from "next/navigation"; // ✅ Next.js
-import { postData } from "@/API/apiService";
 import CustomButton from "../ui/CustomButton";
-import { MODALS } from "../modals/modalConstants";
 const AssessmentTwoForm = ({ handleNext, reasonForSupport }) => {
   const theme = useTheme();
   const router = useRouter();
@@ -48,16 +46,8 @@ const AssessmentTwoForm = ({ handleNext, reasonForSupport }) => {
         ...updated,
         reason_for_support: reasonForSupport || "",
       };
-
-      const res = await postData("/api/store_balgo_info/", body);
-
-      if (!res.error && res.status === 201) {
-        handleNext(MODALS.SUCCESS_MODAL, "Sign up Successful");
-        router.push("/welcome"); // ✅ Next.js navigation
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      console.log(body);
+    } catch (err) {}
   };
 
   return (

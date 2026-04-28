@@ -9,9 +9,8 @@ import ModalHeader from "../modals/ModalHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 
-import { postData } from "../../API/apiService";
 import CustomButton from "../ui/CustomButton";
-import { MODALS } from "../modals/modalConstants";
+import FormikDatePicker from "../ui/FormikDatePicker";
 
 const validationSchema = Yup.object({
   fname: Yup.string().required("First name is required"),
@@ -26,8 +25,6 @@ const UpdateInfoForm = ({ handleNext }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const { planDetails } = useAppContext();
-
   const formik = useFormik({
     initialValues: {
       fname: "",
@@ -37,37 +34,7 @@ const UpdateInfoForm = ({ handleNext }) => {
     },
     validationSchema,
     onSubmit: async (values) => {
-      try {
-        setLoading(true);
-        setErrorMsg("");
-
-        const response = await postData(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/update_user_info/`,
-          {
-            first_name: values.fname,
-            last_name: values.lname,
-            phone_number: values.phoneNo,
-            date_of_birth: values.dob,
-          },
-        );
-
-        if (!response.error && response.status === 200) {
-          const allowedPlans = ["plan4", "plan42"];
-
-          if (!allowedPlans.includes(planDetails?.plan)) {
-            handleNext(MODALS.PLANSMODAL);
-          } else {
-            handleNext(MODALS.ASSESSMENT_ONE);
-          }
-        } else {
-          setErrorMsg("Failed to update profile");
-        }
-      } catch (err) {
-        console.error(err);
-        setErrorMsg("Something went wrong");
-      } finally {
-        setLoading(false);
-      }
+      console.log(values);
     },
   });
 
@@ -112,10 +79,17 @@ const UpdateInfoForm = ({ handleNext }) => {
         helperText={formik.touched.phoneNo && formik.errors.phoneNo}
       />
 
-      {/* <FormikDatePicker formik={formik} name="dob" label="Date of Birth" /> */}
+      <FormikDatePicker formik={formik} name="dob" label="Date of Birth" />
 
       <Box sx={{ textAlign: "center", mt: 3 }}>
-        <CustomButton type="submit" disabled={loading}>
+        <CustomButton
+          style={{
+            width: "200px",
+            borderRadius: "26px",
+          }}
+          type="submit"
+          disabled={loading}
+        >
           {loading ? (
             <CircularProgress size={20} sx={{ color: "#fff" }} />
           ) : (

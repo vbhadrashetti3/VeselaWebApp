@@ -41,12 +41,12 @@ const AuthFlowManager = ({
           />
         );
 
-      case MODALS.SUCCESS_MODAL:
+      case MODALS.SUCCESS:
         return (
           <SuccessfulModal successMsg={successMsg} handleNext={handleNext} />
         );
 
-      case MODALS.PLANSMODAL:
+      case MODALS.PLANS:
         return <PricingPlansContent />;
 
       default:
@@ -57,7 +57,7 @@ const AuthFlowManager = ({
   if (!modalStepName) return null;
 
   return (
-    <GenericModalWrapper open={true} onClose={onClose}>
+    <GenericModalWrapper width={"600px"} open={true} onClose={onClose}>
       <AnimatePresence mode="wait">
         <motion.div
           key={modalStepName}
