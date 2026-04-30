@@ -47,7 +47,7 @@ const AuthFlowManager = ({
         );
 
       case MODALS.PLANS:
-        return <PricingPlansContent />;
+        return <PricingPlansContent handleNext={handleNext} />;
 
       default:
         return null;
@@ -55,15 +55,27 @@ const AuthFlowManager = ({
   };
 
   if (!modalStepName) return null;
-
+  const getModalWidth = () => {
+    switch (modalStepName) {
+      case MODALS.PLANS:
+        return {
+          xs: "95%",
+          sm: 560,
+          md: 640, // 👈 reduced from 720 → cleaner fit
+        };
+      default:
+        return 420;
+    }
+  };
   return (
-    <GenericModalWrapper width={"600px"} open={true} onClose={onClose}>
+    <GenericModalWrapper width={getModalWidth()} open={true} onClose={onClose}>
       <AnimatePresence mode="wait">
         <motion.div
           key={modalStepName}
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, x: 40 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -40 }}
+          transition={{ duration: 0.25 }}
         >
           {renderModal()}
         </motion.div>

@@ -23,7 +23,6 @@ const plans = [
       "Smaller model",
       "Human connection expert",
     ],
-    disabled: true,
   },
   {
     id: "pro",
@@ -50,30 +49,18 @@ const PricingPlansContent = () => {
 
   return (
     <Box pt={2}>
-      <Grid container spacing={2} alignItems="stretch">
+      <Grid container spacing={2} sx={{ mt: 2 }} justifyContent="center">
         {plans.map((plan) => (
-          <Grid
-            item
-            xs={12}
-            md={6}
-            key={plan.id}
-            sx={{ display: "flex" }} // 🔥 important for equal height
-          >
+          <Grid item xs={12} md={6} key={plan.id}>
             <Card
               sx={{
                 width: "100%",
-                borderRadius: 3,
-                bgcolor: theme.palette.background.modalBackground,
-                color: theme.palette.text.primary,
-                boxShadow: 4,
+                borderRadius: 2,
+                border: "1px solid #e0e0e0",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
                 p: 2,
-                transition: "0.25s",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                },
               }}
             >
               <CardContent
@@ -164,7 +151,7 @@ const PricingPlansContent = () => {
                 >
                   <Button
                     fullWidth
-                    variant="contained"
+                    variant={plan.id === "free" ? "outlined" : "contained"}
                     disabled={plan.disabled}
                     onClick={() => handleSelectPlan(plan.link)}
                     sx={{

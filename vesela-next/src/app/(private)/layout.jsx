@@ -1,6 +1,5 @@
 // app/(private)/layout.jsx
 
-import PrivateHeader from "@/components/private/PrivateHeader";
 import { Box } from "@mui/material";
 
 export default function PrivateLayout({ children }) {
@@ -13,7 +12,6 @@ export default function PrivateLayout({ children }) {
         minHeight: "100vh",
       }}
     >
-      <PrivateHeader />
       {children}
     </Box>
   );

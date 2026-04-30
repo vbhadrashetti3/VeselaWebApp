@@ -5,9 +5,6 @@ const themes = {
   light: {
     palette: {
       mode: "light",
-      primary: {
-        main: "#3e1929",
-      },
       background: {
         default: "#f2fbff",
         paper: "#ffffff",

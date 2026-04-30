@@ -23,7 +23,6 @@ import ModalHeader from "../modals/ModalHeader";
 
 import CustomButton from "../ui/CustomButton";
 import { MODALS } from "../modals/modalConstants";
-import FormikDatePicker from "../ui/FormikDatePicker";
 import { useSignUp } from "@/hooks/useSignUp";
 
 const validationSchema = Yup.object({
@@ -56,7 +55,19 @@ const SignUpForm = ({ handleNext }) => {
       agreeToTerms: false,
     },
     validationSchema,
-    onSubmit: async (values, { setSubmitting }) => {
+    onSubmit: async (values, { setSubmitting, setTouched }) => {
+      setTouched({
+        email: true,
+        password: true,
+        confirmPassword: true,
+        agreeToTerms: true,
+      });
+
+      if (!validationSchema.isValidSync(values)) {
+        setSubmitting(false);
+        return;
+      }
+
       const body = {
         username: values.email,
         password1: values.password,
@@ -66,8 +77,8 @@ const SignUpForm = ({ handleNext }) => {
 
       signUp(body, setSubmitting);
     },
-    validateOnChange: true,
-    validateOnBlur: false,
+    validateOnChange: false,
+    validateOnBlur: true,
   });
 
   const handlePasswordToggle = () => setShowPwd((prev) => !prev);
@@ -99,8 +110,9 @@ const SignUpForm = ({ handleNext }) => {
         name="email"
         value={formik.values.email}
         onChange={formik.handleChange}
-        error={showErrors && Boolean(formik.errors.email)}
-        helperText={showErrors && formik.errors.email}
+        onBlur={formik.handleBlur}
+        error={formik.touched.email && formik.errors.email}
+        helperText={formik.touched.email ? formik.errors.email : ""}
         startIcon={<EmailOutlinedIcon sx={{ fontSize: 16 }} />}
       />
 
@@ -110,8 +122,9 @@ const SignUpForm = ({ handleNext }) => {
         name="password"
         value={formik.values.password}
         onChange={formik.handleChange}
-        error={showErrors && Boolean(formik.errors.password)}
-        helperText={showErrors && formik.errors.password}
+        onBlur={formik.handleBlur}
+        error={formik.touched.password && formik.errors.password}
+        helperText={formik.touched.password ? formik.errors.password : ""}
         startIcon={<LockOutlinedIcon sx={{ fontSize: 16 }} />}
         endIcon={
           <div onClick={handlePasswordToggle} style={{ cursor: "pointer" }}>
@@ -130,8 +143,11 @@ const SignUpForm = ({ handleNext }) => {
         name="confirmPassword"
         value={formik.values.confirmPassword}
         onChange={formik.handleChange}
-        error={showErrors && Boolean(formik.errors.confirmPassword)}
-        helperText={showErrors && formik.errors.confirmPassword}
+        onBlur={formik.handleBlur}
+        error={formik.touched.confirmPassword && formik.errors.confirmPassword}
+        helperText={
+          formik.touched.confirmPassword ? formik.errors.confirmPassword : ""
+        }
         startIcon={<LockOutlinedIcon sx={{ fontSize: 16 }} />}
         endIcon={
           <div onClick={handlePasswordToggle} style={{ cursor: "pointer" }}>
@@ -174,7 +190,7 @@ const SignUpForm = ({ handleNext }) => {
           Already have an account?{" "}
           <span
             onClick={goToLogin}
-            style={{ cursor: "pointer", fontWeight: 700 }}
+            style={{ cursor: "pointer", fontWeight: 700, color: "#3e1929" }}
           >
             Sign In
           </span>

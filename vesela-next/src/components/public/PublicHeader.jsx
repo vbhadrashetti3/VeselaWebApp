@@ -7,7 +7,7 @@ import { MODALS } from "../modals/modalConstants";
 export default function PublicHeader() {
   const { openModal } = useModal();
   const handleSignIn = () => {
-    openModal(MODALS.PLANS);
+    openModal(MODALS.LOGIN);
   };
 
   return (

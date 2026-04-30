@@ -24,10 +24,13 @@ import { MODALS } from "../modals/modalConstants";
 import { useLogin } from "@/hooks/useLogin";
 
 const validationSchema = Yup.object({
-  email: Yup.string().email().required(),
-  password: Yup.string().min(6).required(),
+  email: Yup.string()
+    .email("Enter a valid email")
+    .required("Email is required"),
+  password: Yup.string()
+    .min(8, "Minimum 8 characters")
+    .required("Password is required"),
 });
-
 const LoginForm = ({ handleNext }) => {
   const [show, setShow] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -37,7 +40,18 @@ const LoginForm = ({ handleNext }) => {
   const formik = useFormik({
     initialValues: { email: "", password: "" },
     validationSchema,
-    onSubmit: (values, { setSubmitting }) => login(values, setSubmitting),
+    validateOnBlur: true,
+    validateOnChange: false,
+    onSubmit: (values, { setSubmitting, setTouched }) => {
+      setTouched({ email: true, password: true });
+
+      if (!validationSchema.isValidSync(values)) {
+        setSubmitting(false);
+        return;
+      }
+
+      login(values, setSubmitting);
+    },
   });
 
   return (
@@ -56,7 +70,9 @@ const LoginForm = ({ handleNext }) => {
         name="email"
         value={formik.values.email}
         onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
         error={formik.touched.email && formik.errors.email}
+        helperText={formik.touched.email ? formik.errors.email : ""}
         startIcon={<EmailOutlinedIcon />}
       />
 
@@ -66,7 +82,9 @@ const LoginForm = ({ handleNext }) => {
         name="password"
         value={formik.values.password}
         onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
         error={formik.touched.password && formik.errors.password}
+        helperText={formik.touched.password ? formik.errors.password : ""}
         startIcon={<LockOutlinedIcon />}
         endIcon={
           <div style={{ cursor: "pointer" }} onClick={() => setShow(!show)}>
@@ -75,7 +93,13 @@ const LoginForm = ({ handleNext }) => {
         }
       />
 
-      <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
         <FormControlLabel
           control={
             <Checkbox
@@ -94,7 +118,12 @@ const LoginForm = ({ handleNext }) => {
         />
 
         <Typography
-          sx={{ cursor: "pointer", fontWeight: 600, fontSize: 14 }}
+          sx={{
+            cursor: "pointer",
+            color: "#3e1929",
+            fontWeight: 600,
+            fontSize: 14,
+          }}
           onClick={() =>
             window.open(
               "https://portal.grayskyai.com/accounts/password/reset/",
@@ -113,7 +142,7 @@ const LoginForm = ({ handleNext }) => {
           Don’t have an account?{" "}
           <span
             onClick={() => handleNext(MODALS.SIGNUP)}
-            style={{ cursor: "pointer", fontWeight: 700 }}
+            style={{ cursor: "pointer", color: "#3e1929", fontWeight: 700 }}
           >
             Sign up
           </span>

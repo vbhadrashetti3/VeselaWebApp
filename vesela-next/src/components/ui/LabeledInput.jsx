@@ -73,6 +73,8 @@ const LabeledInput = ({
 
           "& .MuiOutlinedInput-input": {
             padding: "8px 10px",
+            fontSize: type === "password" ? "20px" : "14px",
+            letterSpacing: type === "password" ? "0.1em" : "normal",
           },
 
           "& .MuiOutlinedInput-notchedOutline": {
@@ -86,7 +88,6 @@ const LabeledInput = ({
           },
 
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-         
             borderWidth: 1,
           },
 

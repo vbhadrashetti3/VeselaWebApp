@@ -11,6 +11,8 @@ import * as Yup from "yup";
 
 import CustomButton from "../ui/CustomButton";
 import FormikDatePicker from "../ui/FormikDatePicker";
+import { useUserUpdate } from "@/hooks/useUserUpdate";
+import { MODALS } from "../modals/modalConstants";
 
 const validationSchema = Yup.object({
   fname: Yup.string().required("First name is required"),
@@ -22,8 +24,7 @@ const validationSchema = Yup.object({
 });
 
 const UpdateInfoForm = ({ handleNext }) => {
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const { loading, errorMsg, updateUser } = useUserUpdate(handleNext);
 
   const formik = useFormik({
     initialValues: {
@@ -33,8 +34,24 @@ const UpdateInfoForm = ({ handleNext }) => {
       dob: null,
     },
     validationSchema,
-    onSubmit: async (values) => {
-      console.log(values);
+    validateOnBlur: true,
+    validateOnChange: false,
+    onSubmit: (values, { setSubmitting, setTouched }) => {
+      setTouched({ fname: true, lname: true, phoneNo: true, dob: true });
+
+      if (!validationSchema.isValidSync(values)) {
+        setSubmitting(false);
+        return;
+      }
+      const { fname, lname, phoneNo, dob } = values;
+      const body = {
+        first_name: fname,
+        last_name: lname,
+        phone_number: phoneNo,
+        date_of_birth: dob,
+      };
+      localStorage.setItem("userInfo", JSON.stringify(body));
+      handleNext && handleNext(MODALS.ASSESSMENT_ONE);
     },
   });
 
@@ -56,7 +73,7 @@ const UpdateInfoForm = ({ handleNext }) => {
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         error={formik.touched.fname && Boolean(formik.errors.fname)}
-        helperText={formik.touched.fname && formik.errors.fname}
+        helperText={formik.touched.fname ? formik.errors.fname : ""}
       />
 
       <LabeledInput
@@ -66,7 +83,7 @@ const UpdateInfoForm = ({ handleNext }) => {
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         error={formik.touched.lname && Boolean(formik.errors.lname)}
-        helperText={formik.touched.lname && formik.errors.lname}
+        helperText={formik.touched.lname ? formik.errors.lname : ""}
       />
 
       <LabeledInput
@@ -76,7 +93,7 @@ const UpdateInfoForm = ({ handleNext }) => {
         onChange={formik.handleChange}
         onBlur={formik.handleBlur}
         error={formik.touched.phoneNo && Boolean(formik.errors.phoneNo)}
-        helperText={formik.touched.phoneNo && formik.errors.phoneNo}
+        helperText={formik.touched.phoneNo ? formik.errors.phoneNo : ""}
       />
 
       <FormikDatePicker formik={formik} name="dob" label="Date of Birth" />

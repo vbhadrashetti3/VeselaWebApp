@@ -42,7 +42,7 @@ const GenericModalWrapper = ({
           transform: "translate(-50%, -50%)",
 
           width: {
-            xs: "90%",
+            xs: width,
             sm: "80%",
             md: width,
           },
