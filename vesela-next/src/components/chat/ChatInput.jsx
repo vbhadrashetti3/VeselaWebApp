@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Box,
   OutlinedInput,
@@ -12,11 +12,29 @@ import {
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
 
-export default function ChatInput() {
+export default function ChatInput({ onSend, isConnected }) {
   const [inputValue, setInputValue] = useState("");
 
-  // Determine if the send button should be enabled
-  const isSendEnabled = inputValue.trim().length > 0;
+  // ✅ Prevent double send spam
+
+  const isSendEnabled = inputValue.trim().length > 0 && isConnected;
+
+  const handleSend = () => {
+    if (!isSendEnabled) return;
+
+    onSend(inputValue.trim());
+    setInputValue("");
+  };
+
+  const handleKeyDown = (e) => {
+    // ✅ IME fix (important for international keyboards)
+    if (e.nativeEvent.isComposing) return;
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSend();
+    }
+  };
 
   return (
     <Box
@@ -36,9 +54,11 @@ export default function ChatInput() {
           fullWidth
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Send Message ..."
+          onKeyDown={handleKeyDown}
+          placeholder={isConnected ? "Send Message ..." : "Connecting..."}
           endAdornment={
             <InputAdornment position="end">
+              {/* Mic Button */}
               <Tooltip
                 title="Voice input coming in the next release"
                 arrow
@@ -64,10 +84,11 @@ export default function ChatInput() {
                 </Box>
               </Tooltip>
 
+              {/* Send Button */}
               <IconButton
+                onClick={handleSend}
                 disabled={!isSendEnabled}
                 sx={{
-                  // Dynamic background: White when enabled, dark grey when disabled
                   bgcolor: isSendEnabled ? "#fff !important" : "#333",
                   width: 40,
                   height: 40,
@@ -76,7 +97,6 @@ export default function ChatInput() {
                   "&:hover": {
                     bgcolor: isSendEnabled ? "#f0f0f0 !important" : "#444",
                   },
-                  // Fix for Material UI disabled state styles
                   "&.Mui-disabled": {
                     bgcolor: "#333",
                     opacity: 0.6,
@@ -85,7 +105,6 @@ export default function ChatInput() {
               >
                 <SendOutlinedIcon
                   sx={{
-                    // Dynamic icon color: Black when enabled, White when disabled
                     color: isSendEnabled ? "#000" : "white",
                     fontSize: 18,
                   }}
