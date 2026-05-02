@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/services/auth.service";
 import { MODALS } from "@/components/modals/modalConstants";
-import { TOKEN, USER_DETAILS, POST_LOGIN_NAVIGATE_TO } from "@/constant";
+import { TOKEN, USER_DETAILS,  } from "@/constant";
 
 export const useLogin = (handleNext) => {
   const router = useRouter();
@@ -20,10 +20,9 @@ export const useLogin = (handleNext) => {
         localStorage.setItem(TOKEN, response.data.access);
         localStorage.setItem(USER_DETAILS, JSON.stringify(response.data.user));
 
-        handleNext(MODALS.SUCCESS_MODAL, "Login Successful!");
+        handleNext(MODALS.SUCCESS);
 
-        const redirectTo = localStorage.getItem(POST_LOGIN_NAVIGATE_TO);
-        if (redirectTo) router.push(redirectTo);
+        
       } else {
         setErrorMsg(
           response?.data?.detail ||

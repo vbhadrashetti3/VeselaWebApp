@@ -44,7 +44,7 @@ export default function PublicHeader() {
             variant="contained"
             onClick={handleSignIn}
             type="button"
-            sx={{ borderRadius: "50px", px: 4 }}
+            sx={{ borderRadius: "50px", px: 4, backgroundColor: "#3e1929" }}
           >
             Sign In
           </Button>

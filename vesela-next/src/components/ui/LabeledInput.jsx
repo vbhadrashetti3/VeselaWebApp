@@ -66,14 +66,14 @@ const LabeledInput = ({
         error={error}
         inputProps={inputProps}
         sx={{
-          borderRadius: 1.5,
+          borderRadius: "5px",
           backgroundColor: theme.palette.background.modalBackground,
           color: theme.palette.text.primary,
-          minHeight: multiline ? "auto" : 38,
+          minHeight: multiline ? "auto" : 40,
 
           "& .MuiOutlinedInput-input": {
             padding: "8px 10px",
-            fontSize: type === "password" ? "20px" : "14px",
+            fontSize: "14px",
             letterSpacing: type === "password" ? "0.1em" : "normal",
           },
 

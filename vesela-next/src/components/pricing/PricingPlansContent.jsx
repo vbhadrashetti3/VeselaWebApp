@@ -8,6 +8,7 @@ import {
   Box,
   Grid,
   useTheme,
+  Chip,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 
@@ -36,138 +37,67 @@ const plans = [
       "Leader on humanitybench.org",
     ],
     link: "https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007",
+    popular: true,
   },
 ];
 
-const PricingPlansContent = () => {
+export default function PricingPlansContent() {
   const theme = useTheme();
 
-  const handleSelectPlan = (link) => {
-    if (!link) return;
-    window.open(link, "_blank");
-  };
-
   return (
-    <Box pt={2}>
-      <Grid container spacing={2} sx={{ mt: 2 }} justifyContent="center">
+    <Box sx={{ p: 2 }}>
+      <Grid container spacing={2}>
         {plans.map((plan) => (
-          <Grid item xs={12} md={6} key={plan.id}>
+          <Grid
+            key={plan.id}
+            size={{ xs: 12, sm: 6, md: 4 }} // ✅ correct v7 API
+            sx={{ display: "flex" }} // ✅ required for equal height
+          >
             <Card
               sx={{
                 width: "100%",
-                borderRadius: 2,
-                border: "1px solid #e0e0e0",
+                height: "100%", // ✅ equal height
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "space-between",
-                p: 2,
+                position: "relative", // ✅ fix chip position
+                border: "1px solid #ddd",
               }}
             >
               <CardContent
                 sx={{
-                  p: 0,
                   display: "flex",
                   flexDirection: "column",
-                  flexGrow: 1,
+                  flexGrow: 1, // ✅ pushes button down
                 }}
               >
-                {/* Plan Name */}
-                <Typography
-                  sx={{
-                    textAlign: "center",
-                    fontSize: 14,
-                    fontWeight: 600,
-                    mb: 1,
-                    color: theme.palette.text.secondary,
-                  }}
-                >
+                <Typography textAlign="center" fontWeight={600}>
                   {plan.name}
                 </Typography>
 
-                {/* Price */}
-                <Box
-                  sx={{
-                    textAlign: "center",
-                    pb: 2,
-                    borderBottom: `1px solid ${theme.palette.divider}`,
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      fontSize: 30,
-                      fontWeight: 700,
-                    }}
-                  >
+                <Box textAlign="center" py={2}>
+                  <Typography fontSize={28} fontWeight={700}>
                     {plan.price}
-                    <Typography
-                      component="span"
-                      sx={{
-                        fontSize: 14,
-                        ml: 0.5,
-                        color: theme.palette.text.secondary,
-                      }}
-                    >
-                      {plan.period}
-                    </Typography>
+                    <span style={{ fontSize: "14px", fontWeight: 400 }}>
+                      / month
+                    </span>
                   </Typography>
                 </Box>
 
-                {/* Features */}
-                <Box sx={{ mt: 2, flexGrow: 1 }}>
-                  {plan.features.map((feature, idx) => (
-                    <Box
-                      key={idx}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        mb: 1,
-                      }}
-                    >
-                      <CheckIcon
-                        sx={{
-                          fontSize: 16,
-                          mr: 1,
-                          color: theme.palette.primary.main,
-                        }}
-                      />
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          color: theme.palette.text.secondary,
-                        }}
-                      >
-                        {feature}
-                      </Typography>
+                <Box sx={{ flexGrow: 1 }}>
+                  {plan.features.map((f, i) => (
+                    <Box key={i} display="flex" mb={1}>
+                      <CheckIcon fontSize="small" />
+                      <Typography ml={1}>{f}</Typography>
                     </Box>
                   ))}
                 </Box>
 
-                {/* Button */}
-                <Box
-                  sx={{
-                    pt: 2,
-                    borderTop: `1px solid ${theme.palette.divider}`,
-                  }}
+                <Button
+                  fullWidth
+                  variant={plan.id === "free" ? "outlined" : "contained"}
                 >
-                  <Button
-                    fullWidth
-                    variant={plan.id === "free" ? "outlined" : "contained"}
-                    disabled={plan.disabled}
-                    onClick={() => handleSelectPlan(plan.link)}
-                    sx={{
-                      borderRadius: "25px",
-                      py: 1.2,
-                      fontWeight: 600,
-
-                      ...(plan.disabled && {
-                        bgcolor: "#cbd5e1",
-                        color: "#fff",
-                      }),
-                    }}
-                  >
-                    Select Plan
-                  </Button>
-                </Box>
+                  Select Plan
+                </Button>
               </CardContent>
             </Card>
           </Grid>
@@ -175,6 +105,4 @@ const PricingPlansContent = () => {
       </Grid>
     </Box>
   );
-};
-
-export default PricingPlansContent;
+}

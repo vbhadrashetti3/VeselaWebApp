@@ -13,13 +13,13 @@ export const MODALS = Object.freeze({
 });
 
 export const SETTINGS_MODAL = Object.freeze({
-  SUBSCRIPTION: "subscription",
-  SUPPORT: "support",
-  APPEARANCE: "appearance",
-  FAQ: "faq",
-  TERMS: "terms",
-  PRIVACY: "privacy",
-  ABOUT: "about",
-  LOGOUT: "logout",
-  DELETE: "delete",
+  MySubscription: "MySubscription",
+  Support: "Support",
+  Appearance: "Appearance",
+  FAQ: "FAQ",
+  Terms: "Terms of Use",
+  Privacy: "Privacy Policy",
+  About: "AboutGrey",
+  Logout: "logout",
+  Delete: "delete",
 });

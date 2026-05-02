@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import {
   AppBar,
   Toolbar,
-  Typography,
   IconButton,
   Box,
   Container,
@@ -21,39 +20,42 @@ import {
   Settings,
   OpenInNew as Link,
 } from "@mui/icons-material";
+import GenreicLottie from "../ui/GenericLottie";
+import GraceLogo from "../../../public/Grace-Logo-Bars.json";
+import { TOKEN } from "@/constant";
+import HistoryModal from "../chat-history/HistoryModal";
+import SettingsModal from "../setting/SettingModal";
 
-export default function Header({
-  token,
-  navigate,
-  requireLogin,
-  setHistoryModal,
-  setSettingsModal,
-}) {
+export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const [historyModal, setHistoryModal] = useState(false);
+  const [settingsModal, setSettingsModal] = useState(false);
 
   const handleOpenMenu = (event) => setAnchorEl(event.currentTarget);
   const handleCloseMenu = () => setAnchorEl(null);
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem(TOKEN) : null;
 
   const headerMenuItems = [
     {
       label: "New Chat",
       icon: <Plus sx={{ fontSize: 18 }} />,
-      action: () => requireLogin(() => navigate(`/chat?new=${Date.now()}`)),
+      action: () => console.log("New Chat Clicked", Date.now()), // Replace with actual action
       disabled: !token,
       tooltip: "Please log in to start a new chat",
     },
     {
       label: "History",
       icon: <History sx={{ fontSize: 18 }} />,
-      action: () => requireLogin(() => setHistoryModal(true)),
+      action: () => setHistoryModal(true),
       disabled: !token,
       tooltip: "Please log in to view history",
     },
     {
       label: "Settings",
       icon: <Settings sx={{ fontSize: 18 }} />,
-      action: () => requireLogin(() => setSettingsModal(true)),
+      action: () => setSettingsModal(true),
       disabled: !token,
       tooltip: "Please log in to open settings",
     },
@@ -87,12 +89,7 @@ export default function Header({
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 700, fontSize: "1.1rem", color: "white" }}
-            >
-              DevAssistant
-            </Typography>
+            <GenreicLottie animationData={GraceLogo} width={100} />
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -161,6 +158,18 @@ export default function Header({
             </Menu>
           </Box>
         </Toolbar>
+        {historyModal && (
+          <HistoryModal
+            open={historyModal}
+            onClose={() => setHistoryModal(false)}
+          />
+        )}
+        {settingsModal && (
+          <SettingsModal
+            open={settingsModal}
+            onClose={() => setSettingsModal(false)}
+          />
+        )}
       </Container>
     </AppBar>
   );

@@ -3,20 +3,32 @@
 import { Box, CircularProgress, Typography } from "@mui/material";
 import { useEffect } from "react";
 import Image from "next/image";
+import { useModal } from "@/context/ModalContext";
+import { POST_LOGIN_NAVIGATE_TO } from "@/constant";
 import { useRouter } from "next/navigation";
-import { MODALS } from "../modals/modalConstants";
 
 const SuccessfulModal = ({ handleNext, successMsg }) => {
+  const { closeModal } = useModal();
   const router = useRouter();
-
   useEffect(() => {
-    handleNext && handleNext(MODALS.SUCCESS);
+    setTimeout(() => {
+      const redirectTo = localStorage.getItem(POST_LOGIN_NAVIGATE_TO);
+      if (redirectTo) router.push(redirectTo);
+      else router.push("/chat");
+      closeModal();
+    }, 5000);
   }, []);
 
   return (
     <Box sx={{ textAlign: "center" }}>
-      {/* ✅ Next.js Image */}
-      <Image src="/log-Successful.png" alt="success" width={160} height={160} />
+      <Image
+        src="/log-successful.png"
+        alt="success"
+        width={160}
+        height={160}
+        priority
+        unoptimized={true}
+      />
 
       <Box mt={3}>
         <Typography

@@ -120,7 +120,6 @@ const LoginForm = ({ handleNext }) => {
         <Typography
           sx={{
             cursor: "pointer",
-            color: "#3e1929",
             fontWeight: 600,
             fontSize: 14,
           }}
@@ -142,7 +141,7 @@ const LoginForm = ({ handleNext }) => {
           Don’t have an account?{" "}
           <span
             onClick={() => handleNext(MODALS.SIGNUP)}
-            style={{ cursor: "pointer", color: "#3e1929", fontWeight: 700 }}
+            style={{ cursor: "pointer", fontWeight: 700 }}
           >
             Sign up
           </span>

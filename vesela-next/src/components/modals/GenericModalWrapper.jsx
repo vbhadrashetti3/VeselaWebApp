@@ -9,7 +9,6 @@ const GenericModalWrapper = ({
   onClose,
   children,
   width = 420,
-  height = "auto",
   minHeight = "auto",
 }) => {
   const theme = useTheme();
@@ -25,14 +24,6 @@ const GenericModalWrapper = ({
       aria-labelledby="modal-title"
       aria-describedby="modal-description"
       closeAfterTransition
-      slotProps={{
-        backdrop: {
-          sx: {
-            backdropFilter: "blur(6px)",
-            backgroundColor: "rgba(0,0,0,0.4)",
-          },
-        },
-      }}
     >
       <Box
         sx={{
@@ -51,7 +42,7 @@ const GenericModalWrapper = ({
           maxHeight: "90vh",
 
           bgcolor: theme.palette.background.paper,
-          borderRadius: 2,
+          borderRadius: "10px",
           boxShadow: 24,
           p: 2.5,
 

@@ -19,10 +19,10 @@ export default function ChatBubble({ role, message }) {
           <Paper
             sx={{
               p: 2,
-              bgcolor: isAI ? "#1e1e26" : "#2d1622",
+              bgcolor: isAI ? "#000" : "#1e1e26",
               color: "white",
-              borderRadius: 2,
-              border: isAI ? "1px solid #333" : "none",
+              borderRadius: "10px",
+              border: isAI ? "None" : "1px solid #333",
             }}
           >
             <Typography variant="body2" sx={{ lineHeight: 1.6 }}>
