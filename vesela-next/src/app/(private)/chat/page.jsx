@@ -5,7 +5,7 @@ import { Box } from "@mui/material";
 export default function Page() {
   return (
     // minHeight ensures the background covers the screen, but allows growth
-    <Box sx={{ minHeight: "100vh", bgcolor: "#000" }}>
+    <Box>
       {/* Header is position="fixed" inside its own component */}
       <Header />
       <ChatPage />

@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Container } from "@mui/material";
+import { Box, Container, Typography } from "@mui/material";
 import { useEffect, useRef } from "react";
 import ChatBubble from "./ChatBubble";
 import ChatInput from "./ChatInput";
@@ -12,37 +12,33 @@ export default function ChatPage() {
 
   const bottomRef = useRef(null);
 
-  // ✅ Smooth but stable scroll
   useEffect(() => {
-    bottomRef.current?.scrollIntoView();
-    console.log("Scrolled to bottom", Date.now());
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
 
   return (
     <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* Chat Area */}
+      
+      {/* Status */}
+      <Typography sx={{ p: 1, fontSize: 12 }}>
+        {isConnected ? "🟢 Connected" : "🔴 Connecting..."}
+      </Typography>
+
+      {/* Chat */}
       <Box sx={{ flex: 1, overflowY: "auto" }}>
         <Container maxWidth="md">
-          <Box
-            sx={{
-              pt: 10,
-              pb: 12,
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-            }}
-          >
-            {messages.map((msg, i) => (
-              <ChatBubble key={i} role={msg.role} message={msg.message} />
-            ))}
+          {messages.map((msg, i) => (
+            <ChatBubble
+              key={i}
+              role={msg.role}
+              message={msg.message}
+              isTyping={isTyping && i === messages.length - 1}
+            />
+          ))}
 
-            {/* Thinking */}
-            {isThinking && (
-              <ChatBubble role="assistant" message="🤔 Thinking..." />
-            )}
+          {isThinking && <ChatBubble role="assistant" message="🤔 Thinking..." />}
 
-            <div ref={bottomRef} />
-          </Box>
+          <div ref={bottomRef} />
         </Container>
       </Box>
 
