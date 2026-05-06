@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation"; 
 import { post } from "@/lib/apiService";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 export const useLogout = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -18,13 +19,13 @@ export const useLogout = () => {
 
       if (shouldClearAuth) {
         // Clear Authentication items
-        localStorage.removeItem("token");
-        localStorage.removeItem("postLoginNavigateTo");
+        localStorageUtil.removeItem("token");
+        localStorageUtil.removeItem("postLoginNavigateTo");
 
         // Reset Object-based items
         const emptyState = JSON.stringify({});
-        localStorage.setItem("userdetails", emptyState);
-        localStorage.setItem("plan_details", emptyState);
+        localStorageUtil.set("userdetails", emptyState);
+        localStorageUtil.set("plan_details", emptyState);
 
         // Optional callback (e.g., to close the modal)
         if (onSuccess) onSuccess();

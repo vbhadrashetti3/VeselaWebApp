@@ -15,13 +15,11 @@ export const useUserUpdate = (handleNext) => {
       const respones = await updateUserInfo(values);
 
       if (!respones.error && respones.status === 200) {
-        const allowedPlans = ["plan4", "plan42"];
-        handleNext && handleNext(MODALS.ASSESSMENT_ONE);
+         handleNext && handleNext(MODALS.ASSESSMENT_TWO);
       }
     } catch (err) {
       setErrorMsg("Something went wrong");
-    } finally {
-      setSubmitting(false);
+    } finally { 
       setLoading(false);
     }
   };

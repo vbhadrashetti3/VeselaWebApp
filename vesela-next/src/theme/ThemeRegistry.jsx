@@ -8,6 +8,7 @@ import { getAppTheme } from "./theme"; // ✅ FIXED
 
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 // Context
 export const ColorModeContext = createContext({
@@ -22,7 +23,7 @@ export default function ThemeRegistry({ children }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
+    const saved = localStorageUtil.get("theme");
 
     if (saved) {
       setMode(saved);
@@ -39,7 +40,7 @@ export default function ThemeRegistry({ children }) {
       toggleColorMode: () => {
         setMode((prev) => {
           const next = prev === "light" ? "dark" : "light";
-          localStorage.setItem("theme", next);
+          localStorageUtil.set("theme", next);
           return next;
         });
       },

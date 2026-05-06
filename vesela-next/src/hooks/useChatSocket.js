@@ -1,52 +1,35 @@
 "use client";
 
-import { TOKEN, USER_DETAILS } from "@/constant";
 import { useEffect, useRef, useState } from "react";
+import { localStorageUtil } from "@/utils/localStorageUtil";
+import { TOKEN, USER_DETAILS } from "@/constant";
 
 export const useChatSocket = () => {
   const socketRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
+  const reconnectRef = useRef(null);
+  const messageQueueRef = useRef([]);
   const hasConnectedRef = useRef(false);
-  const messageQueueRef = useRef([]); // ✅ queue for messages
+  const conversationIdRef = useRef(null);
+  const currentAssistantMsgRef = useRef("");
 
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
 
-  const conversationIdRef = useRef(null);
-  const currentAssistantMsgRef = useRef("");
+  const token = localStorageUtil.get(TOKEN);
 
-  // ✅ Token
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem(TOKEN)
-      : null;
-
-  // ✅ User
   let userId = null;
-  if (typeof window !== "undefined" && token) {
-    try {
-      const user = JSON.parse(localStorage.getItem(USER_DETAILS));
-      userId = user?.pk;
-    } catch {
-      console.error("Invalid USER_DETAILS JSON");
-    }
-  }
+  try {
+    const user = localStorageUtil.get(USER_DETAILS);
+    userId = user?.pk;
+  } catch {}
 
-  // 🔌 CONNECT FUNCTION
+  // 🔌 CONNECT
   const connectSocket = () => {
     if (!token) return;
 
-    // ❗ Prevent duplicate connections
-    if (
-      socketRef.current &&
-      socketRef.current.readyState === WebSocket.OPEN
-    ) {
-      return;
-    }
-
-    console.log("🔌 Connecting WebSocket...");
+    if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
     const socket = new WebSocket(
       `wss://portal.grayskyai.com/ws/chat/?token=${token}`
@@ -55,42 +38,30 @@ export const useChatSocket = () => {
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log("✅ Connected");
       setIsConnected(true);
 
-      // 🚀 Flush queued messages
-      if (messageQueueRef.current.length > 0) {
-        messageQueueRef.current.forEach((msg) => {
-          socket.send(JSON.stringify(msg));
-        });
-        messageQueueRef.current = [];
-      }
+      // flush queue
+      messageQueueRef.current.forEach((msg) => {
+        socket.send(JSON.stringify(msg));
+      });
+      messageQueueRef.current = [];
     };
 
-    socket.onerror = (event) => {
-      console.error("🚨 WebSocket error:", event);
-      console.log("ReadyState:", socket.readyState);
-    };
-
-    socket.onclose = (event) => {
-      console.log("❌ Disconnected");
-      console.log("Code:", event.code);
-      console.log("Reason:", event.reason);
-
+    socket.onclose = (e) => {
       setIsConnected(false);
       socketRef.current = null;
 
-      // 🔁 Auto reconnect (avoid infinite loop on 1006)
-      if (event.code !== 1000 && event.code !== 1006) {
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connectSocket();
-        }, 3000);
+      if (e.code !== 1000) {
+        reconnectRef.current = setTimeout(connectSocket, 3000);
       }
+    };
+
+    socket.onerror = () => {
+      socket.close();
     };
 
     socket.onmessage = (event) => {
       let data;
-
       try {
         data = JSON.parse(event.data);
       } catch {
@@ -109,27 +80,30 @@ export const useChatSocket = () => {
 
           setMessages((prev) => [
             ...prev,
-            { role: "assistant", message: "" },
+            { role: "assistant", message: " " },
           ]);
           break;
 
         case "chunk":
+
+          if (isThinking) setIsThinking(false); 
           currentAssistantMsgRef.current += data.content;
 
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = {
-              role: "assistant",
-              message: currentAssistantMsgRef.current,
-            };
-            return updated;
+          requestAnimationFrame(() => {
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = {
+                role: "assistant",
+                message: currentAssistantMsgRef.current,
+              };
+              return updated;
+            });
           });
           break;
 
         case "done":
           setIsTyping(false);
           setIsThinking(false);
-
           if (data.conversation_id) {
             conversationIdRef.current = data.conversation_id;
           }
@@ -144,47 +118,41 @@ export const useChatSocket = () => {
             {
               role: "assistant",
               message: data.message || "Something went wrong",
+              isError: true,
             },
           ]);
-          break;
-
-        default:
           break;
       }
     };
   };
 
-  // 🧠 INIT (Strict Mode safe)
   useEffect(() => {
     if (!token || hasConnectedRef.current) return;
 
     hasConnectedRef.current = true;
 
+    // load previous messages
+    const saved = localStorage.getItem("chat_messages");
+    if (saved) {
+      setMessages(JSON.parse(saved));
+    }
+
     connectSocket();
 
     return () => {
-      console.log("🧹 Cleaning up socket");
-
-      const socket = socketRef.current;
-
-      // ✅ Only close if OPEN (fixes your main bug)
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.close(1000, "Component unmounted");
-      }
-
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
-
-      socketRef.current = null;
+      socketRef.current?.close(1000);
+      clearTimeout(reconnectRef.current);
     };
   }, [token]);
 
-  // 📤 SEND MESSAGE (FIXED)
+  // persist messages
+  useEffect(() => {
+    localStorage.setItem("chat_messages", JSON.stringify(messages));
+  }, [messages]);
+
+  // 📤 SEND
   const sendMessage = (text) => {
     if (!text?.trim()) return;
-
-    const socket = socketRef.current;
 
     const payload = {
       user_id: userId,
@@ -193,31 +161,22 @@ export const useChatSocket = () => {
       time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
 
-    // ✅ Show instantly in UI
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", message: text },
-    ]);
+    setMessages((prev) => [...prev, { role: "user", message: text }]);
 
-    // ❗ If socket not ready → queue
+
+    // ✅ 🔥 ADD THIS (MOST IMPORTANT)
+    setIsThinking(true);
+    setIsTyping(false);
+
+    const socket = socketRef.current;
+
     if (!socket || socket.readyState !== WebSocket.OPEN) {
-      console.warn("⏳ Socket not ready → queueing message");
-
       messageQueueRef.current.push(payload);
-
-      // 🔥 Try reconnect if socket is null
-      if (!socketRef.current) {
-        connectSocket();
-      }
-
+      connectSocket();
       return;
     }
 
-    try {
-      socket.send(JSON.stringify(payload));
-    } catch (err) {
-      console.error("Send failed:", err);
-    }
+    socket.send(JSON.stringify(payload));
   };
 
   return {

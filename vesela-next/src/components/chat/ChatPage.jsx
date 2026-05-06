@@ -17,13 +17,7 @@ export default function ChatPage() {
   }, [messages.length]);
 
   return (
-    <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      
-      {/* Status */}
-      <Typography sx={{ p: 1, fontSize: 12 }}>
-        {isConnected ? "🟢 Connected" : "🔴 Connecting..."}
-      </Typography>
-
+    <Box sx={{ display: "flex", flexDirection: "column", pt: 10, pb: 13 }}>
       {/* Chat */}
       <Box sx={{ flex: 1, overflowY: "auto" }}>
         <Container maxWidth="md">
@@ -36,7 +30,7 @@ export default function ChatPage() {
             />
           ))}
 
-          {isThinking && <ChatBubble role="assistant" message="🤔 Thinking..." />}
+          {isThinking && <ChatBubble role="assistant" message="Thinking..." />}
 
           <div ref={bottomRef} />
         </Container>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";  
 import { del } from "@/lib/apiService";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 export const useDeleteAccount = () => {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -20,7 +21,7 @@ export const useDeleteAccount = () => {
       if ([200, 204].includes(response?.status)) {
         // Clear all auth-related local storage
         ["token", "userdetails", "plan_details"].forEach((key) => {
-          localStorage.removeItem(key);
+          localStorageUtil.remove(key);
         });
 
         // Redirect to home and force a reload to clear application state

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { registerUser } from "@/services/auth.service";
 import { MODALS } from "@/components/modals/modalConstants";
 import { TOKEN, USER_DETAILS, POST_LOGIN_NAVIGATE_TO } from "@/constant";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 export const useSignUp = (handleNext) => {
   const router = useRouter();
@@ -15,8 +16,8 @@ export const useSignUp = (handleNext) => {
       setErrorMsg("");
       const response = await registerUser(values);
       if (!response.error && response.status === 201) {
-        localStorage.setItem(TOKEN, response.data.access);
-        localStorage.setItem(USER_DETAILS, JSON.stringify(response.data.user));
+        localStorageUtil.set(TOKEN, response.data.access);
+        localStorageUtil.set(USER_DETAILS, JSON.stringify(response.data.user));
 
         handleNext && handleNext(MODALS.UPDATE_INFO);
       } else {

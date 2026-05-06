@@ -23,8 +23,12 @@ const validationSchema = Yup.object({
   dob: Yup.date().nullable().required("Date of birth is required"),
 });
 
-const UpdateInfoForm = ({ handleNext }) => {
-  const { loading, errorMsg, updateUser } = useUserUpdate(handleNext);
+const formatDate = (date) => {
+  return new Date(date).toISOString().split("T")[0];
+};
+
+const UpdateInfoForm = ({ handleNext, setUserInfo }) => {
+  const { loading, errorMsg } = useUserUpdate(handleNext);
 
   const formik = useFormik({
     initialValues: {
@@ -48,9 +52,9 @@ const UpdateInfoForm = ({ handleNext }) => {
         first_name: fname,
         last_name: lname,
         phone_number: phoneNo,
-        date_of_birth: dob,
+        date_of_birth: formatDate(dob),
       };
-      localStorage.setItem("userInfo", JSON.stringify(body));
+      setUserInfo(body);
       handleNext && handleNext(MODALS.ASSESSMENT_ONE);
     },
   });

@@ -11,14 +11,17 @@ import SuccessfulModal from "../user-auth/SuccessfulModal";
 import PricingPlansContent from "../pricing/PricingPlansContent";
 import GenericModalWrapper from "./GenericModalWrapper";
 import { MODALS } from "./modalConstants";
+import { useState } from "react";
 
 const AuthFlowManager = ({
   modalStepName,
   onClose,
   successMsg,
-  reasonForSupport,
   handleNext,
 }) => {
+  const [userInfo, setUserInfo] = useState();
+  const [reasonForSupport, setReasonForSupport] = useState("");
+
   const renderModal = () => {
     switch (modalStepName) {
       case MODALS.LOGIN:
@@ -28,16 +31,26 @@ const AuthFlowManager = ({
         return <SignUpForm handleNext={handleNext} />;
 
       case MODALS.UPDATE_INFO:
-        return <UpdateInfoForm handleNext={handleNext} />;
+        return (
+          <UpdateInfoForm setUserInfo={setUserInfo} handleNext={handleNext} />
+        );
 
       case MODALS.ASSESSMENT_ONE:
-        return <AssessmentOneForm handleNext={handleNext} />;
+        return (
+          <AssessmentOneForm
+            userInfo={userInfo}
+            setReasonForSupport={setReasonForSupport}
+            reasonForSupport={reasonForSupport}
+            handleNext={handleNext}
+          />
+        );
 
       case MODALS.ASSESSMENT_TWO:
         return (
           <AssessmentTwoForm
             reasonForSupport={reasonForSupport}
             handleNext={handleNext}
+            onClose={onClose}
           />
         );
 

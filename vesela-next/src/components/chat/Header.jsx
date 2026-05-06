@@ -25,6 +25,7 @@ import GraceLogo from "../../../public/Grace-Logo-Bars.json";
 import { TOKEN } from "@/constant";
 import HistoryModal from "../chat-history/HistoryModal";
 import SettingsModal from "../setting/SettingModal";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -34,8 +35,7 @@ export default function Header() {
 
   const handleOpenMenu = (event) => setAnchorEl(event.currentTarget);
   const handleCloseMenu = () => setAnchorEl(null);
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem(TOKEN) : null;
+  const token = localStorageUtil.get(TOKEN);
 
   const headerMenuItems = [
     {

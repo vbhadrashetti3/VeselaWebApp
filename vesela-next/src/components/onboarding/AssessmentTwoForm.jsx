@@ -6,11 +6,14 @@ import { useTheme } from "@mui/material/styles";
 import ModalHeader from "../modals/ModalHeader";
 import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
 import SentimentVerySatisfiedIcon from "@mui/icons-material/SentimentVerySatisfied";
-import { useRouter } from "next/navigation"; // ✅ Next.js
+import { useRouter } from "next/navigation";
 import CustomButton from "../ui/CustomButton";
-const AssessmentTwoForm = ({ handleNext, reasonForSupport }) => {
+import { useAssessment } from "@/hooks/useAssessment";
+
+const AssessmentTwoForm = ({ handleNext, reasonForSupport, onClose }) => {
   const theme = useTheme();
   const router = useRouter();
+
   const [step, setStep] = useState(1);
   const [value, setValue] = useState(0);
 
@@ -19,6 +22,12 @@ const AssessmentTwoForm = ({ handleNext, reasonForSupport }) => {
     env: 0,
     er: 0,
   });
+
+  // ✅ hook usage
+  const { submitAssessment, loading, error } = useAssessment(() => {
+    handleNext && handleNext("SUCCESS_MODAL", "Sign up Successful");
+    router.push("/chat");
+  }, onClose);
 
   const subtitles = {
     1: "On a scale of -5 to +5, how do you feel right now?",
@@ -35,19 +44,20 @@ const AssessmentTwoForm = ({ handleNext, reasonForSupport }) => {
 
     setAssessmentValues(updated);
 
+    // 👉 move to next step
     if (step < 3) {
       setStep(step + 1);
-      setValue(0);
+      setValue(updated[step === 1 ? "env" : "er"]);
       return;
     }
 
-    try {
-      const body = {
-        ...updated,
-        reason_for_support: reasonForSupport || "",
-      };
-      console.log(body);
-    } catch (err) {}
+    // 👉 final submit
+    const payload = {
+      ...updated,
+      reason_for_support: reasonForSupport || "",
+    };
+
+    await submitAssessment(payload);
   };
 
   return (
@@ -57,10 +67,12 @@ const AssessmentTwoForm = ({ handleNext, reasonForSupport }) => {
         subtitle={subtitles[step]}
       />
 
+      {/* Value */}
       <Typography sx={{ fontSize: 60, textAlign: "center", mb: 2 }}>
         {value}
       </Typography>
 
+      {/* Slider */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
         <SentimentVeryDissatisfiedIcon />
         <Slider
@@ -74,8 +86,18 @@ const AssessmentTwoForm = ({ handleNext, reasonForSupport }) => {
         <SentimentVerySatisfiedIcon />
       </Box>
 
+      {/* Error */}
+      {error && (
+        <Typography color="error" sx={{ mt: 2 }}>
+          {error}
+        </Typography>
+      )}
+
+      {/* Button */}
       <Box sx={{ textAlign: "center", mt: 4 }}>
-        <CustomButton onClick={handleSubmit}>Continue</CustomButton>
+        <CustomButton onClick={handleSubmit} disabled={loading}>
+          {loading ? "Submitting..." : "Continue"}
+        </CustomButton>
       </Box>
     </Box>
   );

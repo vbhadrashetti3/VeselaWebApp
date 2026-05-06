@@ -1,22 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { Box, Typography, TextField } from "@mui/material";
-import { useTheme } from "@mui/material/styles";  
+import { Box, Typography, TextField, MenuItem } from "@mui/material";
 import CustomButton from "../ui/CustomButton";
 import ModalHeader from "../modals/ModalHeader";
-import { MODALS } from "../modals/modalConstants";
+import { useUserUpdate } from "@/hooks/useUserUpdate";
 
-const AssessmentOneForm = ({ handleNext }) => {
-  const theme = useTheme();
-  const [value, setValue] = useState("");
 
-  const handleSubmit = (e) => {
+
+const AssessmentOneForm = ({
+  handleNext,
+  userInfo,
+  reasonForSupport,
+  setReasonForSupport,
+}) => {
+  const [gender, setGender] = useState("");
+
+  // ✅ use hook
+  const { updateUser, loading, errorMsg } = useUserUpdate(handleNext);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!value.trim()) return; // basic validation
+    if (!reasonForSupport.trim() || !gender) return;
+    const payload = {
+      ...userInfo,
+      gender,
+    };
 
-    handleNext(MODALS.ASSESSMENT_TWO, "", value);
+    await updateUser(payload);
   };
 
   return (
@@ -26,6 +38,35 @@ const AssessmentOneForm = ({ handleNext }) => {
         subtitle="Answer a few quick questions so our AI can create a basic assessment for you."
       />
 
+      {/* Gender Dropdown */}
+      <Typography sx={{ fontWeight: 600, mb: 1 }}>
+        Select your gender
+      </Typography>
+
+      <TextField
+        select
+        fullWidth
+        value={gender}
+        onChange={(e) => setGender(e.target.value)}
+        sx={{
+          mb: 2,
+          "& .MuiOutlinedInput-root": {
+            height: 40,
+          },
+          "& .MuiSelect-select": {
+            display: "flex",
+            alignItems: "center",
+            height: "40px",
+            padding: "0 14px",
+          },
+        }}
+      >
+        <MenuItem value="">Select gender</MenuItem>
+        <MenuItem value="M">Male</MenuItem>
+        <MenuItem value="F">Female</MenuItem>
+      </TextField>
+
+      {/* Question */}
       <Typography sx={{ fontWeight: 600, mb: 1 }}>
         What is the primary reason you are seeking support?
       </Typography>
@@ -33,18 +74,31 @@ const AssessmentOneForm = ({ handleNext }) => {
       <TextField
         multiline
         rows={4}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
+        value={reasonForSupport}
+        onChange={(e) => setReasonForSupport(e.target.value)}
         placeholder="Type your response..."
         fullWidth
+        inputProps={{ maxLength: 1000 }}
       />
 
       <Typography sx={{ textAlign: "right", fontSize: 12 }}>
-        {value.length}/1000
+        {reasonForSupport.length}/1000
       </Typography>
 
+      {/* Error */}
+      {errorMsg && (
+        <Typography color="error" sx={{ mt: 1 }}>
+          {errorMsg}
+        </Typography>
+      )}
+
       <Box sx={{ textAlign: "center", mt: 3 }}>
-        <CustomButton onClick={handleSubmit}>Continue</CustomButton>
+        <CustomButton
+          onClick={handleSubmit}
+          disabled={!reasonForSupport.trim() || !gender || loading}
+        >
+          {loading ? "Please wait..." : "Continue"}
+        </CustomButton>
       </Box>
     </>
   );

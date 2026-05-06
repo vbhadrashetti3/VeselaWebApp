@@ -1,5 +1,6 @@
 "use client";
 
+import { localStorageUtil } from "@/utils/localStorageUtil";
 import axios from "axios";
 
 const api = axios.create({
@@ -12,7 +13,7 @@ const api = axios.create({
 // ✅ Attach token
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
+    const token = localStorageUtil.get("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

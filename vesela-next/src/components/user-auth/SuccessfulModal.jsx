@@ -6,13 +6,14 @@ import Image from "next/image";
 import { useModal } from "@/context/ModalContext";
 import { POST_LOGIN_NAVIGATE_TO } from "@/constant";
 import { useRouter } from "next/navigation";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 const SuccessfulModal = ({ handleNext, successMsg }) => {
   const { closeModal } = useModal();
   const router = useRouter();
   useEffect(() => {
     setTimeout(() => {
-      const redirectTo = localStorage.getItem(POST_LOGIN_NAVIGATE_TO);
+      const redirectTo = localStorageUtil.get(POST_LOGIN_NAVIGATE_TO);
       if (redirectTo) router.push(redirectTo);
       else router.push("/chat");
       closeModal();
