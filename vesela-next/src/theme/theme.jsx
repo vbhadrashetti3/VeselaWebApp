@@ -5,10 +5,11 @@ import { createTheme, alpha } from "@mui/material/styles";
 const tokens = {
   light: {
     primary: "#286CA8",
+    
     background: {
-      default: "#f2fbff",
+      default: "#f5f5f5",
       paper: "#ffffff",
-      modal: "#ffffff",
+      modal: "#fff",
     },
     button: {
       primary: "#3a0d18",
@@ -36,9 +37,9 @@ const tokens = {
   dark: {
     primary: "#286CA8",
     background: {
-      default: "#0f172a",
-      paper: "#1e293b",
-      modal: "#1e293b",
+      default: "#121212",
+      paper: "#1e1e1e",
+      modal: "#1F222A",
     },
     button: {
       primary: "#3a0d18",

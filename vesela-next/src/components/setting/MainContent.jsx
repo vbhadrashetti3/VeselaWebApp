@@ -15,7 +15,6 @@ const MainContent = ({ renderSection }) => {
         flex: 1, // ✅ fills available height
         overflowY: "auto", // ✅ ONLY scroll here
         p: { xs: 2, md: 0 },
-        bgcolor: "background.default",
         color: "text.primary",
         ...scrollbarStyles(theme),
         // scrollbar styling

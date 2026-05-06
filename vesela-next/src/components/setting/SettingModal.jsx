@@ -94,6 +94,7 @@ const SettingsModal = ({ open, onClose }) => {
           p: 0,
           height: "100%",
           overflow: "hidden", // ✅ IMPORTANT
+          bgcolor: theme.palette.background.modalBackground,
         }}
       >
         <Box

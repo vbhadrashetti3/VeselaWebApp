@@ -77,7 +77,7 @@ const Sidebar = ({ activeSection, handleClick }) => {
   ];
 
   return (
-    <Box component="nav" sx={{ p: 2, height: "100%", overflowY: "auto" }}>
+    <Box sx={{ p: 2, height: "100%", overflowY: "auto" }}>
       <List dense disablePadding>
         <Typography
           variant="subtitle2"

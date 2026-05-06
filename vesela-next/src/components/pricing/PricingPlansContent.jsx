@@ -56,11 +56,18 @@ export default function PricingPlansContent() {
             <Card
               sx={{
                 width: "100%",
-                height: "100%", // ✅ equal height
+                minHeight: 350, // 🔥 SAME HEIGHT
+                borderRadius: 3,
+                bgcolor: theme.palette.background.modalBackground,
+                color: theme.palette.text.primary,
+                boxShadow: 4,
                 display: "flex",
                 flexDirection: "column",
-                position: "relative", // ✅ fix chip position
-                border: "1px solid #ddd",
+                justifyContent: "space-between",
+                transition: "0.25s",
+                "&:hover": {
+                  transform: "translateY(-4px)",
+                },
               }}
             >
               <CardContent
