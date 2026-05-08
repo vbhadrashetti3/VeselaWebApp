@@ -13,6 +13,7 @@ import {
   ListItemText,
   Tooltip,
 } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import {
   Menu as MenuIcon,
   Add as Plus,
@@ -36,6 +37,7 @@ export default function Header() {
   const handleOpenMenu = (event) => setAnchorEl(event.currentTarget);
   const handleCloseMenu = () => setAnchorEl(null);
   const token = localStorageUtil.get(TOKEN);
+  const theme = useTheme();
 
   const headerMenuItems = [
     {
@@ -73,9 +75,6 @@ export default function Header() {
       position="fixed"
       elevation={0}
       sx={{
-        backgroundColor: "rgba(0, 0, 0)", // Black with transparency
-        backdropFilter: "blur(12px)", // Enhanced glassmorphism
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
         zIndex: (theme) => theme.zIndex.drawer + 1,
       }}
     >
@@ -96,7 +95,7 @@ export default function Header() {
             <IconButton
               color="inherit"
               onClick={handleOpenMenu}
-              sx={{ bgcolor: open ? "rgba(255,255,255,0.05)" : "transparent" }}
+              sx={{ bgcolor: open ? alpha(theme.palette.primary.main, 0.10) : "transparent" }}
             >
               <MenuIcon />
             </IconButton>
@@ -107,12 +106,8 @@ export default function Header() {
               onClose={handleCloseMenu}
               PaperProps={{
                 sx: {
-                  bgcolor: "#1e1e26", // Matching your ChatInput/Bubble colors
-                  color: "white",
                   mt: 1.5,
                   minWidth: 180,
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 2,
                 },
               }}
               transformOrigin={{ horizontal: "right", vertical: "top" }}
@@ -129,7 +124,7 @@ export default function Header() {
                     }}
                     sx={{
                       py: 1,
-                      "&:hover": { bgcolor: "rgba(255,255,255,0.05)" },
+                      "&:hover": { bgcolor: theme.palette.action.hover },
                     }}
                   >
                     <ListItemIcon sx={{ color: "inherit", minWidth: 36 }}>

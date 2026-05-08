@@ -20,12 +20,17 @@ export default function AISearchInput({
   const [focused, setFocused] = useState(false);
 
   const handleSubmit = () => {
-    if (!value.trim()) return;
-    onSearch?.(value);
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    onSearch?.(trimmed);
+    setValue("");
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") handleSubmit();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
+    }
   };
 
   return (

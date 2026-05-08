@@ -1,12 +1,14 @@
-// app/(private)/layout.jsx
+"use client";
 
-import { Box } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 
 export default function PrivateLayout({ children }) {
+  const theme = useTheme();
+
   return (
     <Box
       sx={{
-        backgroundColor: "#000",
+        backgroundColor: theme.palette.background.default,
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",

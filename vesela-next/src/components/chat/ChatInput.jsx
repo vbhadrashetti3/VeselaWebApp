@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   Box,
   OutlinedInput,
@@ -8,16 +8,26 @@ import {
   IconButton,
   Container,
   Tooltip,
+  Typography,
 } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import MicNoneOutlinedIcon from "@mui/icons-material/MicNoneOutlined";
 import SendOutlinedIcon from "@mui/icons-material/SendOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 
-export default function ChatInput({ onSend, isConnected }) {
+export default function ChatInput({
+  onSend,
+  isConnected,
+  isGuestLocked = false,
+  onGuestLockedClick,
+}) {
+  const theme = useTheme();
   const [inputValue, setInputValue] = useState("");
 
   // ✅ Prevent double send spam
 
-  const isSendEnabled = inputValue.trim().length > 0 && isConnected;
+  const isSendEnabled =
+    inputValue.trim().length > 0 && isConnected && !isGuestLocked;
 
   const handleSend = () => {
     if (!isSendEnabled) return;
@@ -30,7 +40,7 @@ export default function ChatInput({ onSend, isConnected }) {
     // ✅ IME fix (important for international keyboards)
     if (e.nativeEvent.isComposing) return;
 
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -46,15 +56,45 @@ export default function ChatInput({ onSend, isConnected }) {
         zIndex: 1000,
         pb: 4,
         pt: 2,
-        backgroundColor: "#000",
+        backgroundColor:
+          theme.palette?.custom?.surface?.sidebar ||
+          theme.palette.background.default ||
+          "#f6f8fc",
+        borderTop: `1px solid ${theme.palette.divider || "#e2e8f0"}`,
       }}
     >
       <Container maxWidth="md">
+        {isGuestLocked && (
+          <Box
+            role="button"
+            onClick={onGuestLockedClick}
+            sx={{
+              mb: 1.2,
+              p: 1.2,
+              borderRadius: 2,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              cursor: "pointer",
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "action.hover",
+            }}
+          >
+            <LockOutlinedIcon fontSize="small" color="primary" />
+            <Typography variant="caption" color="text.secondary">
+              Free guest limit reached. Login or upgrade to continue.
+            </Typography>
+          </Box>
+        )}
         <OutlinedInput
           fullWidth
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
+          disabled={isGuestLocked}
+          multiline
+          maxRows={6}
           placeholder={isConnected ? "Send Message ..." : "Connecting..."}
           endAdornment={
             <InputAdornment position="end">
@@ -68,14 +108,14 @@ export default function ChatInput({ onSend, isConnected }) {
                   <IconButton
                     disabled
                     sx={{
-                      bgcolor: "#333",
+                      bgcolor: theme.palette.action.disabledBackground,
                       width: 40,
                       height: 40,
                       ml: 1,
                       "&.Mui-disabled": {
-                        bgcolor: "#333",
+                        bgcolor: theme.palette.action.disabledBackground,
                         opacity: 0.5,
-                        color: "rgba(255, 255, 255, 0.3)",
+                        color: theme.palette.text.disabled,
                       },
                     }}
                   >
@@ -89,23 +129,29 @@ export default function ChatInput({ onSend, isConnected }) {
                 onClick={handleSend}
                 disabled={!isSendEnabled}
                 sx={{
-                  bgcolor: isSendEnabled ? "#fff !important" : "#333",
+                  bgcolor: isSendEnabled
+                    ? theme.palette.primary.main
+                    : theme.palette.action.disabledBackground,
                   width: 40,
                   height: 40,
                   ml: 1,
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
-                    bgcolor: isSendEnabled ? "#f0f0f0 !important" : "#444",
+                    bgcolor: isSendEnabled
+                      ? alpha(theme.palette.primary.main, 0.92)
+                      : theme.palette.action.hover,
                   },
                   "&.Mui-disabled": {
-                    bgcolor: "#333",
+                    bgcolor: theme.palette.action.disabledBackground,
                     opacity: 0.6,
                   },
                 }}
               >
                 <SendOutlinedIcon
                   sx={{
-                    color: isSendEnabled ? "#000" : "white",
+                    color: isSendEnabled
+                      ? theme.palette.primary.contrastText
+                      : theme.palette.text.disabled,
                     fontSize: 18,
                   }}
                 />
@@ -113,14 +159,10 @@ export default function ChatInput({ onSend, isConnected }) {
             </InputAdornment>
           }
           sx={{
-            bgcolor: "#1e1e26",
             borderRadius: 10,
-            color: "white",
-            height: 60,
-            "& fieldset": { borderColor: "#333" },
+            minHeight: 60,
+            opacity: isGuestLocked ? 0.72 : 1,
             "& .MuiOutlinedInput-input": { py: 1.5, px: 2 },
-            "&:hover fieldset": { borderColor: "#444" },
-            "&.Mui-focused fieldset": { borderColor: "primary.main" },
           }}
         />
       </Container>

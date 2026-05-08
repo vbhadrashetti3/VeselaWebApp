@@ -79,18 +79,18 @@ const ChatList = ({ onSelectChat, selectedChatId, chatHistory = [] }) => {
                   : "transparent",
                 border: "1px solid",
                 borderColor: isSelected
-                  ? alpha(theme.palette.primary.main, 0.3)
+                  ? alpha(theme.palette.primary.main, 0.35)
                   : "transparent",
                 "&:hover": {
-                  bgcolor: alpha(theme.palette.white || "#fff", 0.05),
-                  borderColor: alpha(theme.palette.white || "#fff", 0.1),
+                  bgcolor: theme.palette.action.hover,
+                  borderColor: alpha(theme.palette.primary.main, 0.12),
                 },
               }}
             >
               <ListItemIcon
                 sx={{
                   minWidth: 32,
-                  color: isSelected ? "#fff" : "#b8b8b8",
+                  color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary,
                 }}
               >
                 <MessageCircleMore size={16} />
@@ -101,7 +101,7 @@ const ChatList = ({ onSelectChat, selectedChatId, chatHistory = [] }) => {
                   fontSize: "13px",
                   fontWeight: isSelected ? 600 : 400,
                   noWrap: true,
-                  color: isSelected ? "#fff" : "#b8b8b8",
+                  color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary,
                 }}
               />
             </ListItemButton>

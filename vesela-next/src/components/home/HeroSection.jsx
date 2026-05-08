@@ -1,10 +1,12 @@
 "use client";
 
-import { Box, InputBase, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import Lottie from "lottie-react";
 import Carousel from "react-material-ui-carousel";
+import { useRouter } from "next/navigation";
 import heroSectionLottie from "../../../public/vesela_white_lottie.json";
 import AISearchInput from "./AISearchInput";
+import { useChatSession } from "@/context/ChatSessionContext";
 
 const headingStyle = {
   fontSize: { xs: "1.5rem", md: "2.2rem" },
@@ -14,6 +16,9 @@ const headingStyle = {
 };
 
 export default function HeroSection() {
+  const router = useRouter();
+  const { setPendingHeroMessage } = useChatSession();
+
   const slides = [
     {
       type: "image",
@@ -24,6 +29,11 @@ export default function HeroSection() {
         "https://lh3.googleusercontent.com/aida-public/AB6AXuDFmXQhlTARowTvUP6mAdl5DFkpA5RposDF85W8efwt-JIRZroolJIM2WfQScUE-q2UsTmr0UzDC5JwM_tPU5O3A1Nb16GbIN9ERFInOvneFZ4H7oyEy9hqlXYVJz8w1y7wAdgQi9Ku43Tovk2DF8tPcxiur4G7KyFdkpmQWBzv-MUBOD-SxHxJA-CAAQviDyyq_4xienAHnWZuJAqTc4b5yjPC1jKjI3Hngv2Bp0FFSmEaz8FUfD5MogHZ5alEgzbxXjsWDdmjX88",
     },
   ];
+
+  const handleSearch = (message) => {
+    setPendingHeroMessage(message);
+    router.push("/chat");
+  };
 
   return (
     <Box
@@ -117,7 +127,7 @@ export default function HeroSection() {
               </Box>
 
               <Box>
-                <AISearchInput />
+                <AISearchInput onSearch={handleSearch} />
               </Box>
             </Box>
           </Box>
