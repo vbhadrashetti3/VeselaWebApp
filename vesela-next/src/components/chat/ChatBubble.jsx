@@ -32,13 +32,13 @@ export default function ChatBubble({
     >
       <Paper
         sx={{
-          padding: "10px 14px",
+          padding: "8px 12px",
           maxWidth: "80%",
           bgcolor: isAI
             ? theme.palette.custom.chat.assistantBubble
             : theme.palette.custom.chat.userBubble,
           color: theme.palette.text.primary,
-          borderRadius: 3,
+          borderRadius: "10px",
           border: `1px solid ${theme.palette.custom.border.soft}`,
         }}
       >
@@ -49,9 +49,15 @@ export default function ChatBubble({
 
         {isError && (
           <Box sx={{ mt: 0.8, display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography sx={{ fontSize: 12, color: "error.main" }}>Something failed.</Typography>
+            <Typography sx={{ fontSize: 12, color: "error.main" }}>
+              Something failed.
+            </Typography>
             {onRetry && (
-              <Button size="small" onClick={onRetry} sx={{ minWidth: "auto", p: 0, fontSize: 12 }}>
+              <Button
+                size="small"
+                onClick={onRetry}
+                sx={{ minWidth: "auto", p: 0, fontSize: 12 }}
+              >
                 Retry
               </Button>
             )}

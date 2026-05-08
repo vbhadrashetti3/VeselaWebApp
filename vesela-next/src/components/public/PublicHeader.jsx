@@ -40,7 +40,7 @@ const menus = [
 ];
 
 export default function PublicHeader() {
-  const { openModal } = useModal(); 
+  const { openModal } = useModal();
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -56,7 +56,6 @@ export default function PublicHeader() {
         sx={{
           bgcolor: "rgba(242, 251, 255, 0.99)",
           backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(0,0,0,0.05)",
         }}
       >
         <Toolbar

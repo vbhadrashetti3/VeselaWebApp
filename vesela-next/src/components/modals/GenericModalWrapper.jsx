@@ -77,7 +77,7 @@ const GenericModalWrapper = ({
             bgcolor: modalBg,
             border: `1px solid ${divider}`,
             boxShadow: modalShadow,
-            borderRadius: 2,
+            borderRadius: "10px",
             p: { xs: 2.5, md: 4 },
 
             // Responsive Sizing

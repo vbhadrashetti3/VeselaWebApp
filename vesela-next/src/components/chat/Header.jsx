@@ -73,9 +73,9 @@ export default function Header() {
   return (
     <AppBar
       position="fixed"
-      elevation={0}
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
+        border: 0,
       }}
     >
       <Container maxWidth="md">
@@ -95,7 +95,11 @@ export default function Header() {
             <IconButton
               color="inherit"
               onClick={handleOpenMenu}
-              sx={{ bgcolor: open ? alpha(theme.palette.primary.main, 0.10) : "transparent" }}
+              sx={{
+                bgcolor: open
+                  ? alpha(theme.palette.primary.main, 0.1)
+                  : "transparent",
+              }}
             >
               <MenuIcon />
             </IconButton>
@@ -104,17 +108,41 @@ export default function Header() {
               anchorEl={anchorEl}
               open={open}
               onClose={handleCloseMenu}
-              PaperProps={{
-                sx: {
-                  mt: 1.5,
-                  minWidth: 180,
+              transformOrigin={{
+                horizontal: "right",
+                vertical: "top",
+              }}
+              anchorOrigin={{
+                horizontal: "right",
+                vertical: "bottom",
+              }}
+              slotProps={{
+                paper: {
+                  elevation: 0,
+                  sx: {
+                    mt: 1.2,
+                    minWidth: 200,
+                    overflow: "hidden",
+                    borderRadius: "10px",
+
+                    bgcolor: theme.palette.background.paper,
+
+                    border: `1px solid ${theme.palette.divider}`,
+
+                    boxShadow:
+                      theme.palette.mode === "dark"
+                        ? "0px 10px 30px rgba(0,0,0,0.45)"
+                        : "0px 10px 30px rgba(15,23,42,0.08)",
+
+                    backdropFilter: "blur(12px)",
+
+                    py: 0.5,
+                  },
                 },
               }}
-              transformOrigin={{ horizontal: "right", vertical: "top" }}
-              anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             >
               {headerMenuItems.map((item) => {
-                const ItemContent = (
+                const content = (
                   <MenuItem
                     key={item.label}
                     disabled={item.disabled}
@@ -123,32 +151,67 @@ export default function Header() {
                       handleCloseMenu();
                     }}
                     sx={{
-                      py: 1,
-                      "&:hover": { bgcolor: theme.palette.action.hover },
+                      mx: 0.5,
+                      my: 0.3,
+                      px: 1.4,
+                      py: 1.1,
+
+                      borderRadius: "0px",
+
+                      color: theme.palette.text.primary,
+
+                      transition: "all 0.18s ease",
+
+                      "&:hover": {
+                        bgcolor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(255,255,255,0.06)"
+                            : "rgba(15,23,42,0.05)",
+                      },
+
+                      "&.Mui-disabled": {
+                        opacity: 0.45,
+                      },
                     }}
                   >
-                    <ListItemIcon sx={{ color: "inherit", minWidth: 36 }}>
+                    <ListItemIcon
+                      sx={{
+                        color: "inherit",
+                        minWidth: 34,
+
+                        "& svg": {
+                          fontSize: 20,
+                        },
+                      }}
+                    >
                       {item.icon}
                     </ListItemIcon>
+
                     <ListItemText
                       primary={item.label}
-                      primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
+                      primaryTypographyProps={{
+                        fontSize: 14,
+                        fontWeight: 500,
+                        letterSpacing: "-0.01em",
+                      }}
                     />
                   </MenuItem>
                 );
 
-                return item.disabled && item.tooltip ? (
-                  <Tooltip
-                    key={item.label}
-                    title={item.tooltip}
-                    placement="left"
-                    arrow
-                  >
-                    <Box>{ItemContent}</Box>
-                  </Tooltip>
-                ) : (
-                  ItemContent
-                );
+                if (item.disabled && item.tooltip) {
+                  return (
+                    <Tooltip
+                      key={item.label}
+                      title={item.tooltip}
+                      placement="left"
+                      arrow
+                    >
+                      <Box>{content}</Box>
+                    </Tooltip>
+                  );
+                }
+
+                return content;
               })}
             </Menu>
           </Box>

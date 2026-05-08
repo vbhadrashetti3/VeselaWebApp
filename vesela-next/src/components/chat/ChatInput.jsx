@@ -56,11 +56,6 @@ export default function ChatInput({
         zIndex: 1000,
         pb: 4,
         pt: 2,
-        backgroundColor:
-          theme.palette?.custom?.surface?.sidebar ||
-          theme.palette.background.default ||
-          "#f6f8fc",
-        borderTop: `1px solid ${theme.palette.divider || "#e2e8f0"}`,
       }}
     >
       <Container maxWidth="md">
@@ -159,10 +154,9 @@ export default function ChatInput({
             </InputAdornment>
           }
           sx={{
-            borderRadius: 10,
+            borderRadius: "15px",
             minHeight: 60,
             opacity: isGuestLocked ? 0.72 : 1,
-            "& .MuiOutlinedInput-input": { py: 1.5, px: 2 },
           }}
         />
       </Container>
