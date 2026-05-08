@@ -1,23 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { localStorageUtil } from "@/utils/localStorageUtil";
 import { TOKEN, USER_DETAILS } from "@/constant";
 
-export const useChatSocket = () => {
+const STREAM_SPEED = 8;
+
+export const useChatSocket = (enabled = false) => {
   const socketRef = useRef(null);
   const reconnectRef = useRef(null);
   const messageQueueRef = useRef([]);
   const hasConnectedRef = useRef(false);
-  const conversationIdRef = useRef(null);
+
+  const streamBufferRef = useRef("");
+  const animationFrameRef = useRef(null);
   const currentAssistantMsgRef = useRef("");
+  const conversationIdRef = useRef(null);
+  const isAnimatingRef = useRef(false);
 
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
 
-  const token = localStorageUtil.get(TOKEN);
+  // ✅ ONLY FOR AUTH USERS
+  const token = enabled ? localStorageUtil.get(TOKEN) : null;
 
   let userId = null;
   try {
@@ -25,11 +32,10 @@ export const useChatSocket = () => {
     userId = user?.pk;
   } catch {}
 
-  // 🔌 CONNECT
-  const connectSocket = () => {
+  // ---------------- SOCKET ----------------
+  const connectSocket = useCallback(() => {
+    if (!enabled) return;
     if (!token) return;
-
-    if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
     const socket = new WebSocket(
       `wss://portal.grayskyai.com/ws/chat/?token=${token}`
@@ -40,33 +46,23 @@ export const useChatSocket = () => {
     socket.onopen = () => {
       setIsConnected(true);
 
-      // flush queue
-      messageQueueRef.current.forEach((msg) => {
-        socket.send(JSON.stringify(msg));
-      });
+      messageQueueRef.current.forEach((msg) =>
+        socket.send(JSON.stringify(msg))
+      );
       messageQueueRef.current = [];
     };
 
-    socket.onclose = (e) => {
+    socket.onclose = () => {
       setIsConnected(false);
       socketRef.current = null;
 
-      if (e.code !== 1000) {
-        reconnectRef.current = setTimeout(connectSocket, 3000);
-      }
+      reconnectRef.current = setTimeout(connectSocket, 3000);
     };
 
-    socket.onerror = () => {
-      socket.close();
-    };
+    socket.onerror = () => socket.close();
 
     socket.onmessage = (event) => {
-      let data;
-      try {
-        data = JSON.parse(event.data);
-      } catch {
-        return;
-      }
+      const data = JSON.parse(event.data);
 
       switch (data.type) {
         case "thinking":
@@ -76,37 +72,59 @@ export const useChatSocket = () => {
         case "stream_start":
           setIsThinking(false);
           setIsTyping(true);
+
           currentAssistantMsgRef.current = "";
+          streamBufferRef.current = "";
 
           setMessages((prev) => [
             ...prev,
-            { role: "assistant", message: " " },
+            {
+              id: crypto.randomUUID(),
+              role: "assistant",
+              message: "",
+            },
           ]);
           break;
 
         case "chunk":
+          streamBufferRef.current += data.content;
 
-          if (isThinking) setIsThinking(false); 
-          currentAssistantMsgRef.current += data.content;
+          if (!isAnimatingRef.current) {
+            isAnimatingRef.current = true;
 
-          requestAnimationFrame(() => {
-            setMessages((prev) => {
-              const updated = [...prev];
-              updated[updated.length - 1] = {
-                role: "assistant",
-                message: currentAssistantMsgRef.current,
-              };
-              return updated;
-            });
-          });
+            const animate = () => {
+              if (!streamBufferRef.current.length) {
+                isAnimatingRef.current = false;
+                return;
+              }
+
+              const chunk = streamBufferRef.current.slice(
+                0,
+                STREAM_SPEED
+              );
+
+              streamBufferRef.current =
+                streamBufferRef.current.slice(STREAM_SPEED);
+
+              currentAssistantMsgRef.current += chunk;
+
+              setMessages((prev) => {
+                const updated = [...prev];
+                updated[updated.length - 1].message =
+                  currentAssistantMsgRef.current;
+                return updated;
+              });
+
+              requestAnimationFrame(animate);
+            };
+
+            requestAnimationFrame(animate);
+          }
           break;
 
         case "done":
           setIsTyping(false);
           setIsThinking(false);
-          if (data.conversation_id) {
-            conversationIdRef.current = data.conversation_id;
-          }
           break;
 
         case "error":
@@ -116,68 +134,59 @@ export const useChatSocket = () => {
           setMessages((prev) => [
             ...prev,
             {
+              id: crypto.randomUUID(),
               role: "assistant",
-              message: data.message || "Something went wrong",
+              message: data.message || "Error",
               isError: true,
             },
           ]);
           break;
       }
     };
-  };
+  }, [enabled, token]);
 
+  // ---------------- INIT ----------------
   useEffect(() => {
-    if (!token || hasConnectedRef.current) return;
+    if (!enabled || !token || hasConnectedRef.current) return;
 
     hasConnectedRef.current = true;
-
-    // load previous messages
-    const saved = localStorage.getItem("chat_messages");
-    if (saved) {
-      setMessages(JSON.parse(saved));
-    }
-
     connectSocket();
 
     return () => {
       socketRef.current?.close(1000);
       clearTimeout(reconnectRef.current);
     };
-  }, [token]);
+  }, [enabled, token, connectSocket]);
 
-  // persist messages
-  useEffect(() => {
-    localStorage.setItem("chat_messages", JSON.stringify(messages));
-  }, [messages]);
+  // ---------------- SEND ----------------
+  const sendMessage = useCallback(
+    (text) => {
+      if (!text?.trim()) return;
 
-  // 📤 SEND
-  const sendMessage = (text) => {
-    if (!text?.trim()) return;
+      const payload = {
+        user_id: userId,
+        text,
+        conversation_id: conversationIdRef.current,
+        time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
 
-    const payload = {
-      user_id: userId,
-      text,
-      conversation_id: conversationIdRef.current,
-      time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    };
+      setMessages((prev) => [
+        ...prev,
+        { id: crypto.randomUUID(), role: "user", message: text },
+      ]);
 
-    setMessages((prev) => [...prev, { role: "user", message: text }]);
+      const socket = socketRef.current;
 
+      if (!socket || socket.readyState !== WebSocket.OPEN) {
+        messageQueueRef.current.push(payload);
+        connectSocket();
+        return;
+      }
 
-    // ✅ 🔥 ADD THIS (MOST IMPORTANT)
-    setIsThinking(true);
-    setIsTyping(false);
-
-    const socket = socketRef.current;
-
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      messageQueueRef.current.push(payload);
-      connectSocket();
-      return;
-    }
-
-    socket.send(JSON.stringify(payload));
-  };
+      socket.send(JSON.stringify(payload));
+    },
+    [userId, connectSocket]
+  );
 
   return {
     messages,

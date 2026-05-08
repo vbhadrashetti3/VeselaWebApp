@@ -31,7 +31,7 @@ const HistoryModal = ({ open, onClose }) => {
         sx: {
           height: "85vh", // Forces a consistent vertical size
           maxHeight: "800px", // Prevents it from becoming too tall on ultra-wide monitors
-          bgcolor: "#0d0d12", // Enterprise dark theme
+          bgcolor: theme.palette.custom.surface.modal,
           backgroundImage: "none",
           borderRadius: 2,
           display: "flex",
@@ -48,7 +48,7 @@ const HistoryModal = ({ open, onClose }) => {
           borderBottom: `1px solid ${theme.palette.divider}`,
         }}
       >
-        <IconButton onClick={onClose} sx={{ color: "grey.500" }}>
+        <IconButton onClick={onClose} sx={{ color: "text.secondary" }}>
           <X size={20} />
         </IconButton>
       </Box>

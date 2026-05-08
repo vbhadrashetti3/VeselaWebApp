@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import LoginForm from "../user-auth/LoginForm";
 import SignUpForm from "../user-auth/SignUpForm";
@@ -13,7 +13,7 @@ import PricingPlansContent from "../pricing/PricingPlansContent";
 
 import GenericModalWrapper from "./GenericModalWrapper";
 import { MODALS } from "./modalConstants";
- 
+import { getModalStepVariants } from "@/animations/modalMotionVariants";
 
 const AuthFlowManager = ({
   modalStepName,
@@ -22,8 +22,9 @@ const AuthFlowManager = ({
   handleNext,
 }) => {
   const [userInfo, setUserInfo] = useState(null);
-
   const [reasonForSupport, setReasonForSupport] = useState("");
+  const reducedMotion = useReducedMotion();
+  const stepVariants = getModalStepVariants(reducedMotion);
 
   const modalComponents = {
     [MODALS.LOGIN]: <LoginForm handleNext={handleNext} />,
@@ -65,22 +66,10 @@ const AuthFlowManager = ({
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={modalStepName}
-          initial={{
-            opacity: 0,
-            x: 40,
-          }}
-          animate={{
-            opacity: 1,
-            x: 0,
-          }}
-          exit={{
-            opacity: 0,
-            x: -40,
-          }}
-          transition={{
-            duration: 0.25,
-            ease: "easeInOut",
-          }}
+          variants={stepVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
         >
           {modalComponents[modalStepName] || null}
         </motion.div>
