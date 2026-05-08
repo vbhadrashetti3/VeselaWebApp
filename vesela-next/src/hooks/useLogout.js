@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation"; 
 import { post } from "@/lib/apiService";
 import { localStorageUtil } from "@/utils/localStorageUtil";
-import { PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO, TOKEN } from "@/constant";
+import { PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO, TOKEN,USER_DETAILS } from "@/constant";
 
 export const useLogout = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);

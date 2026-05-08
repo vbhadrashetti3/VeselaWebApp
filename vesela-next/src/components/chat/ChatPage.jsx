@@ -1,7 +1,6 @@
 "use client";
 
 import { Box, Container } from "@mui/material";
-
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import ChatBubble from "./ChatBubble";
@@ -12,79 +11,48 @@ import { useChatSocket } from "@/hooks/useChatSocket";
 import { TOKEN } from "@/constant";
 import { localStorageUtil } from "@/utils/localStorageUtil";
 import { useChatSession } from "@/context/ChatSessionContext";
-
 import { useModal } from "@/context/ModalContext";
 import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
+  const isAuthenticated = Boolean(localStorageUtil.get(TOKEN));
+
+  // 🟢 SOCKET ONLY IF AUTH
   const { messages, sendMessage, isConnected, isTyping, isThinking } =
-    useChatSocket();
-  const { openModal } = useModal();
-
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
-
-  const bottomRef = useRef(null);
-
-  const sentInitialRef = useRef(false);
+    useChatSocket(isAuthenticated);
 
   const {
     consumePendingHeroMessage,
     guestMessages,
-    canSendGuestMessage,
     sendGuestMessage,
     guestLoading,
+    resetGuestSession,
+    guestSignupRequired,
   } = useChatSession();
 
-  /*
-   * Auth state
-   */
-  useEffect(() => {
-    const updateAuth = () => {
-      setIsAuthenticated(Boolean(localStorageUtil.get(TOKEN)));
-    };
+  const { openModal } = useModal();
 
-    updateAuth();
+  const bottomRef = useRef(null);
 
-    window.addEventListener("storage", updateAuth);
-
-    return () => {
-      window.removeEventListener("storage", updateAuth);
-    };
-  }, []);
-
-  /*
-   * Merge guest + auth messages
-   */
   const mergedMessages = useMemo(() => {
-    if (isAuthenticated) {
-      return [...guestMessages, ...messages];
-    }
+    return isAuthenticated ? [...guestMessages, ...messages] : guestMessages;
+  }, [isAuthenticated, guestMessages, messages]);
 
-    return guestMessages;
-  }, [guestMessages, isAuthenticated, messages]);
-
-  /*
-   * Auto scroll
-   */
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({
-      behavior: "smooth",
-    });
+    if (!isAuthenticated) return;
+
+    // 🔥 wipe guest memory when user logs in
+    resetGuestSession?.();
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mergedMessages.length, isThinking, guestLoading]);
 
-  /*
-   * Initial hero message
-   */
   useEffect(() => {
-    if (sentInitialRef.current) return;
-
     const pendingMessage = consumePendingHeroMessage();
 
     if (!pendingMessage) return;
-
-    sentInitialRef.current = true;
 
     if (isAuthenticated) {
       sendMessage(pendingMessage);
@@ -102,9 +70,7 @@ export default function ChatPage() {
     sendMessage,
   ]);
 
-  /*
-   * Send handler
-   */
+  // ---------------- SEND ----------------
   const handleSend = async (text) => {
     if (isAuthenticated) {
       sendMessage(text);
@@ -113,55 +79,28 @@ export default function ChatPage() {
 
     const result = await sendGuestMessage(text);
 
-    if (!result.ok && result.reason === "limit") {
-      setUpgradeOpen(true);
+    if (!result.ok && result.reason === "locked") {
+      openModal(MODALS.LOGIN);
     }
   };
 
-  const isGuestLocked = !isAuthenticated && !canSendGuestMessage;
+  const isGuestLocked = !isAuthenticated && guestSignupRequired;
 
   return (
     <>
-      {/* Guest Lock Banner */}
       <GuestLimitBanner
         open={isGuestLocked}
         onClick={() => openModal(MODALS.LOGIN)}
       />
 
-      {/* Main Layout */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          pt: 10, 
-          pb: isGuestLocked ? 22 : 13, 
-          minHeight: "100vh",
-        }}
-      >
-        {/* Chat Messages */}
-        <Box
-          sx={{
-            flex: 1,
-            overflowY: "auto",
-          }}
-        >
+      <Box sx={{ display: "flex", flexDirection: "column", pt: 10, pb: 13 }}>
+        <Box sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
           <Container maxWidth="md">
             {mergedMessages.map((msg, i) => (
               <ChatBubble
-                key={i}
+                key={msg.id || i}
                 role={msg.role}
                 message={msg.message}
-                isTyping={
-                  isAuthenticated && isTyping && i === mergedMessages.length - 1
-                }
-                isError={msg.isError}
-                onRetry={
-                  msg.isError && msg.retryText
-                    ? () => {
-                        void handleSend(msg.retryText);
-                      }
-                    : undefined
-                }
               />
             ))}
 
@@ -179,7 +118,6 @@ export default function ChatPage() {
           </Container>
         </Box>
 
-        {/* Chat Input */}
         <ChatInput
           onSend={handleSend}
           isConnected={isAuthenticated ? isConnected : true}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   OutlinedInput,
@@ -20,11 +20,18 @@ export default function ChatInput({
 }) {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  // ✅ ADD THIS
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 🚨 IMPORTANT FIX
+  if (!mounted) return null;
 
   const isSendEnabled =
-    inputValue.trim().length > 0 &&
-    isConnected &&
-    !isGuestLocked;
+    inputValue.trim().length > 0 && isConnected && !isGuestLocked;
 
   const handleSend = () => {
     if (!isSendEnabled) return;
@@ -64,11 +71,7 @@ export default function ChatInput({
           disabled={isGuestLocked}
           multiline
           maxRows={6}
-          placeholder={
-            isConnected
-              ? "Send Message ..."
-              : "Connecting..."
-          }
+          placeholder={isConnected ? "Send Message ..." : "Connecting..."}
           endAdornment={
             <InputAdornment position="end">
               {/* Mic Button */}
@@ -81,24 +84,18 @@ export default function ChatInput({
                   <IconButton
                     disabled
                     sx={{
-                      bgcolor:
-                        theme.palette.action.disabledBackground,
+                      bgcolor: theme.palette.action.disabledBackground,
                       width: 40,
                       height: 40,
                       ml: 1,
                       "&.Mui-disabled": {
-                        bgcolor:
-                          theme.palette.action
-                            .disabledBackground,
+                        bgcolor: theme.palette.action.disabledBackground,
                         opacity: 0.5,
-                        color:
-                          theme.palette.text.disabled,
+                        color: theme.palette.text.disabled,
                       },
                     }}
                   >
-                    <MicNoneOutlinedIcon
-                      sx={{ fontSize: 18 }}
-                    />
+                    <MicNoneOutlinedIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 </Box>
               </Tooltip>
@@ -110,24 +107,18 @@ export default function ChatInput({
                 sx={{
                   bgcolor: isSendEnabled
                     ? theme.palette.primary.main
-                    : theme.palette.action
-                        .disabledBackground,
+                    : theme.palette.action.disabledBackground,
                   width: 40,
                   height: 40,
                   ml: 1,
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
                     bgcolor: isSendEnabled
-                      ? alpha(
-                          theme.palette.primary.main,
-                          0.92
-                        )
+                      ? alpha(theme.palette.primary.main, 0.92)
                       : theme.palette.action.hover,
                   },
                   "&.Mui-disabled": {
-                    bgcolor:
-                      theme.palette.action
-                        .disabledBackground,
+                    bgcolor: theme.palette.action.disabledBackground,
                     opacity: 0.6,
                   },
                 }}
@@ -135,8 +126,7 @@ export default function ChatInput({
                 <SendOutlinedIcon
                   sx={{
                     color: isSendEnabled
-                      ? theme.palette.primary
-                          .contrastText
+                      ? theme.palette.primary.contrastText
                       : theme.palette.text.disabled,
                     fontSize: 18,
                   }}
