@@ -1,29 +1,47 @@
 "use client";
 
 import React from "react";
-import { Box, Modal, IconButton, useTheme } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import { Box, Modal, useTheme, Backdrop } from "@mui/material";
+import { X } from "lucide-react";
 
 const GenericModalWrapper = ({
   open,
   onClose,
   children,
-  width = 420,
-  minHeight = "auto",
+  width,
+  height,
+  minHeight,
 }) => {
   const theme = useTheme();
+
+  // Safety fallback for custom theme properties during hydration
+  const modalBg =
+    theme.palette?.background?.modalBackground ||
+    theme.palette?.background?.paper ||
+    "#ffffff";
+  const textColor = theme.palette?.text?.primary || "#000000";
+
+  const modalWidth = width ?? "420px";
 
   return (
     <Modal
       open={open}
       onClose={(event, reason) => {
-        // prevent accidental close
+        // Prevent closing when clicking outside (UX choice)
         if (reason === "backdropClick") return;
         onClose?.();
       }}
-      aria-labelledby="modal-title"
-      aria-describedby="modal-description"
+      disableScrollLock // Keeps the page scrollbar from jumping
       closeAfterTransition
+      slots={{ backdrop: Backdrop }}
+      slotProps={{
+        backdrop: {
+          style: {
+            backdropFilter: "blur(6px)",
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+          },
+        },
+      }}
     >
       <Box
         sx={{
@@ -32,41 +50,61 @@ const GenericModalWrapper = ({
           left: "50%",
           transform: "translate(-50%, -50%)",
 
+          // Background & Shape
+          bgcolor: modalBg,
+          boxShadow: "0px 20px 40px rgba(0,0,0,0.1)",
+          borderRadius: "10px", // Softer UX
+          p: { xs: 2.5, md: 4 },
+
+          // Responsive Sizing
           width: {
-            xs: width,
+            xs: "92%",
             sm: "80%",
-            md: width,
+            md: modalWidth,
           },
+          maxWidth: "100%",
 
-          maxWidth: "95vw",
+          // Height & Scrolling logic
+          minHeight: minHeight ?? "auto",
+          height: {
+            xs: height ? height : "auto",
+            sm: height ? height : "auto",
+          },
           maxHeight: "90vh",
+          overflowY: "auto", // Allows internal scroll if content is long
 
-          bgcolor: theme.palette.background.paper,
-          borderRadius: "10px",
-          boxShadow: 24,
-          p: 2.5,
-
-          minHeight: minHeight,
-
-          overflowY: "auto",
+          // UI Polish
           outline: "none",
+          transition: "all 0.3s ease-in-out",
+          "&:focus-visible": { outline: "none" },
         }}
       >
-        {/* Close Button (Accessible) */}
-        <IconButton
+        {/* Modern Close Button */}
+        <Box
           onClick={onClose}
-          aria-label="close"
           sx={{
             position: "absolute",
-            top: 10,
-            right: 10,
-            color: theme.palette.text.primary,
+            top: "16px",
+            right: "16px",
+            cursor: "pointer",
+            width: "32px",
+            height: "32px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: "50%",
+            transition: "background-color 0.2s",
+            zIndex: 10,
+            "&:hover": {
+              backgroundColor: "rgba(0,0,0,0.05)",
+            },
           }}
         >
-          <CloseIcon />
-        </IconButton>
+          <X size={20} color={textColor} strokeWidth={2.5} />
+        </Box>
 
-        {children}
+        {/* Modal Content */}
+        <Box sx={{ mt: height ? 0 : 1 }}>{children}</Box>
       </Box>
     </Modal>
   );

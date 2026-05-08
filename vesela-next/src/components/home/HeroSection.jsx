@@ -3,7 +3,7 @@
 import { Box, InputBase, Typography } from "@mui/material";
 import Lottie from "lottie-react";
 import Carousel from "react-material-ui-carousel";
-import heroSectionLottie from "../../../public/veselaLottiewhitelettersUNIFORM.json";
+import heroSectionLottie from "../../../public/vesela_white_lottie.json";
 import AISearchInput from "./AISearchInput";
 
 const headingStyle = {

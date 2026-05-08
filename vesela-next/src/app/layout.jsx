@@ -8,6 +8,15 @@ const urbanist = Urbanist({
   weight: ["400", "500", "600", "700"],
 });
 
+// ✅ Add metadata here
+export const metadata = {
+  title: "Vesela",
+  description: "Vesela Chat App",
+  icons: {
+    icon: "/favicon.webp", // or /icon.png
+  },
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={urbanist.className}>
