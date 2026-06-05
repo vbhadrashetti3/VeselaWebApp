@@ -67,7 +67,7 @@ const UpdateInfoForm = ({ handleNext, setUserInfo }) => {
       />
 
       {errorMsg && (
-        <Typography sx={{ color: "red", mb: 1 }}>{errorMsg}</Typography>
+        <Typography sx={{ color: "error.main", mb: 1 }}>{errorMsg}</Typography>
       )}
 
       <LabeledInput
@@ -112,7 +112,7 @@ const UpdateInfoForm = ({ handleNext, setUserInfo }) => {
           disabled={loading}
         >
           {loading ? (
-            <CircularProgress size={20} sx={{ color: "#fff" }} />
+            <CircularProgress size={20} color="inherit" />
           ) : (
             "Continue"
           )}

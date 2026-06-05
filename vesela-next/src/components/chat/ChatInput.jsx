@@ -60,6 +60,7 @@ export default function ChatInput({
         zIndex: 1000,
         pb: 4,
         pt: 2,
+        bgcolor: alpha(theme.palette.background.default, 0.8),
         backdropFilter: "blur(10px)",
       }}
     >

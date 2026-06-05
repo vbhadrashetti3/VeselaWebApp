@@ -8,7 +8,6 @@ import {
   FormControlLabel,
   Typography,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 
 import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -100,7 +99,7 @@ const SignUpForm = ({ handleNext }) => {
       />
 
       {errorMsg && (
-        <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1, color: "red" }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1, color: "error.main" }}>
           {errorMsg}
         </Typography>
       )}
@@ -179,7 +178,7 @@ const SignUpForm = ({ handleNext }) => {
       />
 
       {showErrors && formik.errors.agreeToTerms && (
-        <Typography sx={{ fontSize: 12, color: "red" }}>
+        <Typography sx={{ fontSize: 12, color: "error.main" }}>
           {formik.errors.agreeToTerms}
         </Typography>
       )}
@@ -190,7 +189,7 @@ const SignUpForm = ({ handleNext }) => {
           Already have an account?{" "}
           <span
             onClick={goToLogin}
-            style={{ cursor: "pointer", fontWeight: 700, }}
+            style={{ cursor: "pointer", fontWeight: 700, color: "inherit" }}
           >
             Sign In
           </span>

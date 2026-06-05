@@ -16,13 +16,17 @@ import {
   ListItemButton,
   ListItemText,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 import MenuIcon from "@mui/icons-material/Menu";
+import { Sun, Moon } from "lucide-react";
 
 import { useModal } from "@/context/ModalContext";
+import { useColorMode } from "@/theme/ThemeRegistry";
 import { MODALS } from "../modals/modalConstants";
 
-import VeselaLogo from "../../../public/vesela_black_lottie.json";
+import VeselaLogoBlack from "../../../public/vesela_black_lottie.json";
+import VeselaLogoWhite from "../../../public/vesela_white_lottie.json";
 
 const menus = [
   {
@@ -41,6 +45,8 @@ const menus = [
 
 export default function PublicHeader() {
   const { openModal } = useModal();
+  const theme = useTheme();
+  const { mode, toggleColorMode } = useColorMode();
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -54,8 +60,9 @@ export default function PublicHeader() {
         position="fixed"
         elevation={0}
         sx={{
-          bgcolor: "rgba(242, 251, 255, 0.99)",
+          bgcolor: theme.palette.custom?.header?.background ?? "rgba(255,255,255,0.88)",
           backdropFilter: "blur(20px)",
+          borderBottom: `1px solid ${theme.palette.custom?.header?.border ?? "rgba(0,0,0,0.08)"}`,
         }}
       >
         <Toolbar
@@ -76,7 +83,7 @@ export default function PublicHeader() {
             }}
           >
             <Lottie
-              animationData={VeselaLogo}
+              animationData={theme.palette.mode === "dark" ? VeselaLogoWhite : VeselaLogoBlack}
               loop={false}
               style={{
                 width: "220px",
@@ -103,7 +110,7 @@ export default function PublicHeader() {
                   component={Link}
                   href={menu.href}
                   sx={{
-                    color: "#111",
+                    color: "text.primary",
                     fontWeight: 600,
                     textTransform: "none",
                     fontSize: "15px",
@@ -114,6 +121,21 @@ export default function PublicHeader() {
               ))}
             </Stack>
 
+            {/* Theme Toggle Button */}
+            <IconButton
+              onClick={toggleColorMode}
+              sx={{
+                color: "text.primary",
+                bgcolor: "action.hover",
+                "&:hover": {
+                  bgcolor: "action.selected",
+                },
+              }}
+              aria-label="Toggle light/dark theme"
+            >
+              {theme.palette.mode === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            </IconButton>
+
             {/* DESKTOP SIGN IN */}
             <Button
               variant="contained"
@@ -122,7 +144,6 @@ export default function PublicHeader() {
               sx={{
                 borderRadius: "50px",
                 px: 4,
-                backgroundColor: "#3e1929",
                 display: { xs: "none", md: "flex" },
               }}
             >
@@ -134,7 +155,7 @@ export default function PublicHeader() {
               onClick={() => setMobileOpen(true)}
               sx={{
                 display: { xs: "flex", md: "none" },
-                color: "#111",
+                color: "text.primary",
               }}
             >
               <MenuIcon />
@@ -153,6 +174,9 @@ export default function PublicHeader() {
           sx={{
             width: 270,
             pt: 2,
+            height: "100%",
+            bgcolor: "background.paper",
+            color: "text.primary",
           }}
         >
           <List>
@@ -177,7 +201,6 @@ export default function PublicHeader() {
                 }}
                 sx={{
                   borderRadius: "50px",
-                  backgroundColor: "#3e1929",
                 }}
               >
                 Sign In
@@ -189,3 +212,4 @@ export default function PublicHeader() {
     </>
   );
 }
+

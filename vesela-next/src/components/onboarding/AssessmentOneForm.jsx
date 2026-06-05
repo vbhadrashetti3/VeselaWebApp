@@ -39,7 +39,7 @@ const AssessmentOneForm = ({
       />
 
       {/* Gender Dropdown */}
-      <Typography sx={{ fontWeight: 600, mb: 1 }}>
+      <Typography sx={{ fontWeight: 600, mb: 1, color: "text.primary" }}>
         Select your gender
       </Typography>
 
@@ -67,7 +67,7 @@ const AssessmentOneForm = ({
       </TextField>
 
       {/* Question */}
-      <Typography sx={{ fontWeight: 600, mb: 1 }}>
+      <Typography sx={{ fontWeight: 600, mb: 1, color: "text.primary" }}>
         What is the primary reason you are seeking support?
       </Typography>
 
@@ -81,7 +81,7 @@ const AssessmentOneForm = ({
         inputProps={{ maxLength: 1000 }}
       />
 
-      <Typography sx={{ textAlign: "right", fontSize: 12 }}>
+      <Typography variant="caption" sx={{ textAlign: "right", display: "block", color: "text.secondary" }}>
         {reasonForSupport.length}/1000
       </Typography>
 

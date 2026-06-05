@@ -65,9 +65,12 @@ const DeleteContent = () => {
         slots={{ backdrop: Backdrop }}
         slotProps={{
           backdrop: {
-            sx: {
+              sx: {
               backdropFilter: "blur(4px)",
-              backgroundColor: "rgba(0,0,0,0.6)",
+              backgroundColor:
+                theme.palette.mode === "dark"
+                  ? "rgba(7, 10, 14, 0.72)"
+                  : "rgba(15, 23, 42, 0.36)",
             },
           },
         }}
@@ -82,7 +85,7 @@ const DeleteContent = () => {
             bgcolor: "background.paper",
             borderRadius: 3,
             p: 4,
-            boxShadow: 24,
+            boxShadow: theme.palette.custom.modalShadow,
             border: `1px solid ${theme.palette.divider}`,
             textAlign: "center",
           }}

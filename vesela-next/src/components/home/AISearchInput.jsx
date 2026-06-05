@@ -103,7 +103,7 @@ export default function AISearchInput({
                 transition: "0.2s",
 
                 "&:hover": {
-                  bgcolor: "#ddd",
+                  bgcolor: "rgba(255,255,255,0.85)",
                   transform: "scale(1.05)",
                 },
 

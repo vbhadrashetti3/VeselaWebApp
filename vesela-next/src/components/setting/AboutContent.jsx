@@ -32,34 +32,31 @@ const AboutContents = [
 
 const AboutContent = () => {
   return (
-    <Box
-      sx={{
-        p: 3,
-      }}
-    >
+    <Box sx={{ p: 3 }}>
       {AboutContents.map((item, index) => {
         return (
-          <div key={index}>
+          <Box key={index} sx={{ mb: 4 }}>
             <Typography
               variant="h6"
-              sx={{ fontWeight: 700, marginBottom: "16px" }}
+              sx={{ fontWeight: 700, mb: 2, color: "text.primary" }}
             >
               {item.heading}
             </Typography>
-            <Typography sx={{ mb: 2 }} variant="subtitle2">
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.7 }}>
               {item.content}
             </Typography>
 
             {item?.contentImg && (
-              <div style={{ marginBottom: "10px" }}>
+              <Box sx={{ mb: 2, borderRadius: 1, overflow: "hidden" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img style={{ width: "100%" }} src={item?.contentImg} alt={item.heading} />
-              </div>
+                <img style={{ width: "100%", display: "block" }} src={item?.contentImg} alt={item.heading} />
+              </Box>
             )}
-          </div>
+          </Box>
         );
       })}
     </Box>
   );
 };
 export default AboutContent;
+

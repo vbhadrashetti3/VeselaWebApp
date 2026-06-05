@@ -5,9 +5,11 @@ import Image from "next/image";
 export default function PublicFooter() {
   return (
     <Box
+
       component="footer"
       sx={{
-        borderTop: "1px solid #e0e0e0",
+        borderTop: "1px solid",
+        borderColor: "divider",
         py: 3,
         px: 2,
         mt: 5,

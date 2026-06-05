@@ -62,7 +62,7 @@ const LoginForm = ({ handleNext }) => {
       />
 
       {errorMsg && (
-        <Typography sx={{ color: "red", mb: 1 }}>{errorMsg}</Typography>
+        <Typography sx={{ color: "error.main", mb: 1 }}>{errorMsg}</Typography>
       )}
 
       <LabeledInput

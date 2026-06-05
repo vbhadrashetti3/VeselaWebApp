@@ -3,6 +3,8 @@
 import { createTheme, alpha } from "@mui/material/styles";
 
 const PRIMARY = "#286CA8";
+const SECONDARY_LIGHT = "#3a1929";
+const SECONDARY_DARK = "#a16c80";
 
 /**
  * Semantic design tokens for scalable theming.
@@ -15,6 +17,12 @@ const colorTokens = {
       main: PRIMARY,
       dark: "#1f5b8d",
       light: "#4c87bb",
+      contrastText: "#ffffff",
+    },
+    secondary: {
+      main: SECONDARY_LIGHT,
+      dark: "#2b0b14",
+      light: "#6b3a50",
       contrastText: "#ffffff",
     },
     text: {
@@ -67,6 +75,12 @@ const colorTokens = {
       dark: "#1f5b8d",
       light: "#5a90c0",
       contrastText: "#eaf2f9",
+    },
+    secondary: {
+      main: SECONDARY_DARK,
+      dark: "#7a4a60",
+      light: "#c490a0",
+      contrastText: "#ffffff",
     },
     text: {
       primary: "#e5edf6",
@@ -137,7 +151,6 @@ const typography = {
 
 export const getAppTheme = (mode = "light") => {
   const t = colorTokens[mode];
-  const isDark = mode === "dark";
 
   return createTheme({
     palette: {
@@ -149,7 +162,10 @@ export const getAppTheme = (mode = "light") => {
         contrastText: t.primary.contrastText,
       },
       secondary: {
-        main: alpha(t.primary.main, isDark ? 0.9 : 0.8),
+        main: t.secondary.main,
+        dark: t.secondary.dark,
+        light: t.secondary.light,
+        contrastText: t.secondary.contrastText,
       },
       background: {
         default: t.background.default,

@@ -1,17 +1,21 @@
 "use client";
 
 import { Box, Typography, Container } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 export default function PhilosophySection() {
+  const theme = useTheme();
+
   return (
     <Box
       component="section"
       sx={{
-        bgcolor: "#E9EDF0",
+        bgcolor: theme.palette.custom.surface.sidebar,
         py: { xs: 8, md: 12 },
+        transition: "background-color 0.3s ease",
       }}
     >
       <Container maxWidth="lg">
@@ -29,7 +33,7 @@ export default function PhilosophySection() {
               sx={{
                 fontSize: "0.8rem",
                 letterSpacing: "2px",
-                color: "#5c5c5c",
+                color: "text.secondary",
                 mb: 2,
               }}
             >
@@ -43,7 +47,7 @@ export default function PhilosophySection() {
                 fontSize: { xs: "2.5rem", md: "4rem" },
                 fontWeight: 800,
                 lineHeight: 1.1,
-                color: "#2b0b14",
+                color: "text.primary",
               }}
             >
               <MotionBox
@@ -88,7 +92,7 @@ export default function PhilosophySection() {
                   fontSize: { xs: "1.3rem", md: "1.8rem" },
                   fontStyle: "italic",
                   lineHeight: 1.5,
-                  color: "#3a2a2a",
+                  color: "text.primary",
                 }}
               >
                 {"“Think about the best conversation you've ever had with a close friend. That spark you feel when ideas are flowing... We don't need smarter monologues. We need better mirrors.”"}
@@ -103,7 +107,7 @@ export default function PhilosophySection() {
               viewport={{ once: true }}
               sx={{
                 height: 2,
-                bgcolor: "#2b0b14",
+                bgcolor: "primary.main",
                 my: 3,
               }}
             />
@@ -118,7 +122,7 @@ export default function PhilosophySection() {
                 sx={{
                   fontSize: "1rem",
                   lineHeight: 1.8,
-                  color: "#4a4a4a",
+                  color: "text.secondary",
                 }}
               >
                 {"Our architecture isn't built to dominate information; it's built to synchronize with the human experience. We leverage maeutics in our models to reflect the nuance of human emotion, intuition, and truth."}

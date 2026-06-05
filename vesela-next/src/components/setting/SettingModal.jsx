@@ -110,8 +110,8 @@ const SettingsModal = ({ open, onClose }) => {
             sx={{
               width: { xs: "100%", md: 280 },
               minWidth: { md: 280 },
-              borderRight: { md: "1px solid #ddd" },
-              borderBottom: { xs: "1px solid #ddd", md: "none" },
+              borderRight: { md: `1px solid ${theme.palette.divider}` },
+              borderBottom: { xs: `1px solid ${theme.palette.divider}`, md: "none" },
               overflow: "hidden", // ✅ no scroll here
             }}
           >
