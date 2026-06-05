@@ -91,9 +91,7 @@ export default function PhilosophySection() {
                   color: "#3a2a2a",
                 }}
               >
-                “Think about the best conversation you've ever had with a close
-                friend. That spark you feel when ideas are flowing... We don't
-                need smarter monologues. We need better mirrors.”
+                {"“Think about the best conversation you've ever had with a close friend. That spark you feel when ideas are flowing... We don't need smarter monologues. We need better mirrors.”"}
               </Typography>
             </MotionBox>
 
@@ -123,10 +121,7 @@ export default function PhilosophySection() {
                   color: "#4a4a4a",
                 }}
               >
-                Our architecture isn't built to dominate information; it's built
-                to synchronize with the human experience. We leverage maeutics
-                in our models to reflect the nuance of human emotion, intuition,
-                and truth.
+                {"Our architecture isn't built to dominate information; it's built to synchronize with the human experience. We leverage maeutics in our models to reflect the nuance of human emotion, intuition, and truth."}
               </Typography>
             </MotionBox>
           </Box>

@@ -43,7 +43,7 @@ export default function ChatPage() {
 
     // 🔥 wipe guest memory when user logs in
     resetGuestSession?.();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, resetGuestSession]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });

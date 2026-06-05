@@ -15,9 +15,10 @@ export default function AuthGuard({ children }) {
     if (!token) {
       router.replace("/"); // redirect to public page
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsChecking(false);
     }
-  }, []);
+  }, [router]);
 
   if (isChecking) return null; // or loader
 

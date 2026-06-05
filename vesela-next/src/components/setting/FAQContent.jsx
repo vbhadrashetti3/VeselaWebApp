@@ -45,7 +45,7 @@ const faqList = [
     question: "What should I do if I need a human counselor?",
     answer: (
       <>
-        If you're in Texas, check out Pursuit of Happiness at{" "}
+        {"If you're in Texas, check out Pursuit of Happiness at "}
         <a
           href="http://www.pohclinic.com/"
           target="_blank"
@@ -187,9 +187,7 @@ const faqList = [
     question: "What if I’m in crisis or feel unsafe?",
     answer: (
       <>
-        Grace is not a crisis service. If you're in danger or experiencing
-        self-harm thoughts, contact your local emergency number. In the U.S.,
-        you can call or text 988 or visit{" "}
+        {"Grace is not a crisis service. If you're in danger or experiencing self-harm thoughts, contact your local emergency number. In the U.S., you can call or text 988 or visit "}
         <a
           href="https://988lifeline.org"
           target="_blank"

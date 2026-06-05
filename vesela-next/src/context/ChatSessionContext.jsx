@@ -85,6 +85,7 @@ export const ChatSessionProvider = ({ children }) => {
   // ---------------------------------------------------
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setPendingHeroMessageState(
       parseStored(STORAGE_KEYS.pendingHeroMessage, ""),
     );

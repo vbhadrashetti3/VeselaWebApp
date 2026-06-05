@@ -40,6 +40,7 @@ export const useChatHistory = (open) => {
 
   // Re-fetch whenever the 'open' state changes to true
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchChatHistory();
   }, [fetchChatHistory]);
 

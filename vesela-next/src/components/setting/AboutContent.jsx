@@ -52,7 +52,8 @@ const AboutContent = () => {
 
             {item?.contentImg && (
               <div style={{ marginBottom: "10px" }}>
-                <img style={{ width: "100%" }} src={item?.contentImg} />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img style={{ width: "100%" }} src={item?.contentImg} alt={item.heading} />
               </div>
             )}
           </div>

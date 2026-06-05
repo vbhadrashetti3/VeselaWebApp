@@ -22,6 +22,7 @@ export const ThemeContextProvider = ({ children }) => {
   useEffect(() => {
     const savedMode = localStorageUtil.get("appMode");
     if (savedMode) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMode(savedMode);
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       setMode("dark");

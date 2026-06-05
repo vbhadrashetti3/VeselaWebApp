@@ -12,7 +12,7 @@ const SuccessfulModal = ({ handleNext, successMsg }) => {
   const { closeModal } = useModal();
   const router = useRouter();
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       const redirectTo = localStorageUtil.get(POST_LOGIN_NAVIGATE_TO);
       if (redirectTo) router.push(redirectTo);
       else {
@@ -20,7 +20,8 @@ const SuccessfulModal = ({ handleNext, successMsg }) => {
       }
       closeModal();
     }, 2000);
-  }, []);
+    return () => clearTimeout(timer);
+  }, [closeModal, router]);
 
   return (
     <Box sx={{ textAlign: "center" }}>

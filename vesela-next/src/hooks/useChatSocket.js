@@ -17,6 +17,7 @@ export const useChatSocket = (enabled = false) => {
   const currentAssistantMsgRef = useRef("");
   const conversationIdRef = useRef(null);
   const isAnimatingRef = useRef(false);
+  const connectSocketRef = useRef(null);
 
   const [messages, setMessages] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -56,7 +57,9 @@ export const useChatSocket = (enabled = false) => {
       setIsConnected(false);
       socketRef.current = null;
 
-      reconnectRef.current = setTimeout(connectSocket, 3000);
+      reconnectRef.current = setTimeout(() => {
+        connectSocketRef.current?.();
+      }, 3000);
     };
 
     socket.onerror = () => socket.close();
@@ -144,6 +147,11 @@ export const useChatSocket = (enabled = false) => {
       }
     };
   }, [enabled, token]);
+
+  // Keep connectSocketRef updated with the latest callback
+  useEffect(() => {
+    connectSocketRef.current = connectSocket;
+  }, [connectSocket]);
 
   // ---------------- INIT ----------------
   useEffect(() => {

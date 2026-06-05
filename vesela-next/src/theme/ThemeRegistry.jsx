@@ -26,6 +26,7 @@ export default function ThemeRegistry({ children }) {
     const saved = localStorageUtil.get("theme");
 
     if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMode(saved);
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
       setMode("dark");
