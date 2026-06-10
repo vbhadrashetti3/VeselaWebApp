@@ -2,137 +2,188 @@
 
 import { Box, Typography } from "@mui/material";
 import Lottie from "lottie-react";
-import Carousel from "react-material-ui-carousel";
+import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import heroSectionLottie from "../../../public/vesela_white_lottie.json";
 import AISearchInput from "./AISearchInput";
 import { useChatSession } from "@/context/ChatSessionContext";
 
-const headingStyle = {
-  fontSize: { xs: "1.5rem", md: "2.2rem" },
-  color: "white",
-  lineHeight: "1.4",
-  fontWeight: 500,
-};
+// ─── Keyframes ────────────────────────────────────────────────────────────────
+const fadeUpKeyframes = `
+  @keyframes heroFadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+`;
+
+function anim(delay) {
+  return {
+    opacity: 0,
+    animation: "heroFadeUp 0.7s ease forwards",
+    animationDelay: `${delay}s`,
+  };
+}
+
+// ─── Shared overlay content ───────────────────────────────────────────────────
+function HeroContent({ onSearch }) {
+  return (
+    <Box
+      sx={{
+        position: "absolute",
+        inset: 0,
+        zIndex: 2,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        px: { xs: 2, sm: 4, md: 8 },
+        textAlign: "center",
+      }}
+    >
+      {/* Logo */}
+      <Box sx={{ width: { xs: 90, md: 130 }, mb: 2, ...anim(0) }}>
+        <Lottie animationData={heroSectionLottie} loop={false} />
+      </Box>
+
+      {/* Heading */}
+      <Typography
+        component="h1"
+        sx={{
+          fontSize: { xs: "1.55rem", sm: "1.9rem", md: "2.5rem" },
+          color: "white",
+          fontWeight: 600,
+          lineHeight: 1.38,
+          maxWidth: { xs: "100%", md: "780px" },
+          letterSpacing: "-0.01em",
+          ...anim(0.18),
+        }}
+      >
+        Everyone&apos;s building AI that knows everything.{" "}
+        <Box component="span" sx={{ fontWeight: 700 }}>
+          We&apos;re interested in AI that knows you.
+        </Box>
+      </Typography>
+
+      {/* Search */}
+      <Box sx={{ mt: 4, width: "100%", ...anim(0.36) }}>
+        <AISearchInput onSearch={onSearch} />
+      </Box>
+    </Box>
+  );
+}
+
+
+const IMAGE_DURATION_MS = 5000;
+const FADE_DURATION_MS = 900;
 
 export default function HeroSection() {
   const router = useRouter();
   const { setPendingHeroMessage } = useChatSession();
 
-  const slides = [
-    {
-      type: "image",
-      title: "Everyone’s building AI that knows everything.",
-      subtitle: "We’re interested in AI that",
-      highlight: "knows you.",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDFmXQhlTARowTvUP6mAdl5DFkpA5RposDF85W8efwt-JIRZroolJIM2WfQScUE-q2UsTmr0UzDC5JwM_tPU5O3A1Nb16GbIN9ERFInOvneFZ4H7oyEy9hqlXYVJz8w1y7wAdgQi9Ku43Tovk2DF8tPcxiur4G7KyFdkpmQWBzv-MUBOD-SxHxJA-CAAQviDyyq_4xienAHnWZuJAqTc4b5yjPC1jKjI3Hngv2Bp0FFSmEaz8FUfD5MogHZ5alEgzbxXjsWDdmjX88",
-    },
-  ];
+  const videoRef = useRef(null);
+  // Controls the image layer opacity (1 = image visible, 0 = video visible)
+  const [imageVisible, setImageVisible] = useState(true);
 
   const handleSearch = (message) => {
     setPendingHeroMessage(message);
     router.push("/chat");
   };
 
+  // Start video immediately and schedule the crossfade.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.play().catch((err) => {
+      console.warn("[HeroSection] video autoplay blocked:", err);
+    });
+
+    const timer = setTimeout(() => {
+      setImageVisible(false);
+    }, IMAGE_DURATION_MS);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []);
+
+  const OVERLAY_IMAGE = "linear-gradient(to bottom, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.62) 100%)";
+  const OVERLAY_VIDEO = "linear-gradient(to bottom, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.68) 100%)";
+
   return (
     <Box
       component="section"
-      sx={{
-        position: "relative",
-        height: "100vh",
-        overflow: "hidden",
-      }}
+      sx={{ position: "relative", height: "100vh", overflow: "hidden" }}
     >
-      <Carousel
-        autoPlay
-        animation="fade"
-        indicators={false}
-        duration={1000}
-        interval={6000}
+      <style>{fadeUpKeyframes}</style>
+
+      {/* ── Layer 1 (bottom): Video ── */}
+      <Box sx={{ position: "absolute", inset: 0 }}>
+        <video
+          ref={videoRef}
+          src="/hero-video-2.mp4"
+          loop
+          muted
+          playsInline
+          preload="auto"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+        {/* Video overlay */}
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background: OVERLAY_VIDEO,
+            zIndex: 1,
+          }}
+        />
+      </Box>
+
+      {/* ── Layer 2 (top): Image — fades out after IMAGE_DURATION_MS ── */}
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          opacity: imageVisible ? 1 : 0,
+          transition: `opacity ${FADE_DURATION_MS}ms ease-in-out`,
+          // Pointer-events off once faded so clicks reach the video layer.
+          pointerEvents: imageVisible ? "auto" : "none",
+        }}
       >
-        {slides.map((slide, i) => (
-          <Box key={i} sx={{ height: "100vh", position: "relative" }}>
-            {/* 🔹 Background */}
-            {slide.type === "video" ? (
-              <video
-                src={slide.video}
-                autoPlay
-                loop
-                muted
-                playsInline
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-            ) : (
-              <Box
-                component="img"
-                src={slide.image}
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-            )}
+        <Box
+          component="img"
+          src="/hero-1.png"
+          alt=""
+          sx={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+        {/* Image overlay */}
+        <Box
+          sx={{
+            position: "absolute",
+            inset: 0,
+            background: OVERLAY_IMAGE,
+            zIndex: 1,
+          }}
+        />
+      </Box>
 
-            {/* 🔹 Dark Overlay */}
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-                bgcolor: "rgba(0,0,0,0.5)",
-                zIndex: 1,
-              }}
-            />
-
-            {/* 🔹 Content */}
-            <Box
-              sx={{
-                position: "absolute",
-                top: "50%",
-                left: "50%",
-                transform: "translate(-50%, -50%)",
-                textAlign: "center",
-                zIndex: 2,
-                px: 2,
-                width: "100%",
-              }}
-            >
-              {/* 🔹 Lottie */}
-              {slide.type === "image" && (
-                <Box
-                  sx={{
-                    width: { xs: 120, md: 400 },
-                    mx: "auto",
-                    mb: 2,
-                  }}
-                >
-                  <Lottie animationData={heroSectionLottie} loop={false} />
-                </Box>
-              )}
-              <Box sx={{ mt: -4 }}>
-                {/* 🔹 Text */}
-                <Typography sx={headingStyle}>{slide.title}</Typography>
-
-                <Typography sx={headingStyle}>
-                  {slide.subtitle}{" "}
-                  <Box component="span" sx={{ fontWeight: 700 }}>
-                    {slide.highlight}
-                  </Box>
-                </Typography>
-              </Box>
-
-              <Box>
-                <AISearchInput onSearch={handleSearch} />
-              </Box>
-            </Box>
-          </Box>
-        ))}
-      </Carousel>
+      {/* ── Overlay content (logo, heading, search) — always on top ── */}
+      <Box sx={{ position: "absolute", inset: 0, zIndex: 3 }}>
+        <HeroContent onSearch={handleSearch} />
+      </Box>
     </Box>
   );
 }

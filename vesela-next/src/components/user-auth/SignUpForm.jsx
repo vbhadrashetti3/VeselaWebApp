@@ -23,6 +23,8 @@ import ModalHeader from "../modals/ModalHeader";
 import CustomButton from "../ui/CustomButton";
 import { MODALS } from "../modals/modalConstants";
 import { useSignUp } from "@/hooks/useSignUp";
+import { useColorMode } from "@/theme/ThemeRegistry";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -44,7 +46,16 @@ const SignUpForm = ({ handleNext }) => {
   const [showPwd, setShowPwd] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
 
-  const { errorMsg, signUp } = useSignUp(handleNext);
+  const { mode, toggleColorMode } = useColorMode();
+
+  const setDarkMode = () => {
+    if (mode !== "dark") {
+      localStorageUtil.set("theme", "dark");
+      toggleColorMode();
+    }
+  };
+
+  const { errorMsg, signUp } = useSignUp(handleNext, setDarkMode);
 
   const formik = useFormik({
     initialValues: {

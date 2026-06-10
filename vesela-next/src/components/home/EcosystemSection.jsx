@@ -14,6 +14,7 @@ const cards = [
     title: "Humanity Bench",
     desc: "Redefining what it means to measure AI and human relations through alignment with humanity.",
     link: "humanitybench.org",
+    href: "https://humanitybench.org/",
     icon: <GroupsIcon />,
     featured: false,
   },
@@ -21,6 +22,7 @@ const cards = [
     title: "Graysky AI",
     desc: "Creating AI that is unconcerned with advancing coding benchmarks, we instead advance humanity.",
     link: "grayskyai.com",
+    href: "https://grayskyai.com/",
     icon: <ScienceIcon />,
     featured: true,
   },
@@ -28,6 +30,7 @@ const cards = [
     title: "Alignment AI",
     desc: "The core protocol for ensuring large language models prioritize human safety and ethical flourishing.",
     link: "humanalignmentai.com",
+    href: "https://humanalignmentai.com/",
     icon: <SyncAltIcon />,
     featured: false,
   },
@@ -41,7 +44,6 @@ export default function EcosystemSection() {
       component="section"
       sx={{
         py: { xs: 8, md: 12 },
-        bgcolor: "background.default",
         transition: "background-color 0.3s ease",
       }}
     >
@@ -98,6 +100,10 @@ export default function EcosystemSection() {
             return (
               <MotionBox
                 key={i}
+                component="a"
+                href={card.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: i * 0.2 }}
@@ -114,12 +120,11 @@ export default function EcosystemSection() {
                   border: isFeatured ? "none" : `1px solid ${theme.palette.custom.border.soft}`,
                   transition: "all 0.3s ease",
                   cursor: "pointer",
+                  textDecoration: "none",
 
                   "&:hover": {
                     transform: "translateY(-6px)",
-                    boxShadow: theme.palette.mode === "dark" 
-                      ? "0 10px 30px rgba(0,0,0,0.5)" 
-                      : "0 10px 30px rgba(0,0,0,0.1)",
+                    boxShadow: theme.palette.custom.shadows.shadow,
                     borderColor: isFeatured ? "transparent" : theme.palette.primary.main,
                   },
                 }}

@@ -1,20 +1,24 @@
 "use client";
 
-import { Box, useTheme } from "@mui/material";
+import { Box } from "@mui/material";
+import { ChatThemeRegistry } from "@/theme/ThemeRegistry";
 
+/**
+ * Layout wrapper for all private (authenticated) routes.
+ * Applies the Chat Application theme — primary brand: #1f222a.
+ */
 export default function PrivateLayout({ children }) {
-  const theme = useTheme();
-
   return (
-    <Box
-      sx={{
-        backgroundColor: theme.palette.background.default,
-        display: "flex",
-        flexDirection: "column",
-        minHeight: "100vh",
-      }}
-    >
-      {children}
-    </Box>
+    <ChatThemeRegistry>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+        }}
+      >
+        {children}
+      </Box>
+    </ChatThemeRegistry>
   );
 }

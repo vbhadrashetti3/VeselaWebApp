@@ -12,7 +12,7 @@ import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useState } from "react";
 
 export default function AISearchInput({
-  placeholder = "Ask Vesela AI anything...",
+  placeholder = "Start chatting with Vesela AI...",
   onSearch,
   width = { xs: "100%", sm: "520px" },
 }) {

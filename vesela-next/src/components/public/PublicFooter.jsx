@@ -35,10 +35,13 @@ export default function PublicFooter() {
             transform: "translateX(-50%)",
           }}
         >
-          <Link href="#" underline="none" color="text.secondary">
+          <Link href="https://humanitybench.org/" target="_blank" rel="noopener noreferrer" underline="none" color="text.secondary">
+            Humanity Bench
+          </Link>
+          <Link href="https://grayskyai.com/" target="_blank" rel="noopener noreferrer" underline="none" color="text.secondary">
             Graysky AI
           </Link>
-          <Link href="#" underline="none" color="text.secondary">
+          <Link href="https://humanalignmentai.com/" target="_blank" rel="noopener noreferrer" underline="none" color="text.secondary">
             Human Alignment AI
           </Link>
           <Link href="#" underline="none" color="text.secondary">

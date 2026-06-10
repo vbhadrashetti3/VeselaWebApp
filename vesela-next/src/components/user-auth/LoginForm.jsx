@@ -22,6 +22,8 @@ import CustomButton from "../ui/CustomButton";
 import { MODALS } from "../modals/modalConstants";
 
 import { useLogin } from "@/hooks/useLogin";
+import { useColorMode } from "@/theme/ThemeRegistry";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -35,7 +37,16 @@ const LoginForm = ({ handleNext }) => {
   const [show, setShow] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const { login, errorMsg } = useLogin(handleNext);
+  const { mode, toggleColorMode } = useColorMode();
+
+  const setDarkMode = () => {
+    if (mode !== "dark") {
+      localStorageUtil.set("theme", "dark");
+      toggleColorMode();
+    }
+  };
+
+  const { login, errorMsg } = useLogin(handleNext, setDarkMode);
 
   const formik = useFormik({
     initialValues: { email: "", password: "" },

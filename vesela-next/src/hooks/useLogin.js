@@ -7,7 +7,7 @@ import { MODALS } from "@/components/modals/modalConstants";
 import { TOKEN, USER_DETAILS,  } from "@/constant";
 import { localStorageUtil } from "@/utils/localStorageUtil";
 
-export const useLogin = (handleNext) => {
+export const useLogin = (handleNext, onSuccess) => {
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -21,9 +21,9 @@ export const useLogin = (handleNext) => {
         localStorageUtil.set(TOKEN, response.data.access);
         localStorageUtil.set(USER_DETAILS, JSON.stringify(response.data.user));
 
+        onSuccess && onSuccess();
         handleNext(MODALS.SUCCESS);
 
-        
       } else {
         setErrorMsg(
           response?.data?.detail ||

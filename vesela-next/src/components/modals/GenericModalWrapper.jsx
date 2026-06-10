@@ -21,17 +21,11 @@ const GenericModalWrapper = ({
   // Safety fallback for custom theme properties during hydration
   const modalBg =
     theme.palette?.background?.modalBackground ||
-    theme.palette?.background?.paper ||
-    "#ffffff";
-  const textColor = theme.palette?.text?.primary || "#000000";
+    theme.palette?.background?.paper;
+  const textColor = theme.palette?.text?.primary;
   const divider = theme.palette?.custom?.border?.soft || theme.palette?.divider;
-  const hoverState =
-    theme.palette?.action?.hover ||
-    (theme.palette?.mode === "dark"
-      ? "rgba(255,255,255,0.08)"
-      : "rgba(0,0,0,0.05)");
-  const modalShadow =
-    theme.palette?.custom?.modalShadow || "0 20px 52px rgba(0,0,0,0.16)";
+  const hoverState = theme.palette?.action?.hover;
+  const modalShadow = theme.palette?.custom?.modalShadow;
 
   const modalWidth = width ?? "420px";
 

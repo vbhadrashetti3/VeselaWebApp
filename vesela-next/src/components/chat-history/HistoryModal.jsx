@@ -31,7 +31,7 @@ const HistoryModal = ({ open, onClose }) => {
         sx: {
           height: "85vh", // Forces a consistent vertical size
           maxHeight: "800px", // Prevents it from becoming too tall on ultra-wide monitors
-          bgcolor: theme.palette.custom.surface.modal,
+          bgcolor: theme.palette.custom?.surface?.modal ?? theme.palette.background.paper,
           backgroundImage: "none",
           borderRadius: 2,
           display: "flex",

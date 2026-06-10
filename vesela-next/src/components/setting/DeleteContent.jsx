@@ -85,7 +85,7 @@ const DeleteContent = () => {
             bgcolor: "background.paper",
             borderRadius: 3,
             p: 4,
-            boxShadow: theme.palette.custom.modalShadow,
+            boxShadow: theme.palette.custom?.modalShadow ?? "0 20px 52px rgba(0,0,0,0.16)",
             border: `1px solid ${theme.palette.divider}`,
             textAlign: "center",
           }}

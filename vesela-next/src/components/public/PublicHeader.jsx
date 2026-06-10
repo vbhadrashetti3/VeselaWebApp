@@ -19,34 +19,37 @@ import {
 import { useTheme } from "@mui/material/styles";
 
 import MenuIcon from "@mui/icons-material/Menu";
-import { Sun, Moon } from "lucide-react";
 
 import { useModal } from "@/context/ModalContext";
-import { useColorMode } from "@/theme/ThemeRegistry";
 import { MODALS } from "../modals/modalConstants";
 
 import VeselaLogoBlack from "../../../public/vesela_black_lottie.json";
-import VeselaLogoWhite from "../../../public/vesela_white_lottie.json";
 
 const menus = [
   {
     label: "Humanity Bench",
-    href: "/humanity-bench",
+    href: "https://humanitybench.org/",
+    external: true,
   },
   {
     label: "Graysky AI",
-    href: "/graysky-ai",
+    href: "https://grayskyai.com/",
+    external: true,
   },
   {
     label: "Alignment AI",
-    href: "/alignment-ai",
+    href: "https://humanalignmentai.com/",
+    external: true,
   },
 ];
 
+/**
+ * Public site header — always light mode.
+ * The theme toggle has been removed; dark mode is not available on the public website.
+ */
 export default function PublicHeader() {
   const { openModal } = useModal();
   const theme = useTheme();
-  const { mode, toggleColorMode } = useColorMode();
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -60,9 +63,11 @@ export default function PublicHeader() {
         position="fixed"
         elevation={0}
         sx={{
-          bgcolor: theme.palette.custom?.header?.background ?? "rgba(255,255,255,0.88)",
-          backdropFilter: "blur(20px)",
-          borderBottom: `1px solid ${theme.palette.custom?.header?.border ?? "rgba(0,0,0,0.08)"}`,
+          border: 0,
+          bgcolor: theme.palette.custom.header.background,
+          backdropFilter: "blur(12px)",
+          borderBottom: `1px solid ${theme.palette.custom.header.border}`,
+          color: theme.palette.text.primary,
         }}
       >
         <Toolbar
@@ -72,7 +77,7 @@ export default function PublicHeader() {
             minHeight: "72px",
           }}
         >
-          {/* LOGO */}
+          {/* LOGO — always use the black (light-mode) logo */}
           <Box
             sx={{
               height: "65px",
@@ -83,13 +88,11 @@ export default function PublicHeader() {
             }}
           >
             <Lottie
-              animationData={theme.palette.mode === "dark" ? VeselaLogoWhite : VeselaLogoBlack}
+              animationData={VeselaLogoBlack}
               loop={false}
               style={{
-                width: "220px",
-                transform: "scale(1.1)",
-                transformOrigin: "center",
-                marginTop: "12px",
+                width: "120px",
+                marginTop: "10px",
               }}
             />
           </Box>
@@ -109,6 +112,8 @@ export default function PublicHeader() {
                   key={menu.label}
                   component={Link}
                   href={menu.href}
+                  target={menu.external ? "_blank" : undefined}
+                  rel={menu.external ? "noopener noreferrer" : undefined}
                   sx={{
                     color: "text.primary",
                     fontWeight: 600,
@@ -120,21 +125,6 @@ export default function PublicHeader() {
                 </Button>
               ))}
             </Stack>
-
-            {/* Theme Toggle Button */}
-            <IconButton
-              onClick={toggleColorMode}
-              sx={{
-                color: "text.primary",
-                bgcolor: "action.hover",
-                "&:hover": {
-                  bgcolor: "action.selected",
-                },
-              }}
-              aria-label="Toggle light/dark theme"
-            >
-              {theme.palette.mode === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-            </IconButton>
 
             {/* DESKTOP SIGN IN */}
             <Button
@@ -185,6 +175,8 @@ export default function PublicHeader() {
                 key={menu.label}
                 component={Link}
                 href={menu.href}
+                target={menu.external ? "_blank" : undefined}
+                rel={menu.external ? "noopener noreferrer" : undefined}
                 onClick={() => setMobileOpen(false)}
               >
                 <ListItemText primary={menu.label} />
@@ -212,4 +204,3 @@ export default function PublicHeader() {
     </>
   );
 }
-

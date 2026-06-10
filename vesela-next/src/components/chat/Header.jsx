@@ -23,7 +23,7 @@ import {
 } from "@mui/icons-material";
 import GenreicLottie from "../ui/GenericLottie";
 import GraceLogo from "../../../public/Grace-Logo-Bars.json";
-import { TOKEN } from "@/constant";
+import { TOKEN, CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 import HistoryModal from "../chat-history/HistoryModal";
 import SettingsModal from "../setting/SettingModal";
 import { localStorageUtil } from "@/utils/localStorageUtil";
@@ -76,9 +76,12 @@ export default function Header() {
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
         border: 0,
+        bgcolor: theme.palette.custom.header.background,
+        color: theme.palette.primary.contrastText,
+        boxShadow: "none"
       }}
     >
-      <Container maxWidth="md">
+      <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>
         <Toolbar
           sx={{
             display: "flex",
@@ -129,10 +132,7 @@ export default function Header() {
 
                     border: `1px solid ${theme.palette.divider}`,
 
-                    boxShadow:
-                      theme.palette.mode === "dark"
-                        ? "0px 10px 30px rgba(0,0,0,0.45)"
-                        : "0px 10px 30px rgba(15,23,42,0.08)",
+                    boxShadow: theme.palette.custom.shadow,
 
                     backdropFilter: "blur(12px)",
 
@@ -163,10 +163,7 @@ export default function Header() {
                       transition: "all 0.18s ease",
 
                       "&:hover": {
-                        bgcolor:
-                          theme.palette.mode === "dark"
-                            ? "rgba(255,255,255,0.06)"
-                            : "rgba(15,23,42,0.05)",
+                        bgcolor: theme.palette.action.hover,
                       },
 
                       "&.Mui-disabled": {

@@ -8,7 +8,7 @@ import ChatInput from "./ChatInput";
 import GuestLimitBanner from "./GuestLimitBanner";
 
 import { useChatSocket } from "@/hooks/useChatSocket";
-import { TOKEN } from "@/constant";
+import { TOKEN, CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 import { localStorageUtil } from "@/utils/localStorageUtil";
 import { useChatSession } from "@/context/ChatSessionContext";
 import { useModal } from "@/context/ModalContext";
@@ -95,7 +95,7 @@ export default function ChatPage() {
 
       <Box sx={{ display: "flex", flexDirection: "column", pt: 10, pb: 13 }}>
         <Box sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
-          <Container maxWidth="md">
+          <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>
             {mergedMessages.map((msg, i) => (
               <ChatBubble
                 key={msg.id || i}

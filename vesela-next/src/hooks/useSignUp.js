@@ -7,7 +7,7 @@ import { MODALS } from "@/components/modals/modalConstants";
 import { TOKEN, USER_DETAILS, POST_LOGIN_NAVIGATE_TO } from "@/constant";
 import { localStorageUtil } from "@/utils/localStorageUtil";
 
-export const useSignUp = (handleNext) => {
+export const useSignUp = (handleNext, onSuccess) => {
   const router = useRouter();
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -19,6 +19,7 @@ export const useSignUp = (handleNext) => {
         localStorageUtil.set(TOKEN, response.data.access);
         localStorageUtil.set(USER_DETAILS, JSON.stringify(response.data.user));
 
+        onSuccess && onSuccess();
         handleNext && handleNext(MODALS.UPDATE_INFO);
       } else {
         const backendMsg =
