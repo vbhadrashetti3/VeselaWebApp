@@ -124,7 +124,13 @@ export default function ChatInput({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            placeholder={isConnected ? "Send Message ..." : "Connecting..."}
+            placeholder={
+              isGuestLocked
+                ? "Limit reached. Log in or upgrade to continue..."
+                : isConnected
+                  ? "Send Message ..."
+                  : "Connecting..."
+            }
             disabled={isGuestLocked}
             sx={{
               color: isLight ? "#111827" : "#f9fafb",
@@ -221,41 +227,26 @@ export default function ChatInput({
                 width: 34,
                 height: 34,
                 borderRadius: "50%",
+                backgroundColor: theme.palette.primary.main,
+                color: "#ffffff",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
 
-                backgroundColor:
-                  !isSendEnabled
-                    ? isLight
-                      ? "rgb(40, 108, 168)"
-                      : "rgb(40, 108, 168)"
-                    : theme.palette.primary.main,
-
-                color:
-                  !isSendEnabled
-                    ? isLight
-                      ? "#9ca3af"
-                      : "#fff"
-                    : "#ffffff",
-
-                transition:
-                  "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                "&.Mui-disabled": {
+                  backgroundColor: isLight
+                    ? "rgba(0, 0, 0, 0.04)"
+                    : "rgba(255, 255, 255, 0.05)",
+                  color: isLight
+                    ? "#9ca3af"
+                    : "#4b5563",
+                },
 
                 "&:hover": {
-                  backgroundColor:
-                    !isSendEnabled
-                      ? "transparent"
-                      : theme.palette.primary.dark,
-
-                  transform:
-                    !isSendEnabled
-                      ? "none"
-                      : "scale(1.05)",
+                  backgroundColor: theme.palette.primary.dark,
+                  transform: "scale(1.05)",
                 },
 
                 "&:active": {
-                  transform:
-                    !isSendEnabled
-                      ? "none"
-                      : "scale(0.95)",
+                  transform: "scale(0.95)",
                 },
               }}
             >

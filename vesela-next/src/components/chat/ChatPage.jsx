@@ -18,8 +18,14 @@ export default function ChatPage() {
   const isAuthenticated = Boolean(localStorageUtil.get(TOKEN));
 
   // 🟢 SOCKET ONLY IF AUTH
-  const { messages, sendMessage, isConnected, isTyping, isThinking } =
-    useChatSocket(isAuthenticated);
+  const {
+    messages,
+    sendMessage,
+    isConnected,
+    isThinking,
+    isTyping,
+    isLocked: isAuthLocked,
+  } = useChatSocket(isAuthenticated);
 
   const {
     consumePendingHeroMessage,
@@ -58,8 +64,8 @@ export default function ChatPage() {
       sendMessage(pendingMessage);
     } else {
       void sendGuestMessage(pendingMessage).then((result) => {
-        if (!result.ok && result.reason === "limit") {
-          setUpgradeOpen(true);
+        if (!result.ok && result.reason === "locked") {
+          openModal(MODALS.LOGIN, { source: "chat" });
         }
       });
     }
@@ -68,6 +74,7 @@ export default function ChatPage() {
     isAuthenticated,
     sendGuestMessage,
     sendMessage,
+    openModal,
   ]);
 
   // ---------------- SEND ----------------
@@ -80,19 +87,30 @@ export default function ChatPage() {
     const result = await sendGuestMessage(text);
 
     if (!result.ok && result.reason === "locked") {
-      openModal(MODALS.LOGIN);
+      openModal(MODALS.LOGIN, { source: "chat" });
     }
   };
 
   const isGuestLocked = !isAuthenticated && guestSignupRequired;
+  const isLimitLocked = isAuthenticated ? isAuthLocked : isGuestLocked;
 
   return (
     <>
       <GuestLimitBanner
-        open={isGuestLocked}
-        onClick={() => openModal(MODALS.LOGIN)}
+        open={isLimitLocked}
+        onClick={() => {
+          if (isAuthenticated) {
+            openModal(MODALS.PLANS);
+          } else {
+            openModal(MODALS.LOGIN, { source: "chat" });
+          }
+        }}
+        message={
+          isAuthenticated
+            ? "Free message limit reached. Upgrade to Pro to continue."
+            : "Free guest limit reached. Login or upgrade to continue."
+        }
       />
-
       <Box sx={{ display: "flex", flexDirection: "column", pt: 10, pb: 13 }}>
         <Box sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
           <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>
@@ -101,6 +119,17 @@ export default function ChatPage() {
                 key={msg.id || i}
                 role={msg.role}
                 message={msg.message}
+                isError={msg.isError}
+                onRetry={
+                  msg.isError && msg.retryText
+                    ? () => handleSend(msg.retryText)
+                    : undefined
+                }
+                isTyping={
+                  msg.role === "assistant" &&
+                  i === mergedMessages.length - 1 &&
+                  isTyping
+                }
               />
             ))}
 
@@ -121,7 +150,7 @@ export default function ChatPage() {
         <ChatInput
           onSend={handleSend}
           isConnected={isAuthenticated ? isConnected : true}
-          isGuestLocked={isGuestLocked}
+          isGuestLocked={isLimitLocked}
         />
       </Box>
     </>

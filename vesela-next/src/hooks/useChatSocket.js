@@ -10,7 +10,7 @@ export const useChatSocket = (enabled = false) => {
   const socketRef = useRef(null);
   const reconnectRef = useRef(null);
   const messageQueueRef = useRef([]);
-  const hasConnectedRef = useRef(false);
+  const isDisposedRef = useRef(false);
 
   const streamBufferRef = useRef("");
   const animationFrameRef = useRef(null);
@@ -23,20 +23,58 @@ export const useChatSocket = (enabled = false) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [isLocked, setIsLocked] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("vesela_auth_limit_locked") === "true";
+  });
 
   // ✅ ONLY FOR AUTH USERS
   const token = enabled ? localStorageUtil.get(TOKEN) : null;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isLocked) {
+      window.localStorage.setItem("vesela_auth_limit_locked", "true");
+    } else {
+      window.localStorage.removeItem("vesela_auth_limit_locked");
+    }
+  }, [isLocked]);
+
+  useEffect(() => {
+    if (!enabled) {
+      setIsLocked(false);
+      setIsConnected(false);
+      setIsTyping(false);
+      setIsThinking(false);
+      setMessages([]);
+      conversationIdRef.current = null;
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem("vesela_auth_limit_locked");
+      }
+    }
+  }, [enabled]);
 
   let userId = null;
   try {
     const user = localStorageUtil.get(USER_DETAILS);
     userId = user?.pk;
-  } catch {}
+  } catch { }
 
   // ---------------- SOCKET ----------------
   const connectSocket = useCallback(() => {
     if (!enabled) return;
     if (!token) return;
+
+    if (reconnectRef.current) {
+      clearTimeout(reconnectRef.current);
+      reconnectRef.current = null;
+    }
+
+    if (socketRef.current) {
+      try {
+        socketRef.current.close();
+      } catch {}
+    }
 
     const socket = new WebSocket(
       `wss://portal.grayskyai.com/ws/chat/?token=${token}`
@@ -44,8 +82,17 @@ export const useChatSocket = (enabled = false) => {
 
     socketRef.current = socket;
 
+    let heartbeatInterval = null;
+
     socket.onopen = () => {
       setIsConnected(true);
+
+      // Start keepalive heartbeat
+      heartbeatInterval = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: "ping" }));
+        }
+      }, 20000);
 
       messageQueueRef.current.forEach((msg) =>
         socket.send(JSON.stringify(msg))
@@ -56,16 +103,25 @@ export const useChatSocket = (enabled = false) => {
     socket.onclose = () => {
       setIsConnected(false);
       socketRef.current = null;
+      if (heartbeatInterval) clearInterval(heartbeatInterval);
+
+      if (isDisposedRef.current) return;
 
       reconnectRef.current = setTimeout(() => {
         connectSocketRef.current?.();
       }, 3000);
     };
 
-    socket.onerror = () => socket.close();
+    socket.onerror = () => {
+      try {
+        socket.close();
+      } catch {}
+    };
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
+
+      if (data.type === "pong") return;
 
       switch (data.type) {
         case "thinking":
@@ -75,6 +131,10 @@ export const useChatSocket = (enabled = false) => {
         case "stream_start":
           setIsThinking(false);
           setIsTyping(true);
+
+          if (data.conversation_id) {
+            conversationIdRef.current = data.conversation_id;
+          }
 
           currentAssistantMsgRef.current = "";
           streamBufferRef.current = "";
@@ -128,6 +188,7 @@ export const useChatSocket = (enabled = false) => {
         case "done":
           setIsTyping(false);
           setIsThinking(false);
+
           break;
 
         case "error":
@@ -143,6 +204,16 @@ export const useChatSocket = (enabled = false) => {
               isError: true,
             },
           ]);
+
+          const finalMsg = data.message || "";
+          const isLimitReached =
+            finalMsg.includes("Your 20 free messages will reset") ||
+            finalMsg.includes("upgrading to the Pro subscription") ||
+            finalMsg.includes("Thanks so much for chatting with Vesela today");
+
+          if (isLimitReached) {
+            setIsLocked(true);
+          }
           break;
       }
     };
@@ -155,13 +226,15 @@ export const useChatSocket = (enabled = false) => {
 
   // ---------------- INIT ----------------
   useEffect(() => {
-    if (!enabled || !token || hasConnectedRef.current) return;
+    if (!enabled || !token) return;
 
-    hasConnectedRef.current = true;
+    isDisposedRef.current = false;
     connectSocket();
 
     return () => {
+      isDisposedRef.current = true;
       socketRef.current?.close(1000);
+      socketRef.current = null;
       clearTimeout(reconnectRef.current);
     };
   }, [enabled, token, connectSocket]);
@@ -183,6 +256,8 @@ export const useChatSocket = (enabled = false) => {
         { id: crypto.randomUUID(), role: "user", message: text },
       ]);
 
+      setIsThinking(true);
+
       const socket = socketRef.current;
 
       if (!socket || socket.readyState !== WebSocket.OPEN) {
@@ -202,5 +277,6 @@ export const useChatSocket = (enabled = false) => {
     isConnected,
     isTyping,
     isThinking,
+    isLocked,
   };
 };

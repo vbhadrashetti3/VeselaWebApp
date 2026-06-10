@@ -16,7 +16,7 @@ const SuccessfulModal = ({ handleNext, successMsg }) => {
       const redirectTo = localStorageUtil.get(POST_LOGIN_NAVIGATE_TO);
       if (redirectTo) router.push(redirectTo);
       else {
-        router.push(`/chat?session=${Date.now()}`);
+        router.push("/welcome");
       }
       closeModal();
     }, 2000);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import LoginForm from "../user-auth/LoginForm";
@@ -15,6 +15,11 @@ import GenericModalWrapper from "./GenericModalWrapper";
 import { MODALS } from "./modalConstants";
 import { getModalStepVariants } from "@/animations/modalMotionVariants";
 
+import { useModal } from "@/context/ModalContext";
+import { useColorMode, ColorModeContext } from "@/theme/ThemeRegistry";
+import { ThemeProvider } from "@mui/material/styles";
+import { getAppTheme, getChatTheme } from "@/theme/theme";
+
 const AuthFlowManager = ({
   modalStepName,
   onClose,
@@ -25,6 +30,30 @@ const AuthFlowManager = ({
   const [reasonForSupport, setReasonForSupport] = useState("");
   const reducedMotion = useReducedMotion();
   const stepVariants = getModalStepVariants(reducedMotion);
+
+  const { modalOptions } = useModal();
+  const rootColorMode = useColorMode();
+  
+  const isFromChat = modalOptions?.source === "chat";
+  
+  const localColorMode = useMemo(() => {
+    if (isFromChat) {
+      return rootColorMode;
+    } else {
+      return {
+        mode: "light",
+        toggleColorMode: () => {},
+      };
+    }
+  }, [isFromChat, rootColorMode]);
+
+  const modalTheme = useMemo(() => {
+    if (isFromChat) {
+      return getChatTheme(rootColorMode.mode);
+    } else {
+      return getAppTheme("light");
+    }
+  }, [isFromChat, rootColorMode.mode]);
 
   const modalComponents = {
     [MODALS.LOGIN]: <LoginForm handleNext={handleNext} />,
@@ -62,19 +91,23 @@ const AuthFlowManager = ({
   if (!modalStepName) return null;
 
   return (
-    <GenericModalWrapper width={"420px"} open={true} onClose={onClose}>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.div
-          key={modalStepName}
-          variants={stepVariants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-        >
-          {modalComponents[modalStepName] || null}
-        </motion.div>
-      </AnimatePresence>
-    </GenericModalWrapper>
+    <ColorModeContext.Provider value={localColorMode}>
+      <ThemeProvider theme={modalTheme}>
+        <GenericModalWrapper width={"420px"} open={true} onClose={onClose}>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={modalStepName}
+              variants={stepVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
+              {modalComponents[modalStepName] || null}
+            </motion.div>
+          </AnimatePresence>
+        </GenericModalWrapper>
+      </ThemeProvider>
+    </ColorModeContext.Provider>
   );
 };
 

@@ -6,14 +6,27 @@ const ModalContext = createContext(null);
 
 export const ModalProvider = ({ children }) => {
   const [currentModal, setCurrentModal] = useState(null);
+  const [modalOptions, setModalOptions] = useState({});
 
-  const openModal = (modal) => setCurrentModal(modal);
-  const closeModal = () => setCurrentModal(null);
+  const openModal = (modal, options) => {
+    setCurrentModal(modal);
+    if (options !== undefined) {
+      setModalOptions(options || {});
+    } else {
+      setModalOptions((prev) => prev || {});
+    }
+  };
+  
+  const closeModal = () => {
+    setCurrentModal(null);
+    setModalOptions({});
+  };
 
   return (
     <ModalContext.Provider
       value={{
         currentModal,
+        modalOptions,
         openModal,
         closeModal,
       }}

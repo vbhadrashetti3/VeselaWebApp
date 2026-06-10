@@ -7,10 +7,12 @@ import {
 } from "@mui/material";
 
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 
 export default function GuestLimitBanner({
   open,
   onClick,
+  message = "Free guest limit reached. Login or upgrade to continue.",
 }) {
   if (!open) return null;
 
@@ -24,7 +26,7 @@ export default function GuestLimitBanner({
         zIndex: 1100,
       }}
     >
-      <Container maxWidth="md">
+      <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>
         <Box
           role="button"
           onClick={onClick}
@@ -51,8 +53,7 @@ export default function GuestLimitBanner({
             variant="caption"
             color="text.secondary"
           >
-            Free guest limit reached. Login or
-            upgrade to continue.
+            {message}
           </Typography>
         </Box>
       </Container>

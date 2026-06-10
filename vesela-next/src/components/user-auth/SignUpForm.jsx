@@ -24,6 +24,7 @@ import CustomButton from "../ui/CustomButton";
 import { MODALS } from "../modals/modalConstants";
 import { useSignUp } from "@/hooks/useSignUp";
 import { useColorMode } from "@/theme/ThemeRegistry";
+import { useModal } from "@/context/ModalContext";
 import { localStorageUtil } from "@/utils/localStorageUtil";
 
 const validationSchema = Yup.object({
@@ -47,8 +48,12 @@ const SignUpForm = ({ handleNext }) => {
   const [showErrors, setShowErrors] = useState(false);
 
   const { mode, toggleColorMode } = useColorMode();
+  const { modalOptions } = useModal();
 
   const setDarkMode = () => {
+    if (modalOptions?.source === "chat") {
+      return;
+    }
     if (mode !== "dark") {
       localStorageUtil.set("theme", "dark");
       toggleColorMode();

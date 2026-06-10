@@ -6,7 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useState, useRef
 } from "react";
 
 import { post } from "@/lib/apiService";
@@ -129,14 +129,25 @@ export const ChatSessionProvider = ({ children }) => {
   // HERO MESSAGE
   // ---------------------------------------------------
 
+  const consumedRef = useRef(false);
+
   const setPendingHeroMessage = useCallback((message) => {
+    consumedRef.current = false;
     setPendingHeroMessageState(message?.trim() || "");
   }, []);
 
   const consumePendingHeroMessage = useCallback(() => {
+    if (consumedRef.current) return "";
+
     const message = pendingHeroMessage?.trim();
 
-    setPendingHeroMessageState("");
+    if (message) {
+      consumedRef.current = true;
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(STORAGE_KEYS.pendingHeroMessage);
+      }
+      setPendingHeroMessageState("");
+    }
 
     return message;
   }, [pendingHeroMessage]);
@@ -192,13 +203,13 @@ export const ChatSessionProvider = ({ children }) => {
 
         const body = hasInitializedSession
           ? {
-              text: trimmed,
-              key: guestKey || "",
-            }
+            text: trimmed,
+            key: guestKey || "",
+          }
           : {
-              text: "initial_message",
-              key: "",
-            };
+            text: "initial_message",
+            key: "",
+          };
 
         const { status, data, error } = await post(
           "/api/sales_incoming/",
@@ -263,18 +274,26 @@ export const ChatSessionProvider = ({ children }) => {
         // ASSISTANT MESSAGE
         // ---------------------------------------------------
 
+        const responseText = response?.text || "";
+
         appendGuestMessage({
           id: crypto.randomUUID(),
           role: "assistant",
           message:
-            response?.text || "Thanks. I am ready for your next question.",
+            responseText || "Thanks. I am ready for your next question.",
         });
 
         // ---------------------------------------------------
         // BACKEND LOCK
         // ---------------------------------------------------
 
-        if (response?.showSignup === true) {
+        const isLimitReached =
+          response?.showSignup === true ||
+          responseText.includes("Your 20 free messages will reset") ||
+          responseText.includes("upgrading to the Pro subscription") ||
+          responseText.includes("Thanks so much for chatting with Vesela today");
+
+        if (isLimitReached) {
           setGuestSignupRequired(true);
         }
 
@@ -355,10 +374,8 @@ export const ChatSessionProvider = ({ children }) => {
       pendingHeroMessage,
       setPendingHeroMessage,
       consumePendingHeroMessage,
-
       guestMessages,
       guestKey,
-
       guestLoading,
       guestError,
 

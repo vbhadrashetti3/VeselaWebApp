@@ -20,6 +20,7 @@ import {
   History,
   Settings,
   OpenInNew as Link,
+  Logout as LogoutIcon,
 } from "@mui/icons-material";
 import GenreicLottie from "../ui/GenericLottie";
 import GraceLogo from "../../../public/Grace-Logo-Bars.json";
@@ -27,12 +28,17 @@ import { TOKEN, CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 import HistoryModal from "../chat-history/HistoryModal";
 import SettingsModal from "../setting/SettingModal";
 import { localStorageUtil } from "@/utils/localStorageUtil";
+import { useRouter } from "next/navigation";
+import { useLogout } from "@/hooks/useLogout";
 
 export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [historyModal, setHistoryModal] = useState(false);
   const [settingsModal, setSettingsModal] = useState(false);
+
+  const router = useRouter();
+  const { logout } = useLogout();
 
   const handleOpenMenu = (event) => setAnchorEl(event.currentTarget);
   const handleCloseMenu = () => setAnchorEl(null);
@@ -63,11 +69,21 @@ export default function Header() {
     },
 
     {
-      label: "Grayskyai.com",
+      label: "Vesela",
       icon: <Link sx={{ fontSize: 18 }} />,
-      action: () => window.open("https://grayskyai.com"),
+      action: () => router.push("/"),
       disabled: false,
     },
+    ...(token
+      ? [
+          {
+            label: "Logout",
+            icon: <LogoutIcon sx={{ fontSize: 18 }} />,
+            action: () => logout(),
+            disabled: false,
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -77,7 +93,7 @@ export default function Header() {
         zIndex: (theme) => theme.zIndex.drawer + 1,
         border: 0,
         bgcolor: theme.palette.custom.header.background,
-        color: theme.palette.primary.contrastText,
+        color: "#ffffff",
         boxShadow: "none"
       }}
     >
@@ -86,11 +102,25 @@ export default function Header() {
           sx={{
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "center",
             padding: "8px 0 !important",
             minHeight: "64px",
+            position: "relative",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          {/* Left spacer so logo absolute centering is relative to the toolbar */}
+          <Box sx={{ width: 40 }} />
+
+          {/* Centered GraceLogo */}
+          <Box
+            sx={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
             <GenreicLottie animationData={GraceLogo} width={100} />
           </Box>
 

@@ -54,7 +54,7 @@ export default function PublicHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleSignIn = () => {
-    openModal(MODALS.LOGIN);
+    openModal(MODALS.LOGIN, { source: "public" });
   };
 
   return (
