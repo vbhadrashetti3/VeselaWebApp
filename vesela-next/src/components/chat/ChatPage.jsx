@@ -1,32 +1,35 @@
 "use client";
 
 import { Box, Container } from "@mui/material";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import ChatBubble from "./ChatBubble";
 import ChatInput from "./ChatInput";
 import GuestLimitBanner from "./GuestLimitBanner";
 
+import { useAuth } from "@/context/AuthContext";
 import { useChatSocket } from "@/hooks/useChatSocket";
-import { TOKEN, CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
-import { localStorageUtil } from "@/utils/localStorageUtil";
+import { CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 import { useChatSession } from "@/context/ChatSessionContext";
 import { useModal } from "@/context/ModalContext";
 import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
-  const isAuthenticated = Boolean(localStorageUtil.get(TOKEN));
+  // ─── Auth ──────────────────────────────────────────────────────────────────
+  const { isAuthenticated, token, userId } = useAuth();
 
-  // 🟢 SOCKET ONLY IF AUTH
+  // ─── WebSocket (auth users only) ───────────────────────────────────────────
+  // Pass null token when guest — hook stays disconnected
   const {
     messages,
     sendMessage,
     isConnected,
-    isThinking,
     isTyping,
+    isThinking,
     isLocked: isAuthLocked,
-  } = useChatSocket(isAuthenticated);
+  } = useChatSocket(isAuthenticated ? token : null, userId);
 
+  // ─── Guest session ─────────────────────────────────────────────────────────
   const {
     consumePendingHeroMessage,
     guestMessages,
@@ -38,46 +41,69 @@ export default function ChatPage() {
 
   const { openModal } = useModal();
 
-  const bottomRef = useRef(null);
-
-  const mergedMessages = useMemo(() => {
-    return isAuthenticated ? [...guestMessages, ...messages] : guestMessages;
-  }, [isAuthenticated, guestMessages, messages]);
-
+  // ─── Clear guest data when user logs in ────────────────────────────────────
   useEffect(() => {
-    if (!isAuthenticated) return;
-
-    // 🔥 wipe guest memory when user logs in
-    resetGuestSession?.();
+    if (isAuthenticated) {
+      resetGuestSession?.();
+    }
   }, [isAuthenticated, resetGuestSession]);
 
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mergedMessages.length, isThinking, guestLoading]);
+  // ─── Pending hero message ──────────────────────────────────────────────────
+  // One-shot: fires once per mount to consume a message typed on the hero page.
+  const pendingFiredRef = useRef(false);
 
   useEffect(() => {
-    const pendingMessage = consumePendingHeroMessage();
+    if (pendingFiredRef.current) return;
 
-    if (!pendingMessage) return;
+    const pending = consumePendingHeroMessage();
+    if (!pending) return;
+
+    pendingFiredRef.current = true;
 
     if (isAuthenticated) {
-      sendMessage(pendingMessage);
+      sendMessage(pending); // queued internally if socket not yet open
     } else {
-      void sendGuestMessage(pendingMessage).then((result) => {
+      sendGuestMessage(pending).then((result) => {
         if (!result.ok && result.reason === "locked") {
           openModal(MODALS.LOGIN, { source: "chat" });
         }
       });
     }
-  }, [
-    consumePendingHeroMessage,
-    isAuthenticated,
-    sendGuestMessage,
-    sendMessage,
-    openModal,
-  ]);
+    // consumePendingHeroMessage deliberately omitted from deps.
+    // It changes identity every time pendingHeroMessage state updates (localStorage
+    // hydration), which would cause double-sends. We capture it in the first run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
-  // ---------------- SEND ----------------
+  // ─── Combined message list ─────────────────────────────────────────────────
+  // Auth: show guest history + ws messages (guest messages cleared on login)
+  // Guest: show guest messages only
+  const mergedMessages = useMemo(
+    () => (isAuthenticated ? [...guestMessages, ...messages] : guestMessages),
+    [isAuthenticated, guestMessages, messages],
+  );
+
+  // ─── Auto-scroll ───────────────────────────────────────────────────────────
+  const bottomRef = useRef(null);
+  const containerRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    // Only auto-scroll if the user is already near the bottom (within 150px)
+    const distanceFromBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distanceFromBottom < 150) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  });
+  // No deps — runs after every render. useLayoutEffect avoids flash.
+  // The near-bottom guard prevents hijacking scroll when user reads history.
+
+  // ─── Send handler ──────────────────────────────────────────────────────────
   const handleSend = async (text) => {
     if (isAuthenticated) {
       sendMessage(text);
@@ -85,25 +111,25 @@ export default function ChatPage() {
     }
 
     const result = await sendGuestMessage(text);
-
     if (!result.ok && result.reason === "locked") {
       openModal(MODALS.LOGIN, { source: "chat" });
     }
   };
 
-  const isGuestLocked = !isAuthenticated && guestSignupRequired;
-  const isLimitLocked = isAuthenticated ? isAuthLocked : isGuestLocked;
+  // ─── Lock state ────────────────────────────────────────────────────────────
+  const isLimitLocked = isAuthenticated
+    ? isAuthLocked
+    : guestSignupRequired;
 
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <GuestLimitBanner
         open={isLimitLocked}
         onClick={() => {
-          if (isAuthenticated) {
-            openModal(MODALS.PLANS);
-          } else {
-            openModal(MODALS.LOGIN, { source: "chat" });
-          }
+          openModal(isAuthenticated ? MODALS.PLANS : MODALS.LOGIN, {
+            source: "chat",
+          });
         }}
         message={
           isAuthenticated
@@ -111,9 +137,13 @@ export default function ChatPage() {
             : "Free guest limit reached. Login or upgrade to continue."
         }
       />
+
       <Box sx={{ display: "flex", flexDirection: "column", pt: 10, pb: 13 }}>
-        <Box sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
-          <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>
+        <Box ref={containerRef} sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
+          <Container
+            maxWidth={false}
+            sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}
+          >
             {mergedMessages.map((msg, i) => (
               <ChatBubble
                 key={msg.id || i}
@@ -133,12 +163,10 @@ export default function ChatPage() {
               />
             ))}
 
-            {/* Auth thinking */}
+            {/* Thinking indicator */}
             {isAuthenticated && isThinking && (
               <ChatBubble role="assistant" message="Thinking..." isThinking />
             )}
-
-            {/* Guest thinking */}
             {!isAuthenticated && guestLoading && (
               <ChatBubble role="assistant" message="Thinking..." isThinking />
             )}

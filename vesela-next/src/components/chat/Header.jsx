@@ -24,26 +24,26 @@ import {
 } from "@mui/icons-material";
 import GenreicLottie from "../ui/GenericLottie";
 import GraceLogo from "../../../public/Grace-Logo-Bars.json";
-import { TOKEN, CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
+import { CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 import HistoryModal from "../chat-history/HistoryModal";
 import SettingsModal from "../setting/SettingModal";
-import { localStorageUtil } from "@/utils/localStorageUtil";
 import { useRouter } from "next/navigation";
 import { useLogout } from "@/hooks/useLogout";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [historyModal, setHistoryModal] = useState(false);
   const [settingsModal, setSettingsModal] = useState(false);
-
   const router = useRouter();
   const { logout } = useLogout();
+  const { isAuthenticated } = useAuth();
+  const token = isAuthenticated; // alias for menu item disabled checks
+  const theme = useTheme();
 
   const handleOpenMenu = (event) => setAnchorEl(event.currentTarget);
   const handleCloseMenu = () => setAnchorEl(null);
-  const token = localStorageUtil.get(TOKEN);
-  const theme = useTheme();
 
   const headerMenuItems = [
     {

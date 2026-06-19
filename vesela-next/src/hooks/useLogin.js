@@ -1,29 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import { loginUser } from "@/services/auth.service";
 import { MODALS } from "@/components/modals/modalConstants";
-import { TOKEN, USER_DETAILS,  } from "@/constant";
-import { localStorageUtil } from "@/utils/localStorageUtil";
 
 export const useLogin = (handleNext, onSuccess) => {
-  const router = useRouter();
+  const { login } = useAuth();
   const [errorMsg, setErrorMsg] = useState("");
 
-  const login = async (values, setSubmitting) => {
+  const handleLogin = async (values, setSubmitting) => {
     try {
       setErrorMsg("");
 
       const response = await loginUser(values);
 
       if (!response.error && response.status === 200) {
-        localStorageUtil.set(TOKEN, response.data.access);
-        localStorageUtil.set(USER_DETAILS, JSON.stringify(response.data.user));
+        // Persist auth state via context (which also writes localStorage)
+        login(response.data.access, response.data.user);
 
-        onSuccess && onSuccess();
+        onSuccess?.();
         handleNext(MODALS.SUCCESS);
-
       } else {
         setErrorMsg(
           response?.data?.detail ||
@@ -31,7 +28,7 @@ export const useLogin = (handleNext, onSuccess) => {
             "Login failed",
         );
       }
-    } catch (err) {
+    } catch {
       setErrorMsg("Something went wrong");
     } finally {
       setSubmitting(false);
@@ -39,7 +36,7 @@ export const useLogin = (handleNext, onSuccess) => {
   };
 
   return {
-    login,
+    login: handleLogin,
     errorMsg,
     setErrorMsg,
   };

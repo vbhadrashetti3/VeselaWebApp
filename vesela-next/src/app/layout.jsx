@@ -1,6 +1,7 @@
 import { Urbanist } from "next/font/google";
 import { ModalProvider } from "@/context/ModalContext";
 import { ChatSessionProvider } from "@/context/ChatSessionContext";
+import { AuthProvider } from "@/context/AuthContext";
 import ThemeRegistry from "@/theme/ThemeRegistry";
 import GlobalModals from "../components/modals/GlobalModals";
 
@@ -23,12 +24,14 @@ export default function RootLayout({ children }) {
     <html lang="en" className={urbanist.className}>
       <body>
         <ThemeRegistry>
-          <ChatSessionProvider>
-            <ModalProvider>
-              {children}
-              <GlobalModals />
-            </ModalProvider>
-          </ChatSessionProvider>
+          <AuthProvider>
+            <ChatSessionProvider>
+              <ModalProvider>
+                {children}
+                <GlobalModals />
+              </ModalProvider>
+            </ChatSessionProvider>
+          </AuthProvider>
         </ThemeRegistry>
       </body>
     </html>

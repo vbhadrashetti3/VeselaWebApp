@@ -1,26 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { localStorageUtil } from "./utils/localStorageUtil";
-import { TOKEN } from "./constant";
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AuthGuard({ children }) {
   const router = useRouter();
-  const [isChecking, setIsChecking] = useState(true);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    const token = localStorageUtil.get(TOKEN);
-
-    if (!token) {
-      router.replace("/"); // redirect to public page
-    } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsChecking(false);
+    if (!isAuthenticated) {
+      router.replace("/");
     }
-  }, [router]);
+  }, [isAuthenticated, router]);
 
-  if (isChecking) return null; // or loader
+  // Don't render children until we know the user is authenticated
+  if (!isAuthenticated) return null;
 
   return <>{children}</>;
 }
