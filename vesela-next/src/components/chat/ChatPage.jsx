@@ -15,33 +15,26 @@ import { useModal } from "@/context/ModalContext";
 import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
-  // ─── Auth ──────────────────────────────────────────────────────────────────
   const { isAuthenticated, token, userId } = useAuth();
-
-  // ─── WebSocket (auth users only) ───────────────────────────────────────────
-  // Pass null token when guest — hook stays disconnected
   const {
     messages,
     sendMessage,
     isConnected,
-    isTyping,
-    isThinking,
+    isStreaming: isAuthStreaming,
     isLocked: isAuthLocked,
   } = useChatSocket(isAuthenticated ? token : null, userId);
 
-  // ─── Guest session ─────────────────────────────────────────────────────────
   const {
     consumePendingHeroMessage,
     guestMessages,
     sendGuestMessage,
-    guestLoading,
+    guestLoading: isGuestStreaming,
     resetGuestSession,
     guestSignupRequired,
   } = useChatSession();
 
   const { openModal } = useModal();
 
-  // ─── Clear guest data when user logs in ────────────────────────────────────
   useEffect(() => {
     if (isAuthenticated) {
       resetGuestSession?.();
@@ -69,15 +62,8 @@ export default function ChatPage() {
         }
       });
     }
-    // consumePendingHeroMessage deliberately omitted from deps.
-    // It changes identity every time pendingHeroMessage state updates (localStorage
-    // hydration), which would cause double-sends. We capture it in the first run.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
-  // ─── Combined message list ─────────────────────────────────────────────────
-  // Auth: show guest history + ws messages (guest messages cleared on login)
-  // Guest: show guest messages only
   const mergedMessages = useMemo(
     () => (isAuthenticated ? [...guestMessages, ...messages] : guestMessages),
     [isAuthenticated, guestMessages, messages],
@@ -100,10 +86,6 @@ export default function ChatPage() {
       bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   });
-  // No deps — runs after every render. useLayoutEffect avoids flash.
-  // The near-bottom guard prevents hijacking scroll when user reads history.
-
-  // ─── Send handler ──────────────────────────────────────────────────────────
   const handleSend = async (text) => {
     if (isAuthenticated) {
       sendMessage(text);
@@ -116,12 +98,9 @@ export default function ChatPage() {
     }
   };
 
-  // ─── Lock state ────────────────────────────────────────────────────────────
-  const isLimitLocked = isAuthenticated
-    ? isAuthLocked
-    : guestSignupRequired;
+  const isLimitLocked = isAuthenticated ? isAuthLocked : guestSignupRequired;
+  const isStreaming = isAuthenticated ? isAuthStreaming : isGuestStreaming;
 
-  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <>
       <GuestLimitBanner
@@ -138,38 +117,30 @@ export default function ChatPage() {
         }
       />
 
-      <Box sx={{ display: "flex", flexDirection: "column", pt: 10, pb: 13 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", pt: { xs: 8, sm: 9, md: 10 }, pb: { xs: 14, sm: 13 } }}>
         <Box ref={containerRef} sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
           <Container
             maxWidth={false}
-            sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}
+            sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%", px: { xs: 1.5, sm: 2, md: 3 } }}
           >
-            {mergedMessages.map((msg, i) => (
-              <ChatBubble
-                key={msg.id || i}
-                role={msg.role}
-                message={msg.message}
-                isError={msg.isError}
-                onRetry={
-                  msg.isError && msg.retryText
-                    ? () => handleSend(msg.retryText)
-                    : undefined
-                }
-                isTyping={
-                  msg.role === "assistant" &&
-                  i === mergedMessages.length - 1 &&
-                  isTyping
-                }
-              />
-            ))}
-
-            {/* Thinking indicator */}
-            {isAuthenticated && isThinking && (
-              <ChatBubble role="assistant" message="Thinking..." isThinking />
-            )}
-            {!isAuthenticated && guestLoading && (
-              <ChatBubble role="assistant" message="Thinking..." isThinking />
-            )}
+            {mergedMessages.map((msg, i) => {
+              const isLastAssistant =
+                msg.role === "assistant" && i === mergedMessages.length - 1;
+              return (
+                <ChatBubble
+                  key={msg.id || i}
+                  role={msg.role}
+                  message={msg.message}
+                  isError={msg.isError}
+                  onRetry={
+                    msg.isError && msg.retryText
+                      ? () => handleSend(msg.retryText)
+                      : undefined
+                  }
+                  isStreaming={isLastAssistant && isStreaming}
+                />
+              );
+            })}
 
             <div ref={bottomRef} />
           </Container>

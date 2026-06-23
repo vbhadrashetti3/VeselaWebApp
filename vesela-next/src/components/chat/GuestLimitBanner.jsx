@@ -20,7 +20,8 @@ export default function GuestLimitBanner({
     <Box
       sx={{
         position: "fixed",
-        bottom: 92,
+        // Match ChatInput's responsive pb: { xs: 2, sm: 4 } + input height (~56px)
+        bottom: { xs: 72, sm: 92 },
         left: 0,
         right: 0,
         zIndex: 1100,

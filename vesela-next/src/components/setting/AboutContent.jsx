@@ -32,7 +32,7 @@ const AboutContents = [
 
 const AboutContent = () => {
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
       {AboutContents.map((item, index) => {
         return (
           <Box key={index} sx={{ mb: 4 }}>

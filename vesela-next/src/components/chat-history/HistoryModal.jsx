@@ -8,6 +8,7 @@ import {
   CircularProgress,
   Grid,
   useTheme,
+  useMediaQuery,
   IconButton,
 } from "@mui/material";
 import { X } from "lucide-react";
@@ -17,6 +18,7 @@ import ChatList from "./ChatList";
 
 const HistoryModal = ({ open, onClose }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { chatHistory, selectedChatId, setSelectedChatId, loading } =
     useChatHistory(open);
 
@@ -25,15 +27,16 @@ const HistoryModal = ({ open, onClose }) => {
       open={open}
       onClose={onClose}
       fullWidth
-      maxWidth="lg" // Adjust to "md" if "lg" is too wide for your dashboard
+      fullScreen={isMobile}
+      maxWidth="lg"
       scroll="paper"
       PaperProps={{
         sx: {
-          height: "85vh", // Forces a consistent vertical size
-          maxHeight: "800px", // Prevents it from becoming too tall on ultra-wide monitors
+          height: isMobile ? "100%" : "85vh",
+          maxHeight: isMobile ? "100%" : "800px",
           bgcolor: theme.palette.custom?.surface?.modal ?? theme.palette.background.paper,
           backgroundImage: "none",
-          borderRadius: 2,
+          borderRadius: isMobile ? 0 : 2,
           display: "flex",
           flexDirection: "column",
         },
@@ -73,12 +76,25 @@ const HistoryModal = ({ open, onClose }) => {
             <CircularProgress size={24} />
           </Box>
         ) : (
-          <Grid container sx={{ flex: 1, height: "100%", width: "100%" }}>
+          <Grid
+            container
+            sx={{
+              flex: 1,
+              height: "100%",
+              width: "100%",
+              // On mobile stack as column, split height between list and preview
+              flexDirection: { xs: "column", md: "row" },
+            }}
+          >
+            {/* Chat list — capped height on mobile so preview has room */}
             <Grid
               size={{ xs: 12, md: 3.5 }}
               sx={{
-                height: "100%",
-                borderRight: `1px solid ${theme.palette.divider}`,
+                height: { xs: "auto", md: "100%" },
+                maxHeight: { xs: 200, md: "none" },
+                flexShrink: { xs: 0, md: 1 },
+                borderRight: { md: `1px solid ${theme.palette.divider}` },
+                borderBottom: { xs: `1px solid ${theme.palette.divider}`, md: "none" },
                 overflow: "hidden",
               }}
             >
@@ -88,9 +104,15 @@ const HistoryModal = ({ open, onClose }) => {
                 chatHistory={chatHistory}
               />
             </Grid>
+            {/* Chat preview — takes remaining height on mobile */}
             <Grid
               size={{ xs: 12, md: 8.5 }}
-              sx={{ height: "100%", overflow: "hidden" }}
+              sx={{
+                flex: { xs: 1, md: "unset" },
+                height: { xs: "auto", md: "100%" },
+                minHeight: 0,
+                overflow: "hidden",
+              }}
             >
               <ChatPreview chatId={selectedChatId} />
             </Grid>

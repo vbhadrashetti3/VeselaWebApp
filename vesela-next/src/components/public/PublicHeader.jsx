@@ -84,7 +84,6 @@ export default function PublicHeader() {
               overflow: "hidden",
               display: "flex",
               alignItems: "center",
-              ml: { xs: "-55px", md: "0" },
             }}
           >
             <Lottie
@@ -93,6 +92,7 @@ export default function PublicHeader() {
               style={{
                 width: "120px",
                 marginTop: "10px",
+                marginLeft: "-12px", // compensates internal Lottie left padding
               }}
             />
           </Box>

@@ -100,31 +100,28 @@ export default function Header() {
       <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>
         <Toolbar
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
+            display: "grid",
+            gridTemplateColumns: "40px 1fr 40px",
             alignItems: "center",
             padding: "8px 0 !important",
-            minHeight: "64px",
-            position: "relative",
+            minHeight: { xs: "56px", sm: "64px" },
           }}
         >
-          {/* Left spacer so logo absolute centering is relative to the toolbar */}
-          <Box sx={{ width: 40 }} />
+          {/* Left spacer */}
+          <Box />
 
-          {/* Centered GraceLogo */}
+          {/* Centered logo */}
           <Box
             sx={{
-              position: "absolute",
-              left: "50%",
-              transform: "translateX(-50%)",
               display: "flex",
+              justifyContent: "center",
               alignItems: "center",
             }}
           >
             <GenreicLottie animationData={GraceLogo} width={100} />
           </Box>
 
-          <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
             <IconButton
               color="inherit"
               onClick={handleOpenMenu}

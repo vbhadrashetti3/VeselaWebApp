@@ -105,7 +105,8 @@ const UpdateInfoForm = ({ handleNext, setUserInfo }) => {
       <Box sx={{ textAlign: "center", mt: 3 }}>
         <CustomButton
           style={{
-            width: "200px",
+            width: "100%",
+            maxWidth: "200px",
             borderRadius: "26px",
           }}
           type="submit"

@@ -85,7 +85,7 @@ export default function EcosystemSection() {
           sx={{
             display: "grid",
             gridTemplateColumns: { xs: "1fr", md: "repeat(3, 1fr)" },
-            gap: 4,
+            gap: { xs: 3, md: 4 },
           }}
         >
           {cards.map((card, i) => {
@@ -112,8 +112,7 @@ export default function EcosystemSection() {
                   bgcolor: cardBg,
                   color: cardColor,
                   borderRadius: 1.5,
-                  p: 4,
-                  minHeight: 360,
+                  p: { xs: 3, md: 4 },
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "space-between",

@@ -45,18 +45,17 @@ export default function PricingPlansContent() {
   const theme = useTheme();
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Grid container spacing={2}>
+    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+      <Grid container spacing={{ xs: 1.5, md: 2 }}>
         {plans.map((plan) => (
           <Grid
             key={plan.id}
-            size={{ xs: 12, sm: 6, md: 4 }} // ✅ correct v7 API
-            sx={{ display: "flex" }} // ✅ required for equal height
+            size={{ xs: 6, md: 4 }} // side-by-side on all sizes
+            sx={{ display: "flex" }}
           >
             <Card
               sx={{
                 width: "100%",
-                minHeight: 350, // 🔥 SAME HEIGHT
                 borderRadius: 3,
                 bgcolor: theme.palette.background.modalBackground,
                 color: theme.palette.text.primary,
@@ -74,34 +73,52 @@ export default function PricingPlansContent() {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  flexGrow: 1, // ✅ pushes button down
+                  flexGrow: 1,
+                  p: { xs: 1.5, md: 2 },
+                  "&:last-child": { pb: { xs: 1.5, md: 2 } },
                 }}
               >
-                <Typography textAlign="center" fontWeight={600}>
+                <Typography
+                  textAlign="center"
+                  fontWeight={600}
+                  fontSize={{ xs: "12px", md: "14px" }}
+                  noWrap
+                >
                   {plan.name}
                 </Typography>
 
-                <Box textAlign="center" py={2}>
-                  <Typography fontSize={28} fontWeight={700}>
+                <Box textAlign="center" py={{ xs: 1, md: 2 }}>
+                  <Typography
+                    fontSize={{ xs: 22, md: 28 }}
+                    fontWeight={700}
+                    lineHeight={1.2}
+                  >
                     {plan.price}
-                    <span style={{ fontSize: "14px", fontWeight: 400 }}>
+                    <Box
+                      component="span"
+                      sx={{ fontSize: "12px", fontWeight: 400, display: "block" }}
+                    >
                       / month
-                    </span>
+                    </Box>
                   </Typography>
                 </Box>
 
                 <Box sx={{ flexGrow: 1 }}>
                   {plan.features.map((f, i) => (
-                    <Box key={i} display="flex" mb={1}>
-                      <CheckIcon fontSize="small" />
-                      <Typography ml={1}>{f}</Typography>
+                    <Box key={i} display="flex" mb={0.75} alignItems="flex-start">
+                      <CheckIcon fontSize="small" sx={{ fontSize: 14, mt: "2px", flexShrink: 0 }} />
+                      <Typography ml={0.75} fontSize={{ xs: "11px", md: "14px" }} lineHeight={1.4}>
+                        {f}
+                      </Typography>
                     </Box>
                   ))}
                 </Box>
 
                 <Button
                   fullWidth
+                  size="small"
                   variant={plan.id === "free" ? "outlined" : "contained"}
+                  sx={{ mt: 1, fontSize: { xs: "11px", md: "13px" } }}
                 >
                   Select Plan
                 </Button>

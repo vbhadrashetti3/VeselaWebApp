@@ -8,50 +8,15 @@ import barsTyping from "@/../public/bars-typing.json";
 export default function ChatBubble({
   role,
   message,
-  isTyping,
-  isThinking,
+  isStreaming,
   isError,
   onRetry,
 }) {
   const theme = useTheme();
   const isAI = role === "assistant";
 
-  if (isThinking) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: isAI ? "row" : "row-reverse",
-          mb: 2,
-        }}
-      >
-        <Paper
-          sx={{
-            padding: "8px 12px",
-            maxWidth: "80%",
-            bgcolor: isAI
-              ? theme.palette.custom.chat.assistantBubble
-              : theme.palette.custom.chat.userBubble,
-            color: theme.palette.text.primary,
-            borderRadius: "10px",
-            border: `1px solid ${theme.palette.custom.border.soft}`,
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              filter: theme.palette.mode === "dark" ? "invert(1) brightness(2)" : "none",
-            }}
-          >
-            <GenericLottie animationData={barsTyping} width={80} height={22} loop={true} />
-          </Box>
-        </Paper>
-      </Box>
-    );
-  }
+  const lottieFilter =
+    theme.palette.mode === "dark" ? "invert(1) brightness(2)" : "none";
 
   return (
     <Box
@@ -64,20 +29,59 @@ export default function ChatBubble({
       <Paper
         sx={{
           padding: "8px 12px",
-          maxWidth: "80%",
+          maxWidth: { xs: "95%", sm: "85%", md: "78%" },
           bgcolor: isAI
             ? theme.palette.custom.chat.assistantBubble
             : theme.palette.custom.chat.userBubble,
           color: theme.palette.text.primary,
           borderRadius: "10px",
           border: `1px solid ${theme.palette.custom.border.soft}`,
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
         }}
       >
-        <Typography sx={{ fontSize: "14px", lineHeight: 1.6 }}>
+        {/*
+         * Message body.
+         * component="div" prevents the <div>-inside-<p> hydration error
+         * that occurs when the Lottie <div> is rendered inline.
+         */}
+        <Typography
+          component="div"
+          sx={{
+            fontSize: "14px",
+            lineHeight: 1.6,
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "4px",
+            minHeight: "22px", // prevents zero-height flash before first chunk
+          }}
+        >
           {message}
-          {isAI && isTyping && <span>|</span>}
+
+          {/* Inline loader — visible the entire time isStreaming is true */}
+          {isAI && isStreaming && (
+            <Box
+              component="span"
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                verticalAlign: "middle",
+                flexShrink: 0,
+                filter: lottieFilter,
+              }}
+            >
+              <GenericLottie
+                animationData={barsTyping}
+                width={message ? 40 : 80}
+                height={message ? 14 : 22}
+                loop={true}
+              />
+            </Box>
+          )}
         </Typography>
 
+        {/* Error UI — unchanged */}
         {isError && (
           <Box sx={{ mt: 0.8, display: "flex", alignItems: "center", gap: 1 }}>
             <Typography sx={{ fontSize: 12, color: "error.main" }}>

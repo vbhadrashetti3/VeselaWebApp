@@ -113,7 +113,14 @@ export default function HeroSection() {
   return (
     <Box
       component="section"
-      sx={{ position: "relative", height: "100vh", overflow: "hidden" }}
+      sx={{
+        position: "relative",
+        // 100svh = small viewport height (excludes browser chrome on mobile).
+        // Falls back to 100vh for browsers that don't support svh units.
+        height: { xs: "100svh", fallback: "100vh" },
+        minHeight: "-webkit-fill-available",
+        overflow: "hidden",
+      }}
     >
       <style>{fadeUpKeyframes}</style>
 

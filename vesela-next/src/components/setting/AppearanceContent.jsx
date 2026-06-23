@@ -17,7 +17,7 @@ const AppearanceContent = () => {
   const { mode, toggleColorMode } = useColorMode();
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: { xs: 2, md: 3 } }}>
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
         Appearance
       </Typography>

@@ -37,8 +37,7 @@ const GenericModalWrapper = ({
         if (reason === "backdropClick") return;
         onClose?.();
       }}
-      disableScrollLock
-      keepMounted
+      // NOTE: keep scroll lock ON so background doesn't scroll behind modal on mobile
       slots={{ backdrop: Backdrop }}
       slotProps={{
         backdrop: {
@@ -52,75 +51,90 @@ const GenericModalWrapper = ({
           },
         },
       }}
+      // Use flex centering on the Modal root — avoids transform-based centering
+      // that can produce sub-pixel clipping at 320px widths.
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        p: { xs: 2, sm: 3 }, // safe margin from screen edges
+      }}
     >
-      {/* Centering wrapper: keeps translate transform stable while Framer Motion animates the panel */}
+      {/*
+       * The motion panel. No more position:absolute + translate(-50%,-50%).
+       * The Modal root is a flex container so this centers naturally.
+       */}
       <Box
+        component={motion.div}
+        initial={variants.initial}
+        animate={open ? variants.animate : variants.exit}
         sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
+          // Background & Shape
+          bgcolor: modalBg,
+          border: `1px solid ${divider}`,
+          boxShadow: modalShadow,
+          borderRadius: "10px",
+          p: { xs: 2.5, md: 4 },
+
+          // Responsive Sizing
+          width: {
+            xs: "100%",     // fills the flex parent up to the p:2 margin
+            sm: "80%",
+            md: modalWidth,
+          },
+          // Hard cap so it never overflows on tiny screens
+          maxWidth: modalWidth,
+
+          // Height & Scrolling
+          minHeight: minHeight ?? "auto",
+          height: {
+            xs: height ? height : "auto",
+            sm: height ? height : "auto",
+          },
+          // svh = small viewport height — accounts for mobile browser chrome
+          maxHeight: { xs: "90svh", md: "90vh" },
+          overflowY: "auto",
+
+          // Remove default focus outline from Framer Motion div
+          outline: "none",
+          "&:focus-visible": { outline: "none" },
+
+          // Relative for the close button
+          position: "relative",
         }}
       >
+        {/* Close button */}
         <Box
-          component={motion.div}
-          initial={variants.initial}
-          animate={open ? variants.animate : variants.exit}
+          onClick={onClose}
           sx={{
-            // Background & Shape
-            bgcolor: modalBg,
-            border: `1px solid ${divider}`,
-            boxShadow: modalShadow,
-            borderRadius: "10px",
-            p: { xs: 2.5, md: 4 },
-
-            // Responsive Sizing
-            width: {
-              xs: "92%",
-              sm: "80%",
-              md: modalWidth,
+            position: "absolute",
+            top: "16px",
+            right: "16px",
+            cursor: "pointer",
+            width: "32px",
+            height: "32px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: "50%",
+            transition: "background-color 0.2s ease, transform 0.2s ease",
+            zIndex: 10,
+            // Larger touch target on mobile without changing visual size
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              inset: "-8px",
             },
-            maxWidth: "100%",
-
-            // Height & Scrolling logic
-            minHeight: minHeight ?? "auto",
-            height: {
-              xs: height ? height : "auto",
-              sm: height ? height : "auto",
+            "&:hover": {
+              backgroundColor: hoverState,
+              transform: "scale(1.04)",
             },
-            maxHeight: "90vh",
-            overflowY: "auto",
-
-            outline: "none",
-            "&:focus-visible": { outline: "none" },
           }}
         >
-          <Box
-            onClick={onClose}
-            sx={{
-              position: "absolute",
-              top: "16px",
-              right: "16px",
-              cursor: "pointer",
-              width: "32px",
-              height: "32px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: "50%",
-              transition: "background-color 0.2s ease, transform 0.2s ease",
-              zIndex: 10,
-              "&:hover": {
-                backgroundColor: hoverState,
-                transform: "scale(1.04)",
-              },
-            }}
-          >
-            <X size={20} color={textColor} strokeWidth={2.5} />
-          </Box>
-
-          <Box sx={{ mt: height ? 0 : 1 }}>{children}</Box>
+          <X size={20} color={textColor} strokeWidth={2.5} />
         </Box>
+
+        <Box sx={{ mt: height ? 0 : 1 }}>{children}</Box>
       </Box>
     </Modal>
   );

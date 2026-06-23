@@ -167,7 +167,8 @@ const LoginForm = ({ handleNext }) => {
       <Box sx={{ textAlign: "center", mt: 2 }}>
         <CustomButton
           style={{
-            width: "200px",
+            width: "100%",
+            maxWidth: "200px",
             borderRadius: "26px",
           }}
           type="submit"

@@ -10,7 +10,7 @@ const SupportContent = () => {
   return (
     <Box
       sx={{
-        p: 3,
+        p: { xs: 2, md: 3 },
         display: "flex",
         flexDirection: "column",
         gap: 3,

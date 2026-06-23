@@ -45,10 +45,11 @@ export default function AISearchInput({
         fullWidth
         sx={{
           mt: 3,
-          height: 64,
+          minHeight: 56,
           borderRadius: "50px",
           px: 1.5,
           width,
+          fontSize: { xs: "16px", sm: "16px" }, // ≥16px prevents iOS zoom on focus
 
           // 🔥 Glass background
           bgcolor: "rgba(255,255,255,0.08)",

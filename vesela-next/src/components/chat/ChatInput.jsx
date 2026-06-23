@@ -67,8 +67,8 @@ export default function ChatInput({
         left: 0,
         right: 0,
         zIndex: 1000,
-        pb: 4,
-        pt: 2,
+        pb: { xs: 2, sm: 4 },
+        pt: { xs: 1.5, sm: 2 },
         backdropFilter: "blur(10px)",
       }}
     >
@@ -134,7 +134,8 @@ export default function ChatInput({
             disabled={isGuestLocked}
             sx={{
               color: isLight ? "#111827" : "#f9fafb",
-              fontSize: "16px",
+              // ≥16px prevents iOS Safari from auto-zooming the viewport on focus
+              fontSize: { xs: "16px", sm: "16px" },
               lineHeight: 1.5,
               flex: 1,
               minWidth: 0,

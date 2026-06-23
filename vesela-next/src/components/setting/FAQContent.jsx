@@ -209,7 +209,7 @@ const FAQContent = () => {
     <Box
       sx={{
         width: "100%",
-        p: 3,
+        p: { xs: 2, md: 3 },
         height: "100%",
         overflowY: "auto",
       }}

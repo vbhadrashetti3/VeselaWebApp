@@ -41,7 +41,7 @@ const TermsContent = () => {
   return (
     <Box
       sx={{
-        p: 3,
+        p: { xs: 2, md: 3 },
         height: "100%",
         overflowY: "auto",
         color: theme.palette.text.primary,

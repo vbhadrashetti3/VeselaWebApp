@@ -10,12 +10,18 @@ const urbanist = Urbanist({
   weight: ["400", "500", "600", "700"],
 });
 
-// ✅ Add metadata here
+// Viewport meta — prevents iOS auto-zoom and sets correct initial scale
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata = {
   title: "Vesela",
   description: "Vesela Chat App",
   icons: {
-    icon: "/favicon.webp", // or /icon.png
+    icon: "/favicon.webp",
   },
 };
 

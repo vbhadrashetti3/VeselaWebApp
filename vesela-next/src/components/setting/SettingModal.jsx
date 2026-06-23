@@ -6,6 +6,7 @@ import {
   DialogContent,
   Typography,
   useTheme,
+  useMediaQuery,
   CircularProgress,
   Box,
   IconButton,
@@ -27,6 +28,7 @@ import { useLogout } from "@/hooks/useLogout";
 
 const SettingsModal = ({ open, onClose }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { logout, isLoggingOut } = useLogout();
   const [activeSection, setActiveSection] = useState(
     SETTINGS_MODAL.MySubscription,
@@ -72,13 +74,14 @@ const SettingsModal = ({ open, onClose }) => {
       open={open}
       onClose={onClose}
       fullWidth
+      fullScreen={isMobile}
       maxWidth="lg"
       PaperProps={{
         sx: {
-          height: "85vh",
-          maxHeight: "800px",
-          borderRadius: "8px",
-          overflow: "hidden", // ✅ prevent dialog scroll
+          height: isMobile ? "100%" : "85vh",
+          maxHeight: isMobile ? "100%" : "800px",
+          borderRadius: isMobile ? 0 : "8px",
+          overflow: "hidden",
         },
       }}
     >
@@ -110,14 +113,18 @@ const SettingsModal = ({ open, onClose }) => {
             sx={{
               width: { xs: "100%", md: 280 },
               minWidth: { md: 280 },
+              // Chip-row fits in ~54px on mobile; full height on desktop
+              maxHeight: { xs: 54, md: "none" },
               borderRight: { md: `1px solid ${theme.palette.divider}` },
               borderBottom: { xs: `1px solid ${theme.palette.divider}`, md: "none" },
-              overflow: "hidden", // ✅ no scroll here
+              overflowY: { xs: "hidden", md: "hidden" },
+              flexShrink: 0,
             }}
           >
             <Sidebar
               activeSection={activeSection}
               handleClick={handleSideBarNavLink}
+              compact={isMobile}
             />
           </Box>
 
@@ -126,10 +133,11 @@ const SettingsModal = ({ open, onClose }) => {
             sx={{
               flex: 1,
               minWidth: 0,
+              minHeight: 0,
               display: "flex",
               p: 0,
               flexDirection: "column",
-              overflow: "hidden", // ✅ prevent double scroll
+              overflow: "hidden",
             }}
           >
             <MainContent renderSection={renderSection} />

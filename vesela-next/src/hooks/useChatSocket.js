@@ -5,12 +5,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const WS_URL = "wss://portal.grayskyai.com/ws/chat/";
-const STREAM_SPEED = 8; // characters per animation frame
 
 // Close codes that are worth retrying (transient / network errors)
 const RETRYABLE_CODES = new Set([1001, 1006, 1011, 1012, 1013, 1014]);
 const MAX_RETRIES = 5;
 const BASE_BACKOFF_MS = 1000;
+
+// Message types that carry no content and must never touch UI state
+const SILENT_TYPES = new Set(["ping", "pong", "heartbeat", "keepalive"]);
 
 // ─── Limit-reached detector ──────────────────────────────────────────────────
 
@@ -23,53 +25,32 @@ const LIMIT_PHRASES = [
 function isLimitMessage(text) {
   return LIMIT_PHRASES.some((phrase) => text.includes(phrase));
 }
-
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
-/**
- * useChatSocket
- *
- * Manages a WebSocket connection to the Vesela chat backend.
- *
- * @param {string|null} token  – JWT access token. Pass null to stay disconnected.
- * @param {string|null} userId – User's PK, sent with every message payload.
- */
 export const useChatSocket = (token, userId) => {
   // ─── Refs ──────────────────────────────────────────────────────────────────
-  const socketRef        = useRef(null);
-  const retryCountRef    = useRef(0);
-  const retryTimerRef    = useRef(null);
-  const isDisposedRef    = useRef(false);
-  const userIdRef        = useRef(userId);   // always-fresh userId for callbacks
-  const tokenRef         = useRef(token);    // always-fresh token for reconnects
+  const socketRef = useRef(null);
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef(null);
+  const isDisposedRef = useRef(false);
+  const userIdRef = useRef(userId);
+  const tokenRef = useRef(token);
 
-  // Streaming animation
-  const streamBufferRef        = useRef("");
-  const animFrameRef           = useRef(null);
-  const currentAssistantMsgRef = useRef("");
-  const isAnimatingRef         = useRef(false);
-  const isStreamActiveRef      = useRef(false);
-  const conversationIdRef      = useRef(null);
-
-  // Message queue: messages sent before the socket was open
-  const messageQueueRef  = useRef([]);
-
-  // Stable ref to the onMessage handler so the socket closure never goes stale
-  const onMessageRef     = useRef(null);
+  const currentAssistantIdRef = useRef(null);
+  const messageQueueRef = useRef([]);
+  const conversationIdRef = useRef(null);
+  const onMessageRef = useRef(null);
 
   // ─── State ─────────────────────────────────────────────────────────────────
-  const [messages,   setMessages]   = useState([]);
-  const [status,     setStatus]     = useState("disconnected");
-  const [isTyping,   setIsTyping]   = useState(false);
-  const [isThinking, setIsThinking] = useState(false);
-  const [isLocked,   setIsLocked]   = useState(() => {
+  const [messages, setMessages] = useState([]);
+  const [status, setStatus] = useState("disconnected");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [isLocked, setIsLocked] = useState(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("vesela_auth_limit_locked") === "true";
   });
 
   // Keep refs in sync with latest prop values every render
   userIdRef.current = userId;
-  tokenRef.current  = token;
+  tokenRef.current = token;
 
   // ─── Persist locked flag ────────────────────────────────────────────────────
   useEffect(() => {
@@ -80,44 +61,6 @@ export const useChatSocket = (token, userId) => {
       localStorage.removeItem("vesela_auth_limit_locked");
     }
   }, [isLocked]);
-
-  // ─── Streaming animation ───────────────────────────────────────────────────
-
-  const startAnimation = useCallback(() => {
-    if (isAnimatingRef.current) return;
-    isAnimatingRef.current = true;
-
-    const animate = () => {
-      if (isDisposedRef.current) {
-        isAnimatingRef.current = false;
-        return;
-      }
-
-      if (!streamBufferRef.current.length) {
-        isAnimatingRef.current = false;
-        if (!isStreamActiveRef.current) setIsTyping(false);
-        return;
-      }
-
-      const chunk = streamBufferRef.current.slice(0, STREAM_SPEED);
-      streamBufferRef.current = streamBufferRef.current.slice(STREAM_SPEED);
-      currentAssistantMsgRef.current += chunk;
-
-      setMessages((prev) => {
-        if (!prev.length) return prev;
-        const next = [...prev];
-        const last = next[next.length - 1];
-        if (last?.role === "assistant") {
-          last.message = currentAssistantMsgRef.current;
-        }
-        return next;
-      });
-
-      animFrameRef.current = requestAnimationFrame(animate);
-    };
-
-    animFrameRef.current = requestAnimationFrame(animate);
-  }, []);
 
   // ─── Message handler ───────────────────────────────────────────────────────
 
@@ -130,44 +73,58 @@ export const useChatSocket = (token, userId) => {
       return;
     }
 
-    switch (data.type) {
-      case "pong":
-        return; // native heartbeat response — ignore silently
+    if (SILENT_TYPES.has(data.type)) return;
 
+    switch (data.type) {
       case "thinking":
-        setIsThinking(true);
+        setIsStreaming(true);
         break;
 
       case "stream_start":
-        setIsThinking(false);
-        setIsTyping(true);
-        isStreamActiveRef.current = true;
-        currentAssistantMsgRef.current = "";
-        streamBufferRef.current = "";
+        // A new assistant turn is beginning.
+        setIsStreaming(true);
         if (data.conversation_id) {
           conversationIdRef.current = data.conversation_id;
         }
-        setMessages((prev) => [
-          ...prev,
-          { id: crypto.randomUUID(), role: "assistant", message: "" },
-        ]);
+        // Insert an empty assistant bubble to stream into.
+        {
+          const id = crypto.randomUUID();
+          currentAssistantIdRef.current = id;
+          setMessages((prev) => [
+            ...prev,
+            { id, role: "assistant", message: "" },
+          ]);
+        }
         break;
 
       case "chunk":
-        streamBufferRef.current += data.content ?? "";
-        startAnimation();
+        // Append chunk directly to the current assistant bubble.
+        if (currentAssistantIdRef.current && data.content) {
+          setMessages((prev) => {
+            const idx = prev.findIndex(
+              (m) => m.id === currentAssistantIdRef.current,
+            );
+            if (idx === -1) return prev;
+            const next = [...prev];
+            next[idx] = {
+              ...next[idx],
+              message: next[idx].message + data.content,
+            };
+            return next;
+          });
+        }
         break;
 
       case "done":
-        isStreamActiveRef.current = false;
-        setIsThinking(false);
-        if (!isAnimatingRef.current) setIsTyping(false);
+      case "complete":
+        // Stream finished — this is the ONLY place we hide the loader.
+        setIsStreaming(false);
+        currentAssistantIdRef.current = null;
         break;
 
       case "error": {
-        isStreamActiveRef.current = false;
-        setIsTyping(false);
-        setIsThinking(false);
+        setIsStreaming(false);
+        currentAssistantIdRef.current = null;
         const msg = data.message || "An error occurred.";
         setMessages((prev) => [
           ...prev,
@@ -178,10 +135,10 @@ export const useChatSocket = (token, userId) => {
       }
 
       default:
-        // Unknown message type — log and ignore to prevent UI noise
+        // Unknown type — log and ignore to prevent UI noise
         console.debug("[WS] Unknown message type:", data.type, data);
     }
-  }, [startAnimation]);
+  }, []); // no deps — reads no state; all mutations are via setter functions
 
   // Keep the message handler ref in sync
   useEffect(() => {
@@ -194,11 +151,6 @@ export const useChatSocket = (token, userId) => {
     clearTimeout(retryTimerRef.current);
     retryTimerRef.current = null;
 
-    if (animFrameRef.current) {
-      cancelAnimationFrame(animFrameRef.current);
-      animFrameRef.current = null;
-    }
-
     const ws = socketRef.current;
     if (ws) {
       ws.onopen = ws.onmessage = ws.onclose = ws.onerror = null;
@@ -207,9 +159,9 @@ export const useChatSocket = (token, userId) => {
     }
 
     messageQueueRef.current = [];
+    currentAssistantIdRef.current = null;
     setStatus("disconnected");
-    setIsThinking(false);
-    setIsTyping(false);
+    setIsStreaming(false);
   }, []);
 
   const connect = useCallback(() => {
@@ -234,10 +186,10 @@ export const useChatSocket = (token, userId) => {
 
     ws.onopen = () => {
       if (isDisposedRef.current) return ws.close();
-      retryCountRef.current = 0; // reset backoff on successful connect
+      retryCountRef.current = 0;
       setStatus("connected");
 
-      // Drain any messages that were sent while the socket was connecting
+      currentAssistantIdRef.current = null;
       while (messageQueueRef.current.length > 0) {
         const payload = messageQueueRef.current.shift();
         ws.send(JSON.stringify(payload));
@@ -249,9 +201,28 @@ export const useChatSocket = (token, userId) => {
     ws.onclose = (event) => {
       if (isDisposedRef.current) return;
       socketRef.current = null;
+      currentAssistantIdRef.current = null;
       setStatus("disconnected");
-      setIsThinking(false);
-      setIsTyping(false);
+
+      setIsStreaming((prev) => {
+        if (prev) {
+          setMessages((msgs) => {
+            const last = msgs[msgs.length - 1];
+            // Don't double-append if the last message was already an error
+            if (last?.isError) return msgs;
+            return [
+              ...msgs,
+              {
+                id: crypto.randomUUID(),
+                role: "assistant",
+                message: "Connection lost. Please retry.",
+                isError: true,
+              },
+            ];
+          });
+        }
+        return false;
+      });
 
       const { code, reason } = event;
       console.debug(`[WS] Closed — code=${code}, reason=${reason || "none"}`);
@@ -288,17 +259,13 @@ export const useChatSocket = (token, userId) => {
     };
 
     ws.onerror = () => {
-      // onclose fires immediately after onerror — let it handle reconnect
       console.debug("[WS] Socket error");
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // no deps — reads token from ref; connect is stable for its lifetime
-
-  // ─── Init / Teardown ───────────────────────────────────────────────────────
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!token) {
-      // Token removed (logout) — disconnect and reset
       disconnect();
       setMessages([]);
       conversationIdRef.current = null;
@@ -317,8 +284,6 @@ export const useChatSocket = (token, userId) => {
       isDisposedRef.current = true;
       disconnect();
     };
-  // Reconnect only when token identity changes (login/logout)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   // ─── Send ──────────────────────────────────────────────────────────────────
@@ -338,7 +303,9 @@ export const useChatSocket = (token, userId) => {
       ...prev,
       { id: crypto.randomUUID(), role: "user", message: text.trim() },
     ]);
-    setIsThinking(true);
+
+    // Show loader immediately — do not wait for the WS event
+    setIsStreaming(true);
 
     const ws = socketRef.current;
     if (ws?.readyState === WebSocket.OPEN) {
@@ -348,18 +315,15 @@ export const useChatSocket = (token, userId) => {
       messageQueueRef.current.push(payload);
       connect();
     }
-  // connect is stable (no deps), so this callback is stable too
+    // connect is stable (no deps), so this callback is stable too
   }, [connect]);
-
-  // ─── Public API ────────────────────────────────────────────────────────────
 
   return {
     messages,
     sendMessage,
     status,
     isConnected: status === "connected",
-    isTyping,
-    isThinking,
+    isStreaming,
     isLocked,
   };
 };
