@@ -15,7 +15,7 @@ import CheckIcon from "@mui/icons-material/Check";
 const plans = [
   {
     id: "free",
-    name: "Grace 2 Mini",
+    name: "Vesela 2 Mini",
     price: "Free",
     period: "/month",
     features: [
@@ -27,13 +27,13 @@ const plans = [
   },
   {
     id: "pro",
-    name: "Grace 2 Pro",
+    name: "Vesela 2 Pro",
     price: "$19.99",
     period: "/month",
     features: [
       "Unlimited usage",
       "Memory included",
-      "State of the Art Grace 2 model",
+      "State of the Art Vesela 2 model",
       "Leader on humanitybench.org",
     ],
     link: "https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007",
@@ -50,13 +50,13 @@ export default function PricingPlansContent() {
         {plans.map((plan) => (
           <Grid
             key={plan.id}
-            size={{ xs: 6, md: 4 }} // side-by-side on all sizes
+            size={{ xs: 6, md: 4 }}
             sx={{ display: "flex" }}
           >
             <Card
               sx={{
                 width: "100%",
-                borderRadius: 3,
+                borderRadius: 1,
                 bgcolor: theme.palette.background.modalBackground,
                 color: theme.palette.text.primary,
                 boxShadow: 4,
@@ -116,7 +116,7 @@ export default function PricingPlansContent() {
 
                 <Button
                   fullWidth
-                  size="small"
+                  size="medium"
                   variant={plan.id === "free" ? "outlined" : "contained"}
                   sx={{ mt: 1, fontSize: { xs: "11px", md: "13px" } }}
                 >

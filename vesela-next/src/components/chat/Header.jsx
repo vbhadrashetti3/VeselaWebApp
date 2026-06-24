@@ -23,7 +23,7 @@ import {
   Logout as LogoutIcon,
 } from "@mui/icons-material";
 import GenreicLottie from "../ui/GenericLottie";
-import GraceLogo from "../../../public/Grace-Logo-Bars.json";
+import VeselaLogo from "../../../public/Grace-Logo-Bars.json";
 import { CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 import HistoryModal from "../chat-history/HistoryModal";
 import SettingsModal from "../setting/SettingModal";
@@ -76,13 +76,13 @@ export default function Header() {
     },
     ...(token
       ? [
-          {
-            label: "Logout",
-            icon: <LogoutIcon sx={{ fontSize: 18 }} />,
-            action: () => logout(),
-            disabled: false,
-          },
-        ]
+        {
+          label: "Logout",
+          icon: <LogoutIcon sx={{ fontSize: 18 }} />,
+          action: () => logout(),
+          disabled: false,
+        },
+      ]
       : []),
   ];
 
@@ -91,10 +91,11 @@ export default function Header() {
       position="fixed"
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        border: 0,
-        bgcolor: theme.palette.custom.header.background,
-        color: "#ffffff",
-        boxShadow: "none"
+        bgcolor: theme.palette.background.paper,
+        color: theme.palette.text.primary,
+        boxShadow: "none",
+        borderBottom: "1px solid",
+        borderColor: theme.palette.divider,
       }}
     >
       <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>
@@ -118,7 +119,7 @@ export default function Header() {
               alignItems: "center",
             }}
           >
-            <GenreicLottie animationData={GraceLogo} width={100} />
+            <GenreicLottie animationData={VeselaLogo} width={100} />
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>

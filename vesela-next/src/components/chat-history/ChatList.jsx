@@ -4,7 +4,8 @@ import React, { useEffect, useRef } from "react";
 import {
   Box,
   List,
-  ListItemButton, // Updated from ListItem button prop
+  ListItem,
+  ListItemButton,
   ListItemIcon,
   ListItemText,
   Typography,
@@ -14,36 +15,67 @@ import {
 import { MessageCircleMore } from "lucide-react";
 import { scrollbarStyles } from "@/utils/scrollbar";
 
-const ChatList = ({ onSelectChat, selectedChatId, chatHistory = [] }) => {
+// ─── Props ─────────────────────────────────────────────────────────────────────
+// onSelectChat  : (chatId) => void
+// selectedChatId: string | null
+// chatHistory   : { id, date }[]
+// isVisible     : boolean — suppresses scrollIntoView when panel is off-screen
+
+const ChatList = ({
+  onSelectChat,
+  selectedChatId,
+  chatHistory = [],
+  isVisible = true,
+}) => {
   const theme = useTheme();
   const selectedRef = useRef(null);
 
-  // Auto-scroll to selected chat in history
+  // Auto-scroll to selected item — only when this panel is visible
   useEffect(() => {
-    if (selectedRef.current) {
+    if (selectedRef.current && isVisible) {
       selectedRef.current.scrollIntoView({
         behavior: "smooth",
-        block: "center",
+        block: "nearest",
       });
     }
-  }, [selectedChatId]);
+  }, [selectedChatId, isVisible]);
 
+  // ─── Date formatter — migrated from VeselaAI ─────────────────────────────
+  // Guard: if the string is already in DD/MM/YYYY format (from a previous
+  // format pass or pre-formatted API response), return it as-is instead of
+  // re-parsing and potentially shifting the date.
   const formatDate = (dateString) => {
     if (!dateString) return "Unknown Date";
-    const date = new Date(dateString);
-    return date.toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    // Already formatted: DD/MM/YYYY (with optional time after a comma/space)
+    if (/^\d{2}\/\d{2}\/\d{4}/.test(dateString)) return dateString;
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString; // guard: invalid date
+      return date.toLocaleString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      console.error("Error formatting date:", e);
+      return dateString;
+    }
   };
 
   if (chatHistory.length === 0) {
     return (
-      <Box sx={{ p: 3, textAlign: "center" }}>
-        <Typography variant="body2" color="text.secondary">
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 3,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary" textAlign="center">
           No conversations found
         </Typography>
       </Box>
@@ -53,58 +85,75 @@ const ChatList = ({ onSelectChat, selectedChatId, chatHistory = [] }) => {
   return (
     <Box
       sx={{
-        p: 1,
+        flex: 1,
+        minHeight: 0, // required for overflowY to work in a flex child
         overflowY: "auto",
-        height: "100%", // Let the parent Grid determine height
         bgcolor: "transparent",
         ...scrollbarStyles(theme),
       }}
     >
-      <List sx={{ py: 0 }}>
+      <List
+        dense
+        sx={{ py: 1, px: 0.5 }}
+        role="list"
+        aria-label="Chat conversations"
+      >
         {chatHistory.map((chat) => {
           const isSelected = selectedChatId === chat.id;
 
           return (
-            <ListItemButton
+            // ListItem wrapper provides correct DOM nesting for a11y
+            <ListItem
               key={chat.id}
+              disablePadding
               ref={isSelected ? selectedRef : null}
-              onClick={() => onSelectChat(chat.id)}
-              sx={{
-                borderRadius: "8px",
-                mb: 0.5,
-                transition: "all 0.2s",
-                // High-density enterprise styling
-                bgcolor: isSelected
-                  ? alpha(theme.palette.primary.main, 0.15)
-                  : "transparent",
-                border: "1px solid",
-                borderColor: isSelected
-                  ? alpha(theme.palette.primary.main, 0.35)
-                  : "transparent",
-                "&:hover": {
-                  bgcolor: theme.palette.action.hover,
-                  borderColor: alpha(theme.palette.primary.main, 0.12),
-                },
-              }}
+              role="listitem"
+              aria-current={isSelected ? "true" : undefined}
+              sx={{ mb: 0.5 }}
             >
-              <ListItemIcon
+              <ListItemButton
+                onClick={() => onSelectChat(chat.id)}
                 sx={{
-                  minWidth: 32,
-                  color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary,
+                  borderRadius: "8px",
+                  transition: "all 0.18s ease",
+                  bgcolor: isSelected
+                    ? alpha(theme.palette.primary.main, 0.15)
+                    : "transparent",
+                  border: "1px solid",
+                  borderColor: isSelected
+                    ? alpha(theme.palette.primary.main, 0.35)
+                    : "transparent",
+                  "&:hover": {
+                    bgcolor: isSelected
+                      ? alpha(theme.palette.primary.main, 0.2)
+                      : theme.palette.action.hover,
+                    borderColor: alpha(theme.palette.primary.main, 0.18),
+                  },
                 }}
               >
-                <MessageCircleMore size={16} />
-              </ListItemIcon>
-              <ListItemText
-                primary={formatDate(chat.date)}
-                primaryTypographyProps={{
-                  fontSize: "13px",
-                  fontWeight: isSelected ? 600 : 400,
-                  noWrap: true,
-                  color: isSelected ? theme.palette.primary.main : theme.palette.text.secondary,
-                }}
-              />
-            </ListItemButton>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 32,
+                    color: isSelected
+                      ? theme.palette.primary.main
+                      : theme.palette.text.secondary,
+                  }}
+                >
+                  <MessageCircleMore size={16} />
+                </ListItemIcon>
+                <ListItemText
+                  primary={formatDate(chat.date)}
+                  primaryTypographyProps={{
+                    fontSize: "13px",
+                    fontWeight: isSelected ? 600 : 400,
+                    noWrap: true,
+                    color: isSelected
+                      ? theme.palette.primary.main
+                      : theme.palette.text.secondary,
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
           );
         })}
       </List>

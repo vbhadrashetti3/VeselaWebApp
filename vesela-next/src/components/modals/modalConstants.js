@@ -20,6 +20,8 @@ export const SETTINGS_MODAL = Object.freeze({
   Terms: "Terms of Use",
   Privacy: "Privacy Policy",
   About: "AboutGrey",
+  // Migrated from VeselaAI — the full Vesela Model Card document
+  ModelCard: "ModelCard",
   Logout: "logout",
   Delete: "delete",
 });

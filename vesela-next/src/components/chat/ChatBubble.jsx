@@ -31,11 +31,11 @@ export default function ChatBubble({
           padding: "8px 12px",
           maxWidth: { xs: "95%", sm: "85%", md: "78%" },
           bgcolor: isAI
-            ? theme.palette.custom.chat.assistantBubble
-            : theme.palette.custom.chat.userBubble,
+            ? theme.palette.chat?.bot || "#ffffff"
+            : theme.palette.chat?.user || "#E0E0E0",
           color: theme.palette.text.primary,
-          borderRadius: "10px",
-          border: `1px solid ${theme.palette.custom.border.soft}`,
+          borderRadius: "12px",
+          border: `1px solid ${theme.palette.sendMsgInput?.sendMsgBorder || theme.palette.divider}`,
           wordBreak: "break-word",
           overflowWrap: "anywhere",
         }}

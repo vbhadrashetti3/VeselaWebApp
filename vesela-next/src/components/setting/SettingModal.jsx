@@ -8,8 +8,11 @@ import {
   useTheme,
   useMediaQuery,
   CircularProgress,
+  Grid,
   Box,
   IconButton,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import { X } from "lucide-react";
 
@@ -21,24 +24,70 @@ import TermsContent from "./TermsContent";
 import FAQContent from "./FAQContent";
 import SupportContent from "./SupportContent";
 import DeleteContent from "./DeleteContent";
+import ModelCardContent from "./ModelCardContent";
 import { SETTINGS_MODAL } from "../modals/modalConstants";
 import Sidebar from "./Sidebar";
 import MainContent from "./MainContent";
 import { useLogout } from "@/hooks/useLogout";
+import { scrollbarStyles } from "@/utils/scrollbar";
 
 const SettingsModal = ({ open, onClose }) => {
   const theme = useTheme();
+
+  // VeselaAI uses theme.breakpoints.down("md") — we keep the same breakpoint
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { logout, isLoggingOut } = useLogout();
-  const [activeSection, setActiveSection] = useState(
-    SETTINGS_MODAL.MySubscription,
-  );
+
+  const { logout } = useLogout();
+  const [loading, setLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState(SETTINGS_MODAL.MySubscription);
+
+  const logoutUser = async () => {
+    setLoading(true);
+    await logout(onClose);
+    setLoading(false);
+  };
+
+  const handleTabChange = (_, newValue) => {
+    if (newValue === SETTINGS_MODAL.Logout) {
+      logoutUser();
+    } else {
+      setActiveSection(newValue);
+    }
+  };
 
   const handleSideBarNavLink = (value) => {
     if (value === SETTINGS_MODAL.Logout) {
-      logout(onClose);
+      logoutUser();
     } else {
       setActiveSection(value);
+    }
+  };
+
+  const getSectionDetails = (section) => {
+    switch (section) {
+      case SETTINGS_MODAL.MySubscription:
+        return { title: "My Subscription", description: "Manage your plan and usage limits" };
+      case SETTINGS_MODAL.Appearance:
+        return { title: "Appearance", description: "Customize the application theme and styling" };
+      case SETTINGS_MODAL.Support:
+        return { title: "Support", description: "Get in touch with us on Discord" };
+      case SETTINGS_MODAL.FAQ:
+        return { title: "FAQ", description: "Frequently Asked Questions" };
+      case SETTINGS_MODAL.Terms:
+        return { title: "Terms of Use", description: "Read our Terms of Service" };
+      case SETTINGS_MODAL.Privacy:
+        return { title: "Privacy Policy", description: "Read our Privacy Policy" };
+      case SETTINGS_MODAL.About:
+        return { title: "About Vesela", description: "Learn more about Vesela" };
+      case SETTINGS_MODAL.ModelCard:
+        return {
+          title: "Vesela Model Card",
+          description: "Technical specifications, design philosophy, and parameters of the Vesela model",
+        };
+      case SETTINGS_MODAL.Delete:
+        return { title: "Delete Account", description: "Permanently delete your account" };
+      default:
+        return { title: "", description: "" };
     }
   };
 
@@ -54,6 +103,8 @@ const SettingsModal = ({ open, onClose }) => {
         return <TermsContent />;
       case SETTINGS_MODAL.About:
         return <AboutContent />;
+      case SETTINGS_MODAL.ModelCard:
+        return <ModelCardContent />;
       case SETTINGS_MODAL.FAQ:
         return <FAQContent />;
       case SETTINGS_MODAL.Support:
@@ -62,88 +113,277 @@ const SettingsModal = ({ open, onClose }) => {
         return <DeleteContent />;
       default:
         return (
-          <Box sx={{ p: 3 }}>
-            <Typography color="text.secondary">Select a section</Typography>
-          </Box>
+          <Typography color="text.secondary">Select a section</Typography>
         );
     }
   };
+
+  // ─── Mobile tab items — migrated from VeselaAI ────────────────────────────
+  const mobileTabItems = [
+    { label: "Plan", value: SETTINGS_MODAL.MySubscription },
+    { label: "Display", value: SETTINGS_MODAL.Appearance },
+    { label: "Support", value: SETTINGS_MODAL.Support },
+    { label: "FAQ", value: SETTINGS_MODAL.FAQ },
+    { label: "Terms", value: SETTINGS_MODAL.Terms },
+    { label: "Privacy", value: SETTINGS_MODAL.Privacy },
+    { label: "About", value: SETTINGS_MODAL.About },
+    { label: "Model Card", value: SETTINGS_MODAL.ModelCard },
+    { label: "Delete", value: SETTINGS_MODAL.Delete },
+    { label: "Logout", value: SETTINGS_MODAL.Logout, isLogout: true },
+  ];
+
+  const { title, description } = getSectionDetails(activeSection);
 
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      fullWidth
       fullScreen={isMobile}
+      fullWidth
       maxWidth="lg"
+      scroll="paper"
       PaperProps={{
         sx: {
-          height: isMobile ? "100%" : "85vh",
-          maxHeight: isMobile ? "100%" : "800px",
-          borderRadius: isMobile ? 0 : "8px",
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          borderRadius: isMobile ? 0 : 1,
+          // dvh = dynamic viewport height — accounts for mobile browser chrome
+          height: isMobile ? "100dvh" : "90vh",
+          maxHeight: isMobile ? "100dvh" : "90vh",
           overflow: "hidden",
+          backgroundColor: theme.palette.background.modalBackground,
+          backgroundImage: "none",
         },
       }}
     >
-      {/* Close Button */}
-      <Box sx={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}>
-        <IconButton onClick={onClose}>
-          <X size={20} />
-        </IconButton>
-      </Box>
-
-      <DialogContent
-        sx={{
-          p: 0,
-          height: "100%",
-          overflow: "hidden", // ✅ IMPORTANT
-          bgcolor: theme.palette.background.modalBackground,
-        }}
-      >
-        <Box
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {/*  MOBILE LAYOUT                                                       */}
+      {/* ════════════════════════════════════════════════════════════════════ */}
+      {isMobile ? (
+        <DialogContent
           sx={{
+            p: 0,
             display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            width: "100%",
-            height: "100%", // ✅ IMPORTANT
+            flexDirection: "column",
+            height: "100%",
+            overflow: "hidden",
+            bgcolor: theme.palette.background.modalBackground,
           }}
         >
-          {/* Sidebar */}
+          {/* ── Mobile Header ── */}
           <Box
             sx={{
-              width: { xs: "100%", md: 280 },
-              minWidth: { md: 280 },
-              // Chip-row fits in ~54px on mobile; full height on desktop
-              maxHeight: { xs: 54, md: "none" },
-              borderRight: { md: `1px solid ${theme.palette.divider}` },
-              borderBottom: { xs: `1px solid ${theme.palette.divider}`, md: "none" },
-              overflowY: { xs: "hidden", md: "hidden" },
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              px: 3,
+              pt: 2.5,
+              pb: 1.5,
               flexShrink: 0,
+              borderBottom: `1px solid ${theme.palette.divider}`,
             }}
           >
-            <Sidebar
-              activeSection={activeSection}
-              handleClick={handleSideBarNavLink}
-              compact={isMobile}
-            />
+            <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary" }}>
+              Settings
+            </Typography>
+            <IconButton
+              onClick={onClose}
+              aria-label="Close settings"
+              sx={{ color: "text.primary" }}
+            >
+              <X size={24} />
+            </IconButton>
           </Box>
 
-          {/* Main Content Wrapper */}
+          {/* ── Mobile Tabs — scrollable, migrated from VeselaAI ── */}
+          <Box
+            sx={{
+              px: 1.5,
+              flexShrink: 0,
+              borderBottom: `1px solid ${theme.palette.divider}`,
+            }}
+          >
+            <Tabs
+              value={activeSection}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              allowScrollButtonsMobile
+              sx={{
+                minHeight: 48,
+                "& .MuiTabs-flexContainer": { gap: 0.5 },
+                "& .MuiTabs-indicator": {
+                  backgroundColor: theme.palette.text.primary,
+                },
+                "& .MuiTab-root": {
+                  color: theme.palette.text.secondary,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  minWidth: "fit-content",
+                  whiteSpace: "nowrap",
+                  minHeight: 48,
+                  px: 1.5,
+                  "&.Mui-selected": {
+                    color: theme.palette.text.primary,
+                  },
+                },
+              }}
+            >
+              {mobileTabItems.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  label={tab.label}
+                  value={tab.value}
+                  sx={
+                    tab.isLogout
+                      ? { color: `${theme.palette.error.main} !important` }
+                      : {}
+                  }
+                />
+              ))}
+            </Tabs>
+          </Box>
+
+          {/* ── Mobile Scrollable Content ── */}
           <Box
             sx={{
               flex: 1,
-              minWidth: 0,
+              overflowY: "auto",
+              overflowX: "hidden",
               minHeight: 0,
-              display: "flex",
-              p: 0,
-              flexDirection: "column",
-              overflow: "hidden",
+              // iOS momentum scrolling — migrated from VeselaAI
+              WebkitOverflowScrolling: "touch",
+              px: 3,
+              py: 3,
+              // Safe-area inset padding for notched iOS devices — migrated from VeselaAI
+              pb: "calc(env(safe-area-inset-bottom) + 24px)",
+              ...scrollbarStyles(theme),
             }}
           >
-            <MainContent renderSection={renderSection} />
+            {loading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: "300px",
+                }}
+              >
+                <CircularProgress size={24} />
+              </Box>
+            ) : (
+              <>
+                {/* Section header — migrated from VeselaAI (was not present in Vesela) */}
+                {title && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 700, color: "text.primary" }}
+                    >
+                      {title}
+                    </Typography>
+                    {description && (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary", mt: 0.5 }}
+                      >
+                        {description}
+                      </Typography>
+                    )}
+                  </Box>
+                )}
+                {/* Section content */}
+                <Box>{renderSection()}</Box>
+              </>
+            )}
           </Box>
-        </Box>
-      </DialogContent>
+        </DialogContent>
+      ) : (
+        /* ════════════════════════════════════════════════════════════════════ */
+        /*  TABLET & DESKTOP LAYOUT                                            */
+        /* ════════════════════════════════════════════════════════════════════ */
+        <>
+          {/* Desktop close button — absolute positioned above content */}
+          <Box
+            sx={{
+              position: "absolute",
+              top: 12,
+              right: 20,
+              zIndex: 10,
+            }}
+          >
+            <IconButton
+              onClick={onClose}
+              aria-label="Close settings"
+              sx={{
+                color: theme.palette.text.primary,
+                transition: "all 0.2s ease-in-out",
+                "&:hover": {
+                  backgroundColor: theme.palette.action.hover,
+                  transform: "rotate(90deg)",
+                },
+              }}
+            >
+              <X />
+            </IconButton>
+          </Box>
+
+          <DialogContent
+            sx={{
+              p: 0,
+              flex: 1,
+              display: "flex",
+              overflow: "hidden",
+              overflowX: "hidden",
+              bgcolor: theme.palette.background.modalBackground,
+            }}
+          >
+            {loading ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "100%",
+                }}
+              >
+                <CircularProgress size={24} />
+              </Box>
+            ) : (
+              /* Grid layout — sidebar (md:3) + content (md:9), matches VeselaAI */
+              <Grid
+                container
+                spacing={0}
+                sx={{ flex: 1, minHeight: 0 }}
+              >
+                {/* Sidebar column */}
+                <Grid
+                  size={{ xs: 12, md: 3 }}
+                  sx={{
+                    height: "100%",
+                    borderRight: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <Sidebar
+                    activeSection={activeSection}
+                    handleClick={handleSideBarNavLink}
+                  />
+                </Grid>
+
+                {/* Main content column */}
+                <Grid
+                  size={{ xs: 12, md: 9 }}
+                  sx={{ height: "100%", overflow: "hidden" }}
+                >
+                  <MainContent renderSection={renderSection} />
+                </Grid>
+              </Grid>
+            )}
+          </DialogContent>
+        </>
+      )}
     </Dialog>
   );
 };

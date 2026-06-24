@@ -4,6 +4,7 @@ import { ChatSessionProvider } from "@/context/ChatSessionContext";
 import { AuthProvider } from "@/context/AuthContext";
 import ThemeRegistry from "@/theme/ThemeRegistry";
 import GlobalModals from "../components/modals/GlobalModals";
+import Script from "next/script";
 
 const urbanist = Urbanist({
   subsets: ["latin"],
@@ -35,6 +36,10 @@ export default function RootLayout({ children }) {
               <ModalProvider>
                 {children}
                 <GlobalModals />
+                <Script
+                  src="https://accounts.google.com/gsi/client"
+                  strategy="afterInteractive"
+                />
               </ModalProvider>
             </ChatSessionProvider>
           </AuthProvider>

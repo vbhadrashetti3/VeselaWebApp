@@ -6,83 +6,69 @@ import { createTheme, alpha } from "@mui/material/styles";
 // 1.  SOURCE-OF-TRUTH BRAND CONSTANTS
 // ─────────────────────────────────────────────
 
-/** Public website accent/brand color */
-const PUBLIC_PRIMARY = "#3e1929";
+/** Primary brand color */
+const BRAND_PRIMARY = "#286CA8";
 
-/** Chat application background / brand color */
-const CHAT_PRIMARY = "#1f222a";
-
-const SECONDARY_LIGHT = "#286CA8";
-const SECONDARY_DARK = "#5a90c0";
-
-// ─────────────────────────────────────────────
-// 2.  PUBLIC WEBSITE COLOR TOKENS
-// ─────────────────────────────────────────────
-
-/**
- * Semantic design tokens for the Public Website.
- * Primary brand: #3e1929 (deep burgundy/maroon)
- */
-const publicColorTokens = {
+const colorTokens = {
   light: {
     brand: {
-      main: PUBLIC_PRIMARY,
-      light: "#5e2b42",
-      dark: "#2d111d",
+      main: BRAND_PRIMARY,
+      light: "#4c87bb",
+      dark: "#1f5b8d",
       contrastText: "#ffffff",
     },
     primary: {
-      main: PUBLIC_PRIMARY,
-      dark: "#2d111d",
-      light: "#5e2b42",
-      contrastText: "#ffffff",
-    },
-    secondary: {
-      main: SECONDARY_LIGHT,
+      main: BRAND_PRIMARY,
       dark: "#1f5b8d",
       light: "#4c87bb",
       contrastText: "#ffffff",
     },
+    secondary: {
+      main: "#E0E0E0",
+      dark: "#b0b0b0",
+      light: "#f0f0f0",
+      contrastText: "#000000",
+    },
     text: {
-      primary: "#0f172a",
-      secondary: "#475569",
-      disabled: "#94a3b8",
+      primary: "#000000",
+      secondary: "#555555",
+      disabled: "#9e9e9e",
     },
     background: {
-      default: "#f6f8fc",
+      default: "#f5f5f5",
       paper: "#ffffff",
       overlay: "#ffffff",
     },
     surface: {
       surface: "#ffffff",
       surfaceElevated: "#ffffff",
-      surfaceHover: "#f8fafc",
+      surfaceHover: "#f5f5f5",
       modal: "#ffffff",
-      sidebar: "#f8fafd",
+      sidebar: "#f5f5f5",
       card: "#ffffff",
     },
     border: {
-      soft: "#e2e8f0",
-      strong: "#cbd5e1",
+      soft: "#E0E0E0",
+      strong: "#cccccc",
     },
-    divider: "#e2e8f0",
+    divider: "#E0E0E0",
     state: {
-      hover: "rgba(15, 23, 42, 0.04)",
-      selected: "rgba(62, 25, 41, 0.10)",
-      focusRing: "rgba(62, 25, 41, 0.28)",
-      disabledBg: "#e2e8f0",
+      hover: "rgba(40, 108, 168, 0.04)",
+      selected: "rgba(40, 108, 168, 0.10)",
+      focusRing: "rgba(40, 108, 168, 0.25)",
+      disabledBg: "#e0e0e0",
     },
     header: {
-      background: "rgba(255, 255, 255, 0.88)",
-      border: "rgba(15, 23, 42, 0.08)",
+      background: "#ffffff",
+      border: "#E0E0E0",
     },
     chat: {
-      userBubble: "#f4ebf0",
+      userBubble: "#E0E0E0",
       assistantBubble: "#ffffff",
-      bubbleBorder: "#ecdbe4",
-      inputBg: "#ffffff",
-      welcomeBg: "#f6edf2",
-      welcomeText: "#7a5c6b",
+      bubbleBorder: "#E0E0E0",
+      inputBg: "#FAFAFA",
+      welcomeBg: "#FAFAFA",
+      welcomeText: "#9E9E9E",
     },
     success: {
       main: "#10b981",
@@ -109,8 +95,8 @@ const publicColorTokens = {
       contrastText: "#ffffff",
     },
     shadows: {
-      shadow: "0 10px 24px rgba(15, 23, 42, 0.08)",
-      modalShadow: "0 20px 52px rgba(15, 23, 42, 0.18)",
+      shadow: "0 10px 24px rgba(0, 0, 0, 0.04)",
+      modalShadow: "0 20px 52px rgba(0, 0, 0, 0.12)",
     },
     radius: {
       small: "6px",
@@ -128,63 +114,63 @@ const publicColorTokens = {
   },
   dark: {
     brand: {
-      main: PUBLIC_PRIMARY,
-      light: "#5e2b42",
-      dark: "#2d111d",
+      main: BRAND_PRIMARY,
+      light: "#4c87bb",
+      dark: "#1f5b8d",
       contrastText: "#ffffff",
     },
     primary: {
-      main: "#d896b0",
-      dark: "#a65c7c",
-      light: "#e6b3c7",
-      contrastText: "#151c25",
+      main: BRAND_PRIMARY,
+      dark: "#1f5b8d",
+      light: "#4c87bb",
+      contrastText: "#ffffff",
     },
     secondary: {
-      main: SECONDARY_DARK,
-      dark: "#1f5b8d",
-      light: "#82aed4",
+      main: "#35383F",
+      dark: "#1c1e22",
+      light: "#4e525c",
       contrastText: "#ffffff",
     },
     text: {
-      primary: "#e5edf6",
-      secondary: "#a3b3c5",
-      disabled: "#6e8096",
+      primary: "#ffffff",
+      secondary: "#aaaaaa",
+      disabled: "#777777",
     },
     background: {
-      default: "#fff",
-      paper: "#151c25",
-      overlay: "#1a222d",
+      default: "#121212",
+      paper: "#1e1e1e",
+      overlay: "#1e1e1e",
     },
     surface: {
-      surface: "#151c25",
-      surfaceElevated: "#1b2430",
-      surfaceHover: "#222e3d",
-      modal: "#202a36",
-      sidebar: "#131a23",
-      card: "#1b2430",
+      surface: "#1e1e1e",
+      surfaceElevated: "#1e1e1e",
+      surfaceHover: "#2a2a2a",
+      modal: "#1F222A",
+      sidebar: "#1F222A",
+      card: "#1e1e1e",
     },
     border: {
-      soft: "#2a3645",
-      strong: "#3a4758",
+      soft: "#35383F",
+      strong: "#4e525c",
     },
-    divider: "#2a3645",
+    divider: "#35383F",
     state: {
-      hover: "rgba(229, 237, 246, 0.06)",
-      selected: "rgba(216, 150, 176, 0.24)",
-      focusRing: "rgba(216, 150, 176, 0.42)",
-      disabledBg: "#2a3645",
+      hover: "rgba(40, 108, 168, 0.06)",
+      selected: "rgba(40, 108, 168, 0.25)",
+      focusRing: "rgba(40, 108, 168, 0.40)",
+      disabledBg: "#424242",
     },
     header: {
-      background: "rgba(15, 20, 27, 0.84)",
-      border: "rgba(229, 237, 246, 0.10)",
+      background: "#1e1e1e",
+      border: "#35383F",
     },
     chat: {
-      userBubble: "#4a2336",
-      assistantBubble: "#18212b",
-      bubbleBorder: "#422835",
-      inputBg: "#121923",
-      welcomeBg: "#2b1a23",
-      welcomeText: "#c8a5b7",
+      userBubble: "#1F222A",
+      assistantBubble: "#000000",
+      bubbleBorder: "#35383F",
+      inputBg: "#000000",
+      welcomeBg: "#1F222A",
+      welcomeText: "#BDBDBD",
     },
     success: {
       main: "#10b981",
@@ -230,224 +216,8 @@ const publicColorTokens = {
   },
 };
 
-// ─────────────────────────────────────────────
-// 3.  CHAT APPLICATION COLOR TOKENS
-// ─────────────────────────────────────────────
-
-/**
- * Semantic design tokens for the Chat Application.
- * Primary brand: #1f222a (dark charcoal/navy)
- *
- * In light mode the AppBar / interactive elements use this dark tone.
- * In dark mode, surface colours sit on top of this deep background.
- */
-const chatColorTokens = {
-  light: {
-    brand: {
-      main: CHAT_PRIMARY,
-      light: "#2e3240",
-      dark: "#14161c",
-      contrastText: "#ffffff",
-    },
-    primary: {
-      main: CHAT_PRIMARY,
-      dark: "#14161c",
-      light: "#2e3240",
-      contrastText: "#ffffff",
-    },
-    secondary: {
-      main: SECONDARY_LIGHT,
-      dark: "#1f5b8d",
-      light: "#4c87bb",
-      contrastText: "#ffffff",
-    },
-    text: {
-      primary: "#0f172a",
-      secondary: "#475569",
-      disabled: "#94a3b8",
-    },
-    background: {
-      default: "#f4f6fa",
-      paper: "#ffffff",
-      overlay: "#ffffff",
-    },
-    surface: {
-      surface: "#ffffff",
-      surfaceElevated: "#f8fafc",
-      surfaceHover: "#f1f5f9",
-      modal: "#ffffff",
-      sidebar: "#f4f6fa",
-      card: "#ffffff",
-    },
-    border: {
-      soft: "#e2e8f0",
-      strong: "#cbd5e1",
-    },
-    divider: "#e2e8f0",
-    state: {
-      hover: "rgba(31, 34, 42, 0.06)",
-      selected: "rgba(31, 34, 42, 0.12)",
-      focusRing: "rgba(31, 34, 42, 0.28)",
-      disabledBg: "#e2e8f0",
-    },
-    header: {
-      background: CHAT_PRIMARY,
-      border: "rgba(255, 255, 255, 0.10)",
-    },
-    chat: {
-      userBubble: "#e8eaf0",
-      assistantBubble: "#ffffff",
-      bubbleBorder: "#d8dce8",
-      inputBg: "#ffffff",
-      welcomeBg: "#eef0f6",
-      welcomeText: "#4a5068",
-    },
-    success: {
-      main: "#10b981",
-      light: "#34d399",
-      dark: "#047857",
-      contrastText: "#ffffff",
-    },
-    warning: {
-      main: "#f59e0b",
-      light: "#fbbf24",
-      dark: "#b45309",
-      contrastText: "#ffffff",
-    },
-    error: {
-      main: "#ef4444",
-      light: "#f87171",
-      dark: "#b91c1c",
-      contrastText: "#ffffff",
-    },
-    info: {
-      main: "#3b82f6",
-      light: "#60a5fa",
-      dark: "#1d4ed8",
-      contrastText: "#ffffff",
-    },
-    shadows: {
-      shadow: "0 10px 24px rgba(15, 23, 42, 0.08)",
-      modalShadow: "0 20px 52px rgba(15, 23, 42, 0.18)",
-    },
-    radius: {
-      small: "6px",
-      medium: "12px",
-      large: "18px",
-      full: "9999px",
-    },
-    spacing: {
-      xs: "4px",
-      sm: "8px",
-      md: "16px",
-      lg: "24px",
-      xl: "32px",
-    },
-  },
-  dark: {
-    brand: {
-      main: CHAT_PRIMARY,
-      light: "#2e3240",
-      dark: "#14161c",
-      contrastText: "#ffffff",
-    },
-    primary: {
-      // In dark mode, use a lighter accent derived from the chat primary
-      main: "#8b93b0",
-      dark: "#5c6280",
-      light: "#b0b8d4",
-      contrastText: "#0f111a",
-    },
-    secondary: {
-      main: SECONDARY_DARK,
-      dark: "#1f5b8d",
-      light: "#82aed4",
-      contrastText: "#ffffff",
-    },
-    text: {
-      primary: "#e4e8f4",
-      secondary: "#9ba3be",
-      disabled: "#5c6480",
-    },
-    background: {
-      default: "#000000",
-      paper: CHAT_PRIMARY,
-      overlay: CHAT_PRIMARY,
-    },
-    surface: {
-      surface: CHAT_PRIMARY,
-      surfaceElevated: CHAT_PRIMARY,
-      surfaceHover: "#2e3345",
-      modal: CHAT_PRIMARY,
-      sidebar: CHAT_PRIMARY,
-      card: CHAT_PRIMARY,
-    },
-    border: {
-      soft: "#303545",
-      strong: "#404660",
-    },
-    divider: "#303545",
-    state: {
-      hover: "rgba(228, 232, 244, 0.06)",
-      selected: "rgba(139, 147, 176, 0.20)",
-      focusRing: "rgba(139, 147, 176, 0.40)",
-      disabledBg: "#303545",
-    },
-    header: {
-      background: "#000000",
-      border: "rgba(228, 232, 244, 0.10)",
-    },
-    chat: {
-      userBubble: "#2e3345",
-      assistantBubble: CHAT_PRIMARY,
-      bubbleBorder: "#303545",
-      inputBg: "#191c26",
-      welcomeBg: CHAT_PRIMARY,
-      welcomeText: "#9ba3be",
-    },
-    success: {
-      main: "#10b981",
-      light: "#34d399",
-      dark: "#047857",
-      contrastText: "#ffffff",
-    },
-    warning: {
-      main: "#f59e0b",
-      light: "#fbbf24",
-      dark: "#b45309",
-      contrastText: "#ffffff",
-    },
-    error: {
-      main: "#ef4444",
-      light: "#f87171",
-      dark: "#b91c1c",
-      contrastText: "#ffffff",
-    },
-    info: {
-      main: "#3b82f6",
-      light: "#60a5fa",
-      dark: "#1d4ed8",
-      contrastText: "#ffffff",
-    },
-    shadows: {
-      shadow: "0 14px 40px rgba(0, 0, 0, 0.50)",
-      modalShadow: "0 22px 56px rgba(0, 0, 0, 0.56)",
-    },
-    radius: {
-      small: "6px",
-      medium: "12px",
-      large: "18px",
-      full: "9999px",
-    },
-    spacing: {
-      xs: "4px",
-      sm: "8px",
-      md: "16px",
-      lg: "24px",
-      xl: "32px",
-    },
-  },
-};
+const publicColorTokens = colorTokens;
+const chatColorTokens = colorTokens;
 
 // ─────────────────────────────────────────────
 // 4.  SHARED TYPOGRAPHY
@@ -485,7 +255,10 @@ const buildComponents = () => ({
   MuiAppBar: {
     styleOverrides: {
       root: ({ theme }) => ({
+        backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary,
+        boxShadow: "none",
+        backgroundImage: "none",
       }),
     },
   },
@@ -552,7 +325,7 @@ const buildComponents = () => ({
     },
     styleOverrides: {
       root: ({ theme }) => ({
-        borderRadius: 10,
+        borderRadius: 12,
         paddingInline: 14,
         "&.Mui-disabled": {
           color: theme.palette.text.disabled,
@@ -718,6 +491,20 @@ const buildTheme = (t, mode) =>
         focus: t.state.focusRing,
         disabled: t.text.disabled,
         disabledBackground: t.state.disabledBg,
+      },
+      chat: {
+        user: t.chat.userBubble,
+        bot: t.chat.assistantBubble,
+        msgBg: mode === "light" ? "#E0E0E0" : "#35383F",
+      },
+      welcomePage: {
+        background: t.chat.welcomeBg,
+        text: t.chat.welcomeText,
+        capabilitiesText: mode === "light" ? "#BDBDBD" : "#424242",
+      },
+      sendMsgInput: {
+        sendMsgInputBg: t.chat.inputBg,
+        sendMsgBorder: t.border.soft,
       },
       custom: {
         brand: t.brand,

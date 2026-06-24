@@ -14,12 +14,12 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 const faqList = [
   {
-    question: "How can I get the most out of Grace?",
+    question: "How can I get the most out of Vesela?",
     answer:
-      "Talk to Grace the way you’d talk to a thoughtful, attentive human—short, natural replies are completely fine. She’s trained on real counseling conversations and is designed to help you reflect, gain clarity, and move toward self-actualization.",
+      "Talk to Vesela the way you’d talk to a thoughtful, attentive human—short, natural replies are completely fine. She’s trained on real counseling conversations and is designed to help you reflect, gain clarity, and move toward self-actualization.",
   },
   {
-    question: "Where can I learn more about how Grace works?",
+    question: "Where can I learn more about how Vesela works?",
     answer: (
       <>
         Visit our website at{" "}
@@ -37,9 +37,9 @@ const faqList = [
     ),
   },
   {
-    question: "Is Grace the same as an actual counselor?",
+    question: "Is Vesela the same as an actual counselor?",
     answer:
-      "No. Grace is not a licensed counselor and cannot replace one. She can’t diagnose or treat mental health conditions. Think of her as a tool to help you reflect and find clarity, not as a medical provider.",
+      "No. Vesela is not a licensed counselor and cannot replace one. She can’t diagnose or treat mental health conditions. Think of her as a tool to help you reflect and find clarity, not as a medical provider.",
   },
   {
     question: "What should I do if I need a human counselor?",
@@ -60,10 +60,10 @@ const faqList = [
     ),
   },
   {
-    question: "How much does Grace cost?",
+    question: "How much does Vesela cost?",
     answer: (
       <>
-        Grace costs $18.99/month on our website{" "}
+        Vesela costs $18.99/month on our website{" "}
         <a
           href="https://grayskyai.com"
           target="_blank"
@@ -80,17 +80,17 @@ const faqList = [
   {
     question: "What do I get with a paid subscription?",
     answer:
-      "You unlock our most advanced Grace model, trained on proprietary counseling data, psychology research, and a custom cognitive architecture built for depth and guidance.",
+      "You unlock our most advanced Vesela model, trained on proprietary counseling data, psychology research, and a custom cognitive architecture built for depth and guidance.",
   },
   {
-    question: "Is Grace right for me?",
+    question: "Is Vesela right for me?",
     answer:
-      "Grace is great if you think deeply, feel stuck or overwhelmed, want clarity, need support between therapy sessions, or prefer deeper, reflective conversations. Try the 7-day trial to see if she fits your style.",
+      "Vesela is great if you think deeply, feel stuck or overwhelmed, want clarity, need support between therapy sessions, or prefer deeper, reflective conversations. Try the 7-day trial to see if she fits your style.",
   },
   {
-    question: "Can Grace diagnose me?",
+    question: "Can Vesela diagnose me?",
     answer:
-      "No. Grace cannot diagnose, treat, or cure mental health conditions. She helps you reflect and recognize patterns—not make medical decisions.",
+      "No. Vesela cannot diagnose, treat, or cure mental health conditions. She helps you reflect and recognize patterns—not make medical decisions.",
   },
   {
     question: "What if I need counseling but can’t afford this?",
@@ -131,12 +131,12 @@ const faqList = [
   {
     question: "Why not just use ChatGPT or Claude for counseling?",
     answer:
-      "Generic models explain and advise; Grace guides you toward your own insights. She's trained on proprietary counseling datasets, uses a custom cognitive architecture, and is overseen by licensed clinicians.",
+      "Generic models explain and advise; Vesela guides you toward your own insights. She's trained on proprietary counseling datasets, uses a custom cognitive architecture, and is overseen by licensed clinicians.",
   },
   {
-    question: "How is Grace different from other AI counselor apps?",
+    question: "How is Vesela different from other AI counselor apps?",
     answer:
-      "Most apps wrap generic models. Grace uses proprietary counseling datasets, a custom self-actualization architecture, and clinician oversight—built from the ground up.",
+      "Most apps wrap generic models. Vesela uses proprietary counseling datasets, a custom self-actualization architecture, and clinician oversight—built from the ground up.",
   },
   {
     question: "Is there a free version?",
@@ -164,7 +164,7 @@ const faqList = [
   {
     question: "What’s the purpose of the pre-session questions?",
     answer:
-      "They help Grace understand your emotional state and what you want to work on. Some technical questions also support future model improvements.",
+      "They help Vesela understand your emotional state and what you want to work on. Some technical questions also support future model improvements.",
   },
   {
     question: "What happens after the 7-day free trial?",
@@ -187,7 +187,7 @@ const faqList = [
     question: "What if I’m in crisis or feel unsafe?",
     answer: (
       <>
-        {"Grace is not a crisis service. If you're in danger or experiencing self-harm thoughts, contact your local emergency number. In the U.S., you can call or text 988 or visit "}
+        {"Vesela is not a crisis service. If you're in danger or experiencing self-harm thoughts, contact your local emergency number. In the U.S., you can call or text 988 or visit "}
         <a
           href="https://988lifeline.org"
           target="_blank"

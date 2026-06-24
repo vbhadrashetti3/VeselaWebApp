@@ -84,16 +84,10 @@ export default function ChatInput({
             border: "1px solid",
             borderColor: isFocused
               ? theme.palette.primary.main
-              : isLight
-                ? "#e5e7eb"
-                : "#2d3139",
-            backgroundColor: isLight
-              ? "#f9fafb"
-              : "#161618",
+              : theme.palette.sendMsgInput?.sendMsgBorder || theme.palette.divider,
+            backgroundColor: theme.palette.sendMsgInput?.sendMsgInputBg || theme.palette.background.default,
             boxShadow: isFocused
-              ? isLight
-                ? "0 0 0 3px rgba(40, 108, 168, 0.12), 0 4px 12px rgba(0,0,0,0.03)"
-                : "0 0 0 3px rgba(40, 108, 168, 0.25), 0 4px 12px rgba(0,0,0,0.2)"
+              ? `0 0 0 3px ${alpha(theme.palette.primary.main, isLight ? 0.12 : 0.25)}, 0 4px 12px ${isLight ? "rgba(0,0,0,0.03)" : "rgba(0,0,0,0.2)"}`
               : "none",
             transition:
               "border-color 0.2s, box-shadow 0.2s, border-radius 0.2s",
@@ -106,9 +100,7 @@ export default function ChatInput({
             "&:hover": {
               borderColor: isFocused
                 ? theme.palette.primary.main
-                : isLight
-                  ? "#d1d5db"
-                  : "#4b5563",
+                : theme.palette.custom?.border?.strong || theme.palette.text.secondary,
             },
           }}
         >
@@ -133,7 +125,7 @@ export default function ChatInput({
             }
             disabled={isGuestLocked}
             sx={{
-              color: isLight ? "#111827" : "#f9fafb",
+              color: theme.palette.text.primary,
               // ≥16px prevents iOS Safari from auto-zooming the viewport on focus
               fontSize: { xs: "16px", sm: "16px" },
               lineHeight: 1.5,
@@ -157,23 +149,17 @@ export default function ChatInput({
                 },
 
                 "&::-webkit-scrollbar-thumb": {
-                  background: isLight
-                    ? "#cbd5e1"
-                    : "#3f3f46",
+                  background: theme.palette.divider,
                   borderRadius: "99px",
                 },
 
                 "&::-webkit-scrollbar-thumb:hover": {
-                  background: isLight
-                    ? "#94a3b8"
-                    : "#52525b",
+                  background: theme.palette.text.disabled,
                 },
 
                 scrollbarWidth: "thin",
 
-                scrollbarColor: isLight
-                  ? "#cbd5e1 transparent"
-                  : "#3f3f46 transparent",
+                scrollbarColor: `${theme.palette.divider} transparent`,
               },
             }}
           />
@@ -204,9 +190,7 @@ export default function ChatInput({
                   size="small"
                   disabled
                   sx={{
-                    color: isLight
-                      ? "#6b7280"
-                      : "#a1a1aa",
+                    color: theme.palette.text.secondary,
                     width: 34,
                     height: 34,
                     backgroundColor: isLight
@@ -233,12 +217,8 @@ export default function ChatInput({
                 transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
 
                 "&.Mui-disabled": {
-                  backgroundColor: isLight
-                    ? "rgba(0, 0, 0, 0.04)"
-                    : "rgba(255, 255, 255, 0.05)",
-                  color: isLight
-                    ? "#9ca3af"
-                    : "#4b5563",
+                  backgroundColor: theme.palette.action.disabledBackground,
+                  color: theme.palette.action.disabled,
                 },
 
                 "&:hover": {

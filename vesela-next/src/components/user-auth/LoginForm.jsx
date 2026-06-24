@@ -25,6 +25,7 @@ import { useLogin } from "@/hooks/useLogin";
 import { useColorMode } from "@/theme/ThemeRegistry";
 import { useModal } from "@/context/ModalContext";
 import { localStorageUtil } from "@/utils/localStorageUtil";
+import GoogleLoginButton from "./GoogleLoginButton";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -177,6 +178,16 @@ const LoginForm = ({ handleNext }) => {
           Login
         </CustomButton>
       </Box>
+
+      <Box sx={{ display: "flex", alignItems: "center", my: 2 }}>
+        <Divider sx={{ flex: 1 }} />
+        <Typography variant="body2" sx={{ mx: 2, color: "text.secondary" }}>
+          or
+        </Typography>
+        <Divider sx={{ flex: 1 }} />
+      </Box>
+
+      <GoogleLoginButton handleNext={handleNext} setDarkMode={setDarkMode} />
     </form>
   );
 };
