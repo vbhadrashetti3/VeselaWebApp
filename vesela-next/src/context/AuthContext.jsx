@@ -5,12 +5,14 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
 import { localStorageUtil } from "@/utils/localStorageUtil";
 import { TOKEN, USER_DETAILS, PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO } from "@/constant";
 import { post } from "@/lib/apiService";
+import { getPlan } from "@/services/auth.service";
 
 // ─── Context ───────────────────────────────────────────────────────────────
 
@@ -30,6 +32,16 @@ export const AuthProvider = ({ children }) => {
     return stored;
   });
 
+  const [plan, setPlan] = useState(() => {
+    const stored = localStorageUtil.get(PLAN_DETAILS);
+    if (!stored || typeof stored !== "object" || !stored.plan) return null;
+    return stored.plan;
+  });
+  const [isLoadingPlan, setIsLoadingPlan] = useState(false);
+  const [planError, setPlanError] = useState(null);
+
+  const isFetchingPlanRef = useRef(false);
+
   // Keep localStorage in sync whenever state changes
   useEffect(() => {
     if (token) {
@@ -48,6 +60,12 @@ export const AuthProvider = ({ children }) => {
   // ── login ────────────────────────────────────────────────────────────────
   /** Call this after a successful login API response. */
   const login = useCallback((newToken, newUser) => {
+    if (newToken) {
+      localStorageUtil.set(TOKEN, newToken);
+    }
+    if (newUser) {
+      localStorageUtil.set(USER_DETAILS, newUser);
+    }
     setToken(newToken);
     setUser(newUser);
   }, []);
@@ -63,6 +81,9 @@ export const AuthProvider = ({ children }) => {
       // Clear state
       setToken(null);
       setUser(null);
+      setPlan(null);
+      setPlanError(null);
+      setIsLoadingPlan(false);
 
       // Clear storage
       localStorageUtil.remove(TOKEN);
@@ -75,11 +96,57 @@ export const AuthProvider = ({ children }) => {
     }
   }, [router]);
 
+  // ── fetchPlan ─────────────────────────────────────────────────────────────
+  const fetchPlan = useCallback(async () => {
+    if (!token) return;
+    if (isFetchingPlanRef.current) return;
+    isFetchingPlanRef.current = true;
+
+    setIsLoadingPlan(true);
+    setPlanError(null);
+
+    try {
+      const res = await getPlan();
+      if (!res.error && res.status === 200 && res.data) {
+        setPlan(res.data.plan);
+        localStorageUtil.set(PLAN_DETAILS, res.data);
+      } else {
+        if (res.status === 401) {
+          // Token expired/invalid, logout to clear session
+          logout();
+        } else {
+          setPlanError(res.message || "Failed to fetch subscription plan");
+        }
+      }
+    } catch (err) {
+      setPlanError(err?.message || "An error occurred fetching subscription plan");
+    } finally {
+      setIsLoadingPlan(false);
+      isFetchingPlanRef.current = false;
+    }
+  }, [token, logout]);
+
+  // Automatically fetch subscription plan when token is present
+  useEffect(() => {
+    if (token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchPlan();
+    } else {
+      setPlan(null);
+    }
+  }, [token, fetchPlan]);
+
   const value = {
     token,
     user,
     userId: user?.pk ?? null,
     isAuthenticated: Boolean(token),
+    plan,
+    isLoadingPlan,
+    planError,
+    isPro: plan === "pro",
+    isFree: plan === "free" || !plan,
+    fetchPlan,
     login,
     logout,
   };

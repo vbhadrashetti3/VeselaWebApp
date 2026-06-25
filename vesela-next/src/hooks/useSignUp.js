@@ -4,11 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { registerUser } from "@/services/auth.service";
 import { MODALS } from "@/components/modals/modalConstants";
-import { TOKEN, USER_DETAILS, POST_LOGIN_NAVIGATE_TO } from "@/constant";
-import { localStorageUtil } from "@/utils/localStorageUtil";
+import { useAuth } from "@/context/AuthContext";
 
 export const useSignUp = (handleNext, onSuccess) => {
   const router = useRouter();
+  const { login } = useAuth();
   const [errorMsg, setErrorMsg] = useState("");
 
   const signUp = async (values, setSubmitting) => {
@@ -16,8 +16,8 @@ export const useSignUp = (handleNext, onSuccess) => {
       setErrorMsg("");
       const response = await registerUser(values);
       if (!response.error && response.status === 201) {
-        localStorageUtil.set(TOKEN, response.data.access);
-        localStorageUtil.set(USER_DETAILS, JSON.stringify(response.data.user));
+        // Dispatch login state update to context
+        login(response.data.access, response.data.user);
 
         onSuccess && onSuccess();
         handleNext && handleNext(MODALS.UPDATE_INFO);

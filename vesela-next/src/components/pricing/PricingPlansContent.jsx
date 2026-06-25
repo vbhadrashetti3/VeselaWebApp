@@ -11,6 +11,7 @@ import {
   Chip,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
+import { useAuth } from "@/context/AuthContext";
 
 const plans = [
   {
@@ -43,6 +44,9 @@ const plans = [
 
 export default function PricingPlansContent() {
   const theme = useTheme();
+  const { plan: currentPlan, isAuthenticated } = useAuth();
+
+  const activePlanId = isAuthenticated ? (currentPlan || "free") : null;
 
   return (
     <Box sx={{ p: { xs: 1.5, md: 2 } }}>
@@ -117,10 +121,29 @@ export default function PricingPlansContent() {
                 <Button
                   fullWidth
                   size="medium"
-                  variant={plan.id === "free" ? "outlined" : "contained"}
-                  sx={{ mt: 1, fontSize: { xs: "11px", md: "13px" } }}
+                  variant={activePlanId === plan.id ? "contained" : plan.id === "free" ? "outlined" : "contained"}
+                  color={activePlanId === plan.id ? "success" : "primary"}
+                  disabled={activePlanId === plan.id}
+                  sx={{
+                    mt: 1,
+                    fontSize: { xs: "11px", md: "13px" },
+                    ...(activePlanId === plan.id && {
+                      bgcolor: "success.main",
+                      color: "common.white",
+                      "&.Mui-disabled": {
+                        bgcolor: "success.main",
+                        color: "common.white",
+                        opacity: 0.9,
+                      },
+                    }),
+                  }}
+                  onClick={() => {
+                    if (plan.link) {
+                      window.open(plan.link, "_blank");
+                    }
+                  }}
                 >
-                  Select Plan
+                  {activePlanId === plan.id ? "Current Plan" : "Select Plan"}
                 </Button>
               </CardContent>
             </Card>
