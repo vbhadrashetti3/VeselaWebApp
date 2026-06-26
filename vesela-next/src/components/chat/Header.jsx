@@ -49,7 +49,7 @@ export default function Header() {
     {
       label: "New Chat",
       icon: <Plus sx={{ fontSize: 18 }} />,
-      action: () => console.log("New Chat Clicked", Date.now()), // Replace with actual action
+      action: () => router.push("/welcome"),
       disabled: !token,
       tooltip: "Please log in to start a new chat",
     },
@@ -91,11 +91,10 @@ export default function Header() {
       position="fixed"
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        bgcolor: theme.palette.background.paper,
+        bgcolor: theme.palette.background.default,
         color: theme.palette.text.primary,
         boxShadow: "none",
-        borderBottom: "1px solid",
-        borderColor: theme.palette.divider,
+        border: 0
       }}
     >
       <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>

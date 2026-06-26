@@ -14,14 +14,6 @@ import ChatBubble from "../chat/ChatBubble";
 import ShareModal from "../modals/ShareModal";
 import { scrollbarStyles } from "@/utils/scrollbar";
 
-// ─── ChatPreview ───────────────────────────────────────────────────────────────
-// Migration changes from VeselaAI:
-//  • Added per-conversation error state (was silently ignored)
-//  • Added "Saved Conversation" sub-header bar (VeselaAI feature)
-//  • Added Share button + ShareModal (VeselaAI feature)
-//  • Wired up `error` and `refresh` from useChatDetails hook
-//  • Kept Vesela's ChatBubble (not VeselaAI's MessageList/ReactMarkdown)
-//  • Kept scroll-jank fix: only auto-scroll after !loading
 
 const ChatPreview = ({ chatId }) => {
   const theme = useTheme();
@@ -29,9 +21,6 @@ const ChatPreview = ({ chatId }) => {
   const [shareOpen, setShareOpen] = useState(false);
 
   const { messages, loading, error } = useChatDetails(chatId);
-
-  // Auto-scroll to bottom only after messages load — prevents scroll-jank
-  // that fired when loading flipped to true before content was painted.
   useEffect(() => {
     if (!loading && messages.length > 0 && scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -60,10 +49,6 @@ const ChatPreview = ({ chatId }) => {
             px: { xs: 2, sm: 3 },
             py: 1,
             borderBottom: `1px solid ${theme.palette.divider}`,
-            bgcolor:
-              theme.palette.mode === "light"
-                ? theme.palette.background.paper
-                : theme.palette.background.paper,
             flexShrink: 0,
           }}
         >
@@ -95,7 +80,7 @@ const ChatPreview = ({ chatId }) => {
       <Box
         sx={{
           flex: 1,
-          minHeight: 0, // required for overflow to work in a flex child
+          minHeight: 0,
           overflowY: "auto",
           p: { xs: 1.5, md: 2 },
           display: "flex",
@@ -115,7 +100,6 @@ const ChatPreview = ({ chatId }) => {
             <CircularProgress size={28} thickness={4} />
           </Box>
         ) : error ? (
-          /* ── Per-conversation error state — migrated from VeselaAI ── */
           <Box
             sx={{
               display: "flex",
@@ -166,7 +150,6 @@ const ChatPreview = ({ chatId }) => {
                 />
               ))
               : null}
-            {/* Scroll anchor — sits at the very end of the message list */}
             <div ref={scrollRef} style={{ height: "1px" }} />
           </Box>
         )}

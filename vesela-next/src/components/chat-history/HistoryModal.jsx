@@ -19,12 +19,6 @@ import ChatPreview from "./ChatPreview";
 import { useChatHistory } from "@/hooks/useChatHistory";
 import ChatList from "./ChatList";
 
-// ─── Breakpoints ───────────────────────────────────────────────────────────────
-// Mobile  : < 768px  → full-screen, single-panel with AnimatePresence slide
-// Tablet  : 768–1023px → side-by-side, compact
-// Desktop : ≥ 1024px  → two-panel, rich empty state
-
-// ─── Slide-up Dialog transition (migrated from VeselaAI) ───────────────────────
 const SlideTransition = React.forwardRef(function SlideTransition(props, ref) {
   return <Slide direction="up" ref={ref} {...props} />;
 });
@@ -80,8 +74,6 @@ const HistoryModal = ({ open, onClose }) => {
       PaperProps={{
         sx: {
           width: "100%",
-          // dvh = dynamic viewport height — accounts for mobile browser chrome
-          // (address bar, safe areas). "100dvh" is the VeselaAI pattern.
           height: isMobile ? "100dvh" : "85vh",
           maxHeight: isMobile ? "100dvh" : "860px",
           display: "flex",

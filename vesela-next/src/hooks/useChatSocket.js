@@ -38,6 +38,7 @@ export const useChatSocket = (token, userId) => {
   const messageQueueRef = useRef([]);
   const conversationIdRef = useRef(null);
   const onMessageRef = useRef(null);
+  const connectRef = useRef(null);
 
   // ─── State ─────────────────────────────────────────────────────────────────
   const [messages, setMessages] = useState([]);
@@ -48,9 +49,11 @@ export const useChatSocket = (token, userId) => {
     return localStorage.getItem("vesela_auth_limit_locked") === "true";
   });
 
-  // Keep refs in sync with latest prop values every render
-  userIdRef.current = userId;
-  tokenRef.current = token;
+  // Keep refs in sync with latest prop values outside of render
+  useEffect(() => {
+    userIdRef.current = userId;
+    tokenRef.current = token;
+  }, [userId, token]);
 
   // ─── Persist locked flag ────────────────────────────────────────────────────
   useEffect(() => {
@@ -69,11 +72,16 @@ export const useChatSocket = (token, userId) => {
     try {
       data = JSON.parse(event.data);
     } catch {
-      console.warn("[WS] Unparseable message:", event.data);
+      console.warn("[WS] Unparseable message payload:", event.data);
       return;
     }
 
-    if (SILENT_TYPES.has(data.type)) return;
+    if (SILENT_TYPES.has(data.type)) {
+      console.log(`[WS] Received silent message type: "${data.type}"`);
+      return;
+    }
+
+    console.log(`[WS] Processing message type: "${data.type}"`, data);
 
     switch (data.type) {
       case "thinking":
@@ -85,6 +93,7 @@ export const useChatSocket = (token, userId) => {
         setIsStreaming(true);
         if (data.conversation_id) {
           conversationIdRef.current = data.conversation_id;
+          console.log("[WS] Set conversationId:", data.conversation_id);
         }
         // Insert an empty assistant bubble to stream into.
         {
@@ -112,17 +121,21 @@ export const useChatSocket = (token, userId) => {
             };
             return next;
           });
+        } else {
+          console.warn("[WS] Received chunk but no currentAssistantId or content", data);
         }
         break;
 
       case "done":
       case "complete":
         // Stream finished — this is the ONLY place we hide the loader.
+        console.log(`[WS] Stream completed for message type: "${data.type}"`);
         setIsStreaming(false);
         currentAssistantIdRef.current = null;
         break;
 
       case "error": {
+        console.error("[WS] Received error message:", data);
         setIsStreaming(false);
         currentAssistantIdRef.current = null;
         const msg = data.message || "An error occurred.";
@@ -130,7 +143,10 @@ export const useChatSocket = (token, userId) => {
           ...prev,
           { id: crypto.randomUUID(), role: "assistant", message: msg, isError: true },
         ]);
-        if (isLimitMessage(msg)) setIsLocked(true);
+        if (isLimitMessage(msg)) {
+          console.warn("[WS] User limit message detected. Locking chat.");
+          setIsLocked(true);
+        }
         break;
       }
 
@@ -166,13 +182,25 @@ export const useChatSocket = (token, userId) => {
 
   const connect = useCallback(() => {
     const currentToken = tokenRef.current;
-    if (!currentToken || isDisposedRef.current) return;
+    if (!currentToken) {
+      console.log("[WS] Connection skipped: No token available.");
+      return;
+    }
+    if (isDisposedRef.current) {
+      console.log("[WS] Connection skipped: Hook is disposed.");
+      return;
+    }
 
     // Close any existing socket cleanly before reconnecting
     const old = socketRef.current;
     if (old) {
+      if (old.readyState === WebSocket.CONNECTING || old.readyState === WebSocket.OPEN) {
+        console.log(`[WS] Connection already in progress or open (readyState: ${old.readyState}). Skipping connect.`);
+        return;
+      }
+      console.log("[WS] Closing existing closed/closing socket before reconnecting.");
       old.onopen = old.onmessage = old.onclose = old.onerror = null;
-      try { old.close(); } catch { /* ignore */ }
+      try { old.close(); } catch (err) { console.error("[WS] Error closing stale socket:", err); }
       socketRef.current = null;
     }
 
@@ -180,96 +208,120 @@ export const useChatSocket = (token, userId) => {
     retryTimerRef.current = null;
 
     setStatus("connecting");
+    console.log(`[WS] Connecting to ${WS_URL}...`);
 
-    const ws = new WebSocket(`${WS_URL}?token=${currentToken}`);
-    socketRef.current = ws;
+    try {
+      const ws = new WebSocket(`${WS_URL}?token=${currentToken}`);
+      socketRef.current = ws;
 
-    ws.onopen = () => {
-      if (isDisposedRef.current) return ws.close();
-      retryCountRef.current = 0;
-      setStatus("connected");
-
-      currentAssistantIdRef.current = null;
-      while (messageQueueRef.current.length > 0) {
-        const payload = messageQueueRef.current.shift();
-        ws.send(JSON.stringify(payload));
-      }
-    };
-
-    ws.onmessage = (event) => onMessageRef.current?.(event);
-
-    ws.onclose = (event) => {
-      if (isDisposedRef.current) return;
-      socketRef.current = null;
-      currentAssistantIdRef.current = null;
-      setStatus("disconnected");
-
-      setIsStreaming((prev) => {
-        if (prev) {
-          setMessages((msgs) => {
-            const last = msgs[msgs.length - 1];
-            // Don't double-append if the last message was already an error
-            if (last?.isError) return msgs;
-            return [
-              ...msgs,
-              {
-                id: crypto.randomUUID(),
-                role: "assistant",
-                message: "Connection lost. Please retry.",
-                isError: true,
-              },
-            ];
-          });
+      ws.onopen = () => {
+        if (isDisposedRef.current) {
+          console.log("[WS] Socket opened but hook is disposed. Closing socket.");
+          return ws.close();
         }
-        return false;
-      });
+        retryCountRef.current = 0;
+        setStatus("connected");
+        console.log("[WS] Connection successfully established.");
 
-      const { code, reason } = event;
-      console.debug(`[WS] Closed — code=${code}, reason=${reason || "none"}`);
+        currentAssistantIdRef.current = null;
+        console.log(`[WS] Draining message queue. Queue length: ${messageQueueRef.current.length}`);
+        while (messageQueueRef.current.length > 0) {
+          const payload = messageQueueRef.current.shift();
+          console.log("[WS] Sending queued message payload:", payload);
+          ws.send(JSON.stringify(payload));
+        }
+      };
 
-      // Auth failure codes: stop reconnecting immediately
-      if (code >= 4000 && code < 5000) {
-        console.warn("[WS] Auth/server rejected — will not reconnect. Code:", code);
-        return;
-      }
+      ws.onmessage = (event) => {
+        console.log("[WS] Received raw message:", event.data);
+        onMessageRef.current?.(event);
+      };
 
-      // Clean close: do not reconnect
-      if (code === 1000) return;
+      ws.onclose = (event) => {
+        if (isDisposedRef.current) {
+          console.log("[WS] Socket closed (hook disposed).");
+          return;
+        }
+        socketRef.current = null;
+        currentAssistantIdRef.current = null;
+        setStatus("disconnected");
 
-      // For non-retryable codes stop after logging
-      if (!RETRYABLE_CODES.has(code) && code !== 0) {
-        console.warn("[WS] Non-retryable close code:", code);
-        return;
-      }
+        setIsStreaming((prev) => {
+          if (prev) {
+            console.log("[WS] Connection lost during streaming. Appending error message.");
+            setMessages((msgs) => {
+              const last = msgs[msgs.length - 1];
+              if (last?.isError) return msgs;
+              return [
+                ...msgs,
+                {
+                  id: crypto.randomUUID(),
+                  role: "assistant",
+                  message: "Connection lost. Please retry.",
+                  isError: true,
+                },
+              ];
+            });
+          }
+          return false;
+        });
 
-      // Exponential backoff with jitter
-      if (retryCountRef.current >= MAX_RETRIES) {
-        console.warn("[WS] Max retries reached. Giving up.");
-        return;
-      }
+        const { code, reason } = event;
+        console.warn(`[WS] Closed — code=${code}, reason=${reason || "none"}`);
 
-      const delay = Math.min(
-        BASE_BACKOFF_MS * 2 ** retryCountRef.current + Math.random() * 500,
-        30_000,
-      );
-      retryCountRef.current += 1;
-      console.debug(`[WS] Reconnecting in ${Math.round(delay)}ms (attempt ${retryCountRef.current})`);
+        // Auth failure codes: stop reconnecting immediately
+        if (code >= 4000 && code < 5000) {
+          console.warn("[WS] Auth/server rejected — will not reconnect. Code:", code);
+          return;
+        }
 
-      retryTimerRef.current = setTimeout(() => connect(), delay);
-    };
+        // Clean close: do not reconnect
+        if (code === 1000) return;
 
-    ws.onerror = () => {
-      console.debug("[WS] Socket error");
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // For non-retryable codes stop after logging
+        if (!RETRYABLE_CODES.has(code) && code !== 0) {
+          console.warn("[WS] Non-retryable close code:", code);
+          return;
+        }
+
+        // Exponential backoff with jitter
+        if (retryCountRef.current >= MAX_RETRIES) {
+          console.warn("[WS] Max retries reached. Giving up.");
+          return;
+        }
+
+        const delay = Math.min(
+          BASE_BACKOFF_MS * 2 ** retryCountRef.current + Math.random() * 500,
+          30_000,
+        );
+        retryCountRef.current += 1;
+        console.log(`[WS] Reconnecting in ${Math.round(delay)}ms (attempt ${retryCountRef.current}/${MAX_RETRIES})`);
+
+        retryTimerRef.current = setTimeout(() => connectRef.current?.(), delay);
+      };
+
+      ws.onerror = (err) => {
+        console.error("[WS] Socket error occurred:", err);
+      };
+    } catch (err) {
+      console.error("[WS] Error creating WebSocket instance:", err);
+      setStatus("disconnected");
+    }
   }, []);
+
+  // Keep connect ref in sync
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   useEffect(() => {
     if (!token) {
-      disconnect();
-      setMessages([]);
+      queueMicrotask(() => {
+        disconnect();
+        setMessages([]);
+        setIsLocked(false);
+      });
       conversationIdRef.current = null;
-      setIsLocked(false);
       if (typeof window !== "undefined") {
         localStorage.removeItem("vesela_auth_limit_locked");
       }
@@ -278,18 +330,23 @@ export const useChatSocket = (token, userId) => {
 
     isDisposedRef.current = false;
     retryCountRef.current = 0;
-    connect();
+    queueMicrotask(() => {
+      connect();
+    });
 
     return () => {
       isDisposedRef.current = true;
       disconnect();
     };
-  }, [token]);
+  }, [token, connect, disconnect]);
 
   // ─── Send ──────────────────────────────────────────────────────────────────
 
   const sendMessage = useCallback((text) => {
-    if (!text?.trim()) return;
+    if (!text?.trim()) {
+      console.warn("[WS] Attempted to send empty message. Ignored.");
+      return;
+    }
 
     const payload = {
       user_id: userIdRef.current,
@@ -297,6 +354,8 @@ export const useChatSocket = (token, userId) => {
       conversation_id: conversationIdRef.current,
       time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
+
+    console.log(`[WS] sendMessage called with text: "${text.trim()}"`);
 
     // Optimistically add the user message to the UI
     setMessages((prev) => [
@@ -309,8 +368,11 @@ export const useChatSocket = (token, userId) => {
 
     const ws = socketRef.current;
     if (ws?.readyState === WebSocket.OPEN) {
+      console.log("[WS] Socket is OPEN. Sending payload immediately.");
       ws.send(JSON.stringify(payload));
     } else {
+      const stateString = ws ? `readyState: ${ws.readyState}` : "null";
+      console.log(`[WS] Socket is not open (${stateString}). Queuing message and initiating connection.`);
       // Queue and (re)connect — the queue is drained in onopen
       messageQueueRef.current.push(payload);
       connect();

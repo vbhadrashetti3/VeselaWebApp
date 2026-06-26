@@ -46,18 +46,15 @@ const ChatList = ({
   // re-parsing and potentially shifting the date.
   const formatDate = (dateString) => {
     if (!dateString) return "Unknown Date";
-    // Already formatted: DD/MM/YYYY (with optional time after a comma/space)
-    if (/^\d{2}\/\d{2}\/\d{4}/.test(dateString)) return dateString;
+    // Already formatted: MM/DD/YYYY
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString.trim())) return dateString.trim();
     try {
       const date = new Date(dateString);
       if (isNaN(date.getTime())) return dateString; // guard: invalid date
-      return date.toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const year = date.getFullYear();
+      return `${month}/${day}/${year}`;
     } catch (e) {
       console.error("Error formatting date:", e);
       return dateString;

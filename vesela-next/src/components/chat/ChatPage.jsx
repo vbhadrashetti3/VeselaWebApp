@@ -42,27 +42,36 @@ export default function ChatPage() {
   }, [isAuthenticated, resetGuestSession]);
 
   // ─── Pending hero message ──────────────────────────────────────────────────
-  // One-shot: fires once per mount to consume a message typed on the hero page.
+  // One-shot: fires when connection is established (if authenticated) or immediately (if guest)
   const pendingFiredRef = useRef(false);
 
   useEffect(() => {
     if (pendingFiredRef.current) return;
 
+    // If authenticated, wait until the socket is connected
+    if (isAuthenticated && !isConnected) {
+      console.log("[ChatPage] Waiting for WebSocket connection before sending pending message...");
+      return;
+    }
+
     const pending = consumePendingHeroMessage();
     if (!pending) return;
 
     pendingFiredRef.current = true;
+    console.log(`[ChatPage] Consumed pending hero message: "${pending}". Authenticated: ${isAuthenticated}`);
 
     if (isAuthenticated) {
-      sendMessage(pending); // queued internally if socket not yet open
+      console.log("[ChatPage] Sending pending message via WebSocket");
+      sendMessage(pending);
     } else {
+      console.log("[ChatPage] Sending pending message as guest via HTTP");
       sendGuestMessage(pending).then((result) => {
         if (!result.ok && result.reason === "locked") {
           openModal(MODALS.LOGIN, { source: "chat" });
         }
       });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isConnected, consumePendingHeroMessage, sendMessage, sendGuestMessage, openModal]);
 
   const mergedMessages = useMemo(
     () => (isAuthenticated ? [...guestMessages, ...messages] : guestMessages),
