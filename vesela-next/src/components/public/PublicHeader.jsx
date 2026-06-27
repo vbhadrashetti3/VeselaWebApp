@@ -90,9 +90,8 @@ export default function PublicHeader() {
               animationData={VeselaLogoBlack}
               loop={false}
               style={{
-                width: "120px",
+                width: "110px",
                 marginTop: "10px",
-                marginLeft: "-12px", // compensates internal Lottie left padding
               }}
             />
           </Box>
