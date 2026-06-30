@@ -23,32 +23,28 @@ export default function ChatBubble({
       sx={{
         display: "flex",
         flexDirection: isAI ? "row" : "row-reverse",
-        mb: 2,
+        mb: 3,
       }}
     >
       <Paper
         sx={{
-          padding: "8px 12px",
+          padding: "10px 14px",
           maxWidth: { xs: "95%", sm: "85%", md: "78%" },
+          border: "none",
           bgcolor: isAI
             ? theme.palette.chat?.bot || "#ffffff"
             : theme.palette.chat?.user || "#E0E0E0",
           color: theme.palette.text.primary,
-          borderRadius: "12px",
-          border: `1px solid ${theme.palette.sendMsgInput?.sendMsgBorder || theme.palette.divider}`,
+          borderRadius: "8px",
           wordBreak: "break-word",
           overflowWrap: "anywhere",
         }}
       >
-        {/*
-         * Message body.
-         * component="div" prevents the <div>-inside-<p> hydration error
-         * that occurs when the Lottie <div> is rendered inline.
-         */}
+
         <Typography
           component="div"
           sx={{
-            fontSize: "14px",
+            fontSize: "15px",
             lineHeight: 1.6,
             display: "flex",
             alignItems: "center",

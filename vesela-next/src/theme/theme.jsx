@@ -137,7 +137,7 @@ const colorTokens = {
       disabled: "#777777",
     },
     background: {
-      default: "#121212",
+      default: "#000000",
       paper: "#1e1e1e",
       overlay: "#1e1e1e",
     },
@@ -168,7 +168,7 @@ const colorTokens = {
       userBubble: "#1F222A",
       assistantBubble: "#000000",
       bubbleBorder: "#35383F",
-      inputBg: "#000000",
+      inputBg: "#161618",
       welcomeBg: "#1F222A",
       welcomeText: "#BDBDBD",
     },

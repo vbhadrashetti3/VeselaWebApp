@@ -42,7 +42,7 @@ const plans = [
   },
 ];
 
-export default function PricingPlansContent() {
+export default function PricingPlansContent({ mdSize = 4 }) {
   const theme = useTheme();
   const { plan: currentPlan, isAuthenticated } = useAuth();
 
@@ -54,7 +54,7 @@ export default function PricingPlansContent() {
         {plans.map((plan) => (
           <Grid
             key={plan.id}
-            size={{ xs: 6, md: 4 }}
+            size={{ xs: 12, sm: 6, md: mdSize }}
             sx={{ display: "flex" }}
           >
             <Card

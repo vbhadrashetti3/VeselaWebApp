@@ -5,14 +5,13 @@ import { Box, Modal, useTheme, Backdrop } from "@mui/material";
 import { motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 import { getModalContainerVariants } from "@/animations/modalMotionVariants";
+import { scrollbarStyles } from "@/utils/scrollbar";
 
 const GenericModalWrapper = ({
   open,
   onClose,
   children,
   width,
-  height,
-  minHeight,
 }) => {
   const theme = useTheme();
   const reducedMotion = useReducedMotion();
@@ -27,17 +26,25 @@ const GenericModalWrapper = ({
   const hoverState = theme.palette?.action?.hover;
   const modalShadow = theme.palette?.custom?.modalShadow;
 
-  const modalWidth = width ?? "420px";
+  // Clamp the raw width value into a CSS string, then build a responsive
+  // maxWidth that always fits inside the screen (with 2×p:2 = 32px margin).
+  const maxW = width
+    ? typeof width === "number"
+      ? `${width}px`
+      : width
+    : "440px";
 
   return (
     <Modal
       open={open}
       onClose={(event, reason) => {
-        // Prevent closing when clicking outside (UX choice)
         if (reason === "backdropClick") return;
         onClose?.();
       }}
-      // NOTE: keep scroll lock ON so background doesn't scroll behind modal on mobile
+      // ── Prevents body overflow:hidden + padding-right compensation that
+      // shifts fixed-position siblings (Header, ChatInput, etc.) when the
+      // modal opens. Background scrolling is blocked by the backdrop instead.
+      disableScrollLock
       slots={{ backdrop: Backdrop }}
       slotProps={{
         backdrop: {
@@ -51,90 +58,101 @@ const GenericModalWrapper = ({
           },
         },
       }}
-      // Use flex centering on the Modal root — avoids transform-based centering
-      // that can produce sub-pixel clipping at 320px widths.
+      // Flex-centred root — no translate(-50%,-50%) so no sub-pixel issues
+      // at narrow widths. The `p` creates a safe inset from the viewport edge.
       sx={{
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        p: { xs: 2, sm: 3 }, // safe margin from screen edges
+        p: { xs: 1.5, sm: 2, md: 3 },
       }}
     >
-      {/*
-       * The motion panel. No more position:absolute + translate(-50%,-50%).
-       * The Modal root is a flex container so this centers naturally.
-       */}
       <Box
         component={motion.div}
         initial={variants.initial}
         animate={open ? variants.animate : variants.exit}
         sx={{
-          // Background & Shape
+          // ── Background & shape ──────────────────────────────────────────
           bgcolor: modalBg,
           border: `1px solid ${divider}`,
           boxShadow: modalShadow,
-          borderRadius: "10px",
-          p: { xs: 2.5, md: 4 },
+          borderRadius: { xs: "12px", sm: "10px" },
 
-          // Responsive Sizing
-          width: {
-            xs: "100%",     // fills the flex parent up to the p:2 margin
-            sm: "80%",
-            md: modalWidth,
+          width: "100%",
+          maxWidth: {
+            xs: "100%",   // full width inside the 1.5rem gutter
+            sm: "min(80vw, 520px)",
+            md: maxW,
           },
-          // Hard cap so it never overflows on tiny screens
-          maxWidth: modalWidth,
 
-          // Height & Scrolling
-          minHeight: minHeight ?? "auto",
-          height: {
-            xs: height ? height : "auto",
-            sm: height ? height : "auto",
-          },
-          // svh = small viewport height — accounts for mobile browser chrome
-          maxHeight: { xs: "90svh", md: "90vh" },
-          overflowY: "auto",
+          maxHeight: { xs: "92svh", md: "90vh" },
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden", // clip rounded corners on children
 
-          // Remove default focus outline from Framer Motion div
+          // Remove focus ring injected by Framer Motion
           outline: "none",
           "&:focus-visible": { outline: "none" },
-
-          // Relative for the close button
-          position: "relative",
         }}
       >
-        {/* Close button */}
+        {/* ── Fixed close button (does not scroll with content) ── */}
         <Box
-          onClick={onClose}
           sx={{
-            position: "absolute",
-            top: "16px",
-            right: "16px",
-            cursor: "pointer",
-            width: "32px",
-            height: "32px",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "50%",
-            transition: "background-color 0.2s ease, transform 0.2s ease",
-            zIndex: 10,
-            // Larger touch target on mobile without changing visual size
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              inset: "-8px",
-            },
-            "&:hover": {
-              backgroundColor: hoverState,
-              transform: "scale(1.04)",
-            },
+            flexShrink: 0,
+            position: "relative",
+            height: "40px",
+            // The X is absolutely positioned within this slim header strip
           }}
         >
-          <X size={20} color={textColor} strokeWidth={2.5} />
+          <Box
+            role="button"
+            aria-label="Close"
+            tabIndex={0}
+            onClick={onClose}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClose?.()}
+            sx={{
+              position: "absolute",
+              top: "8px",
+              right: "12px",
+              cursor: "pointer",
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              borderRadius: "50%",
+              transition: "background-color 0.2s ease, transform 0.2s ease",
+              zIndex: 10,
+              // 44×44 touch target without affecting visual size
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                inset: "-6px",
+              },
+              "&:hover": {
+                backgroundColor: hoverState,
+                transform: "scale(1.06)",
+              },
+            }}
+          >
+            <X size={20} color={textColor} strokeWidth={2.5} />
+          </Box>
         </Box>
 
-        <Box sx={{ mt: height ? 0 : 1 }}>{children}</Box>
+        {/* ── Scrollable content area ── */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            p: { xs: 2, sm: 2.5, md: 3 },
+            pt: 0, // top spacing comes from the close-button strip above
+            // Reuse the app-wide scrollbar utility for visual consistency
+            ...scrollbarStyles(theme),
+          }}
+        >
+          {children}
+        </Box>
       </Box>
     </Modal>
   );

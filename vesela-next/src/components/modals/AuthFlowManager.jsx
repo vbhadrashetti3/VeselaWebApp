@@ -33,16 +33,16 @@ const AuthFlowManager = ({
 
   const { modalOptions } = useModal();
   const rootColorMode = useColorMode();
-  
+
   const isFromChat = modalOptions?.source === "chat";
-  
+
   const localColorMode = useMemo(() => {
     if (isFromChat) {
       return rootColorMode;
     } else {
       return {
         mode: "light",
-        toggleColorMode: () => {},
+        toggleColorMode: () => { },
       };
     }
   }, [isFromChat, rootColorMode]);
@@ -85,7 +85,7 @@ const AuthFlowManager = ({
       <SuccessfulModal successMsg={successMsg} handleNext={handleNext} />
     ),
 
-    [MODALS.PLANS]: <PricingPlansContent handleNext={handleNext} />,
+    [MODALS.PLANS]: <PricingPlansContent handleNext={handleNext} mdSize={6} />,
   };
 
   if (!modalStepName) return null;
@@ -93,7 +93,7 @@ const AuthFlowManager = ({
   return (
     <ColorModeContext.Provider value={localColorMode}>
       <ThemeProvider theme={modalTheme}>
-        <GenericModalWrapper width={"420px"} open={true} onClose={onClose}>
+        <GenericModalWrapper width={isFromChat ? 750 : 420} open={true} onClose={onClose}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={modalStepName}

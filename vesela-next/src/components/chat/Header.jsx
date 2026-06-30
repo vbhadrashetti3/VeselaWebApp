@@ -12,6 +12,7 @@ import {
   ListItemIcon,
   ListItemText,
   Tooltip,
+  Grow,
 } from "@mui/material";
 import { alpha, useTheme } from "@mui/material/styles";
 import {
@@ -138,79 +139,66 @@ export default function Header() {
               anchorEl={anchorEl}
               open={open}
               onClose={handleCloseMenu}
-              transformOrigin={{
-                horizontal: "right",
-                vertical: "top",
-              }}
-              anchorOrigin={{
-                horizontal: "right",
-                vertical: "bottom",
-              }}
+              // ── (1) Prevent MUI from removing the scrollbar on open ──────────
+              // disableScrollLock keeps the page width stable so the header
+              // and chat container never shift when the menu is toggled.
+              disableScrollLock
+              // ── (2) Alignment: menu top-right corner meets button bottom-right
+              anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+              transformOrigin={{ horizontal: "right", vertical: "top" }}
+              // ── (3) Subtle open/close animation via MUI Grow ─────────────────
+              TransitionComponent={Grow}
+              TransitionProps={{ timeout: { enter: 180, exit: 120 } }}
               slotProps={{
                 paper: {
                   elevation: 0,
                   sx: {
-                    mt: 1.2,
+                    // Small gap between icon button and menu surface
+                    mt: 0.75,
                     minWidth: 200,
-                    overflow: "hidden",
-                    borderRadius: "10px",
-
+                    overflow: "visible",
+                    borderRadius: "12px",
                     bgcolor: theme.palette.background.paper,
-
                     border: `1px solid ${theme.palette.divider}`,
-
                     boxShadow: theme.palette.custom.shadow,
-
                     backdropFilter: "blur(12px)",
-
-                    py: 0.5,
+                    // Clip children to rounded corners
+                    "& .MuiList-root": { py: 0.75 },
                   },
                 },
               }}
             >
               {headerMenuItems.map((item) => {
-                const content = (
+                const menuItem = (
                   <MenuItem
-                    key={item.label}
                     disabled={item.disabled}
                     onClick={() => {
                       item.action();
                       handleCloseMenu();
                     }}
                     sx={{
-                      mx: 0.5,
-                      my: 0.3,
-                      px: 1.4,
-                      py: 1.1,
-
-                      borderRadius: "0px",
-
+                      mx: 0.75,
+                      my: 0.25,
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: "8px",
                       color: theme.palette.text.primary,
-
-                      transition: "all 0.18s ease",
-
+                      transition: "background-color 0.15s ease",
                       "&:hover": {
-                        bgcolor: theme.palette.action.hover,
+                        bgcolor: alpha(theme.palette.primary.main, theme.palette.mode === "light" ? 0.06 : 0.12),
                       },
-
-                      "&.Mui-disabled": {
-                        opacity: 0.45,
-                      },
+                      "&.Mui-disabled": { opacity: 0.45 },
                     }}
                   >
                     <ListItemIcon
                       sx={{
                         color: "inherit",
                         minWidth: 34,
-
-                        "& svg": {
-                          fontSize: 20,
-                        },
+                        "& svg": { fontSize: 18 },
                       }}
                     >
                       {item.icon}
                     </ListItemIcon>
-
                     <ListItemText
                       primary={item.label}
                       primaryTypographyProps={{
@@ -222,6 +210,7 @@ export default function Header() {
                   </MenuItem>
                 );
 
+                // Wrap disabled items with a Tooltip; key goes on the root node
                 if (item.disabled && item.tooltip) {
                   return (
                     <Tooltip
@@ -230,12 +219,12 @@ export default function Header() {
                       placement="left"
                       arrow
                     >
-                      <Box>{content}</Box>
+                      <Box>{menuItem}</Box>
                     </Tooltip>
                   );
                 }
 
-                return content;
+                return <Box key={item.label}>{menuItem}</Box>;
               })}
             </Menu>
           </Box>
