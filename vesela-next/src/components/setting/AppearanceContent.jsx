@@ -2,35 +2,31 @@
 
 import React from "react";
 import {
-  Box,
-  Typography,
-  Switch,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
+  Switch,
 } from "@mui/material";
-import { useColorMode } from "@/theme/ThemeRegistry"; // Adjust path as needed
+import { useColorMode } from "@/theme/ThemeRegistry";
 import { Sun, Moon } from "lucide-react";
+import SettingSection from "./SettingSection";
 
 const AppearanceContent = () => {
   const { mode, toggleColorMode } = useColorMode();
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-        Appearance
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Adjust how the interface looks on your device.
-      </Typography>
-
+    <SettingSection
+      title="Appearance"
+      description="Adjust how the interface looks on your device."
+    >
       <List
         sx={{
           bgcolor: "background.paper",
           borderRadius: 2,
           border: "1px solid",
           borderColor: "divider",
+          width: "100%",
         }}
       >
         <ListItem
@@ -55,7 +51,7 @@ const AppearanceContent = () => {
           />
         </ListItem>
       </List>
-    </Box>
+    </SettingSection>
   );
 };
 

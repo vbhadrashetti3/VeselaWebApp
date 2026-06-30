@@ -2,30 +2,17 @@
 
 import React from "react";
 import { Button, Typography, Box, useTheme } from "@mui/material";
-import { ExternalLink } from "lucide-react"; // Using Lucide to match your other components
+import { ExternalLink } from "lucide-react";
+import SettingSection from "./SettingSection";
 
 const SupportContent = () => {
   const theme = useTheme();
 
   return (
-    <Box
-      sx={{
-        p: { xs: 2, md: 3 },
-        display: "flex",
-        flexDirection: "column",
-        gap: 3,
-      }}
+    <SettingSection
+      title="Support"
+      description="Need help? Our community and support team are available on Discord to assist you with any questions or technical issues."
     >
-      <Box>
-        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-          Support
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Need help? Our community and support team are available on Discord to
-          assist you with any questions or technical issues.
-        </Typography>
-      </Box>
-
       <Box
         sx={{
           p: 3,
@@ -36,6 +23,7 @@ const SupportContent = () => {
           flexDirection: "column",
           alignItems: "flex-start",
           gap: 2,
+          width: "100%",
         }}
       >
         <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
@@ -63,7 +51,7 @@ const SupportContent = () => {
           Open Discord
         </Button>
       </Box>
-    </Box>
+    </SettingSection>
   );
 };
 

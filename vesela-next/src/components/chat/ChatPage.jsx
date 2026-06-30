@@ -15,14 +15,18 @@ import { useModal } from "@/context/ModalContext";
 import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
-  const { isAuthenticated, token, userId } = useAuth();
+  const { isAuthenticated, isSessionChecked, wsToken, userId } = useAuth();
+  const socketToken = isSessionChecked && isAuthenticated
+    ? (wsToken || "cookie-auth")
+    : null;
+
   const {
     messages,
     sendMessage,
     isConnected,
     isStreaming: isAuthStreaming,
     isLocked: isAuthLocked,
-  } = useChatSocket(isAuthenticated ? token : null, userId);
+  } = useChatSocket(socketToken, userId);
 
   const {
     consumePendingHeroMessage,

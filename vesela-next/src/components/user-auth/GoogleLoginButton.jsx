@@ -77,21 +77,20 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
       });
 
       if (!apiResponse.error && apiResponse.status === 200) {
-        // Resolve platform token and user info across standard django auth keys
-        const token =
-          apiResponse.data.access ||
-          apiResponse.data.token ||
-          apiResponse.data.access_token ||
-          apiResponse.data.key;
-
         const user = apiResponse.data.user;
+        const accessToken =
+          apiResponse.data.access ||
+          apiResponse.data.access_token ||
+          apiResponse.data.token ||
+          apiResponse.data.key ||
+          null;
 
-        if (token && user) {
-          login(token, user);
+        if (user) {
+          login(user, accessToken);
           setDarkMode?.();
           handleNext(MODALS.SUCCESS);
         } else {
-          setErrorMsg("Platform token or user details not received from server.");
+          setErrorMsg("User details not received from server.");
         }
       } else {
         setErrorMsg(

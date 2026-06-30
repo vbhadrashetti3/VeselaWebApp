@@ -7,7 +7,6 @@ import { MODALS } from "@/components/modals/modalConstants";
 import { useAuth } from "@/context/AuthContext";
 
 export const useSignUp = (handleNext, onSuccess) => {
-  const router = useRouter();
   const { login } = useAuth();
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -17,7 +16,7 @@ export const useSignUp = (handleNext, onSuccess) => {
       const response = await registerUser(values);
       if (!response.error && response.status === 201) {
         // Dispatch login state update to context
-        login(response.data.access, response.data.user);
+        login(response.data.user, response.data.access ?? null);
 
         onSuccess && onSuccess();
         handleNext && handleNext(MODALS.UPDATE_INFO);

@@ -37,6 +37,17 @@ export const useChatSocket = (token, userId) => {
   const currentAssistantIdRef = useRef(null);
   const messageQueueRef = useRef([]);
   const conversationIdRef = useRef(null);
+  
+  // Restore conversation ID from localStorage on mount/initial load
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("vesela_active_conversation_id");
+      if (saved) {
+        conversationIdRef.current = saved;
+        console.log("[WS] Restored conversationId from localStorage:", saved);
+      }
+    }
+  }, []);
   const onMessageRef = useRef(null);
   const connectRef = useRef(null);
 
@@ -93,6 +104,9 @@ export const useChatSocket = (token, userId) => {
         setIsStreaming(true);
         if (data.conversation_id) {
           conversationIdRef.current = data.conversation_id;
+          if (typeof window !== "undefined") {
+            localStorage.setItem("vesela_active_conversation_id", data.conversation_id);
+          }
           console.log("[WS] Set conversationId:", data.conversation_id);
         }
         // Insert an empty assistant bubble to stream into.
@@ -208,10 +222,15 @@ export const useChatSocket = (token, userId) => {
     retryTimerRef.current = null;
 
     setStatus("connecting");
-    console.log(`[WS] Connecting to ${WS_URL}...`);
 
     try {
-      const ws = new WebSocket(`${WS_URL}?token=${currentToken}`);
+      // Pass the in-memory access token as a query parameter for WS auth,
+      // or connect without query params if token is 'cookie-auth' (relying on cookies)
+      const url = currentToken && currentToken !== "cookie-auth"
+        ? `${WS_URL}?token=${currentToken}`
+        : WS_URL;
+      console.log(`[WS] Connecting to WebSocket with URL: ${url} (Token type: ${currentToken === "cookie-auth" ? "cookie-auth" : currentToken ? "JWT" : "none"})`);
+      const ws = new WebSocket(url);
       socketRef.current = ws;
 
       ws.onopen = () => {
@@ -227,13 +246,16 @@ export const useChatSocket = (token, userId) => {
         console.log(`[WS] Draining message queue. Queue length: ${messageQueueRef.current.length}`);
         while (messageQueueRef.current.length > 0) {
           const payload = messageQueueRef.current.shift();
+          // Ensure we attach the correct conversation_id if it got generated in the meantime
+          if (conversationIdRef.current && !payload.conversation_id) {
+            payload.conversation_id = conversationIdRef.current;
+          }
           console.log("[WS] Sending queued message payload:", payload);
           ws.send(JSON.stringify(payload));
         }
       };
 
       ws.onmessage = (event) => {
-        console.log("[WS] Received raw message:", event.data);
         onMessageRef.current?.(event);
       };
 
@@ -324,6 +346,7 @@ export const useChatSocket = (token, userId) => {
       conversationIdRef.current = null;
       if (typeof window !== "undefined") {
         localStorage.removeItem("vesela_auth_limit_locked");
+        localStorage.removeItem("vesela_active_conversation_id");
       }
       return;
     }

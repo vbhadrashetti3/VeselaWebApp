@@ -10,24 +10,54 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { localStorageUtil } from "@/utils/localStorageUtil";
-import { TOKEN, USER_DETAILS, PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO } from "@/constant";
+import { USER_DETAILS, PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO } from "@/constant";
 import { post } from "@/lib/apiService";
 import { getPlan } from "@/services/auth.service";
+import {
+  decodeJwt,
+  getCookie,
+  getAuthTokenExpiration,
+  saveAuthTokenExpiration,
+} from "@/utils/authUtil";
 
 // ─── Context ───────────────────────────────────────────────────────────────
 
 const AuthContext = createContext(null);
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+/**
+ * Fetch a fresh access token via the refresh endpoint using cookies.
+ * Uses native fetch so the axios interceptor is never involved.
+ * Returns the access token string, or null on failure.
+ */
+async function fetchFreshAccessToken() {
+  try {
+    const res = await fetch("/api/proxy/dj-rest-auth/token/refresh/", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.access ?? data.access_token ?? null;
+    }
+  } catch {
+    // Swallow — caller handles null
+  }
+  return null;
+}
 
 // ─── Provider ──────────────────────────────────────────────────────────────
 
 export const AuthProvider = ({ children }) => {
   const router = useRouter();
 
-  // Bootstrap from localStorage on first client render
-  const [token, setToken] = useState(() => localStorageUtil.get(TOKEN));
+  // User comes from localStorage as a fast initial render, then is verified /
+  // refreshed from the backend on mount via the cookie session.
   const [user, setUser] = useState(() => {
     const stored = localStorageUtil.get(USER_DETAILS);
-    // stored may be a plain object or a JSON string
     if (!stored || (typeof stored === "object" && !stored.pk)) return null;
     return stored;
   });
@@ -40,54 +70,249 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingPlan, setIsLoadingPlan] = useState(false);
   const [planError, setPlanError] = useState(null);
 
+  // Tracks whether we have finished the initial session check so AuthGuard
+  // doesn't flash a redirect before we know if the cookie session is valid.
+  const [isSessionChecked, setIsSessionChecked] = useState(false);
+
+  // In-memory only — never persisted to localStorage.
+  // Used exclusively for the cross-domain WebSocket connection which cannot
+  // receive cookies automatically (cookies are domain-scoped).
+  const [wsToken, setWsToken] = useState(null);
+
   const isFetchingPlanRef = useRef(false);
+  const refreshTimeoutRef = useRef(null);
 
-  // Keep localStorage in sync whenever state changes
-  useEffect(() => {
-    if (token) {
-      localStorageUtil.set(TOKEN, token);
-    } else {
-      localStorageUtil.remove(TOKEN);
-    }
-  }, [token]);
-
+  // Keep localStorage in sync with user state
   useEffect(() => {
     if (user) {
       localStorageUtil.set(USER_DETAILS, user);
     }
   }, [user]);
 
-  // ── login ────────────────────────────────────────────────────────────────
-  /** Call this after a successful login API response. */
-  const login = useCallback((newToken, newUser) => {
-    if (newToken) {
-      localStorageUtil.set(TOKEN, newToken);
+  // ── Automatic token refresh timer ──────────────────────────────────────────
+
+  const scheduleRefresh = useCallback((expiresAt) => {
+    if (typeof window === "undefined" || !expiresAt) return;
+
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
     }
+
+    const oneHour = 60 * 60 * 1000;
+    const buffer = 50 * 60 * 1000; // Refresh 50 minutes before expiration (within the last hour)
+    const refreshTime = expiresAt - buffer;
+    const delay = refreshTime - Date.now();
+
+    if (delay <= 0) {
+      // Already within the last hour (or expired) - trigger immediate proactive refresh
+      console.log("[Auth] Token is expiring soon or expired. Triggering proactive refresh.");
+      fetchFreshAccessToken().then((newToken) => {
+        if (newToken) {
+          setWsToken(newToken);
+          const decoded = decodeJwt(newToken);
+          if (decoded && decoded.exp) {
+            saveAuthTokenExpiration(newToken);
+            scheduleRefresh(decoded.exp * 1000);
+          }
+        }
+      });
+    } else {
+      console.log(`[Auth] Scheduling automatic token refresh in ${Math.round(delay / 1000 / 60)} minutes.`);
+      refreshTimeoutRef.current = setTimeout(() => {
+        console.log("[Auth] Timer fired. Triggering automatic token refresh.");
+        fetchFreshAccessToken().then((newToken) => {
+          if (newToken) {
+            setWsToken(newToken);
+            const decoded = decodeJwt(newToken);
+            if (decoded && decoded.exp) {
+              saveAuthTokenExpiration(newToken);
+              scheduleRefresh(decoded.exp * 1000);
+            }
+          }
+        });
+      }, delay);
+    }
+  }, []);
+
+  // ── Session hydration on mount ────────────────────────────────────────────
+  // Uses native fetch (NOT the axios instance) so the refresh interceptor is
+  // never triggered here. A 401 from this endpoint simply means "no active
+  // cookie session" — it must NOT trigger the refresh → redirect loop.
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await fetch("/api/proxy/dj-rest-auth/user/", {
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          localStorageUtil.set(USER_DETAILS, data);
+
+          // 1. Try to read token from my-app-auth cookie
+          const cookieToken = getCookie("my-app-auth");
+          if (cookieToken) {
+            console.log("[Auth] Found my-app-auth cookie on page load.");
+            setWsToken(cookieToken);
+            saveAuthTokenExpiration(cookieToken);
+
+            const decoded = decodeJwt(cookieToken);
+            if (decoded && decoded.exp) {
+              const expiresAt = decoded.exp * 1000;
+              const oneHour = 60 * 60 * 1000;
+              const isExpiringSoon = expiresAt - Date.now() < oneHour;
+
+              if (isExpiringSoon) {
+                console.log("[Auth] Cookie token is expiring soon. Refreshing on page load.");
+                const freshToken = await fetchFreshAccessToken();
+                if (freshToken) {
+                  setWsToken(freshToken);
+                  saveAuthTokenExpiration(freshToken);
+                  const freshDecoded = decodeJwt(freshToken);
+                  if (freshDecoded && freshDecoded.exp) {
+                    scheduleRefresh(freshDecoded.exp * 1000);
+                  }
+                }
+              } else {
+                console.log("[Auth] Cookie token is still valid. Skipping refresh call on page load.");
+                scheduleRefresh(expiresAt);
+              }
+            }
+          } else {
+            const isLocalDev = typeof window !== "undefined" &&
+              (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+            const expiresAt = getAuthTokenExpiration();
+            const oneHour = 60 * 60 * 1000;
+            const isExpiringSoon = !expiresAt || (expiresAt - Date.now() < oneHour);
+
+            if (isExpiringSoon || isLocalDev) {
+              console.log("[Auth] Stored expiration indicates expired or expiring soon, or running in local dev. Refreshing.");
+              const freshToken = await fetchFreshAccessToken();
+              if (freshToken) {
+                setWsToken(freshToken);
+                saveAuthTokenExpiration(freshToken);
+                const freshDecoded = decodeJwt(freshToken);
+                if (freshDecoded && freshDecoded.exp) {
+                  scheduleRefresh(freshDecoded.exp * 1000);
+                }
+              } else {
+                setUser(null);
+                setWsToken(null);
+                localStorageUtil.set(USER_DETAILS, {});
+              }
+            } else {
+              console.log("[Auth] Stored expiration indicates valid token. Skipping refresh call on page load.");
+              scheduleRefresh(expiresAt);
+            }
+          }
+        } else {
+          // Not authenticated — clear any stale local data silently
+          setUser(null);
+          setWsToken(null);
+          localStorageUtil.set(USER_DETAILS, {});
+        }
+      } catch {
+        // Network failure — treat as unauthenticated; do not redirect
+        setUser(null);
+        setWsToken(null);
+      } finally {
+        setIsSessionChecked(true);
+      }
+    };
+
+    checkSession();
+  }, [scheduleRefresh]); // Runs once on mount
+
+  // ── Listen for events from axios interceptor ─────────────────────────────
+  useEffect(() => {
+    const handleExpired = () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+      setUser(null);
+      setWsToken(null);
+      setPlan(null);
+      localStorageUtil.set(USER_DETAILS, {});
+      localStorageUtil.set(PLAN_DETAILS, {});
+      localStorageUtil.remove("auth_expires_at");
+    };
+
+    const handleRefreshed = (e) => {
+      const token = e.detail?.token;
+      if (token) {
+        setWsToken(token);
+        const decoded = decodeJwt(token);
+        if (decoded && decoded.exp) {
+          scheduleRefresh(decoded.exp * 1000);
+        }
+      }
+    };
+
+    window.addEventListener("auth:sessionExpired", handleExpired);
+    window.addEventListener("auth:sessionRefreshed", handleRefreshed);
+
+    return () => {
+      window.removeEventListener("auth:sessionExpired", handleExpired);
+      window.removeEventListener("auth:sessionRefreshed", handleRefreshed);
+    };
+  }, [scheduleRefresh]);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // ── login ────────────────────────────────────────────────────────────────
+  /**
+   * Call this after a successful login/signup API response.
+   * @param {object} newUser  - User object from the response body.
+   * @param {string} [accessToken] - Access token from the response body,
+   *   stored in-memory only for WS use (never written to localStorage).
+   */
+  const login = useCallback((newUser, accessToken = null) => {
     if (newUser) {
       localStorageUtil.set(USER_DETAILS, newUser);
+      setUser(newUser);
     }
-    setToken(newToken);
-    setUser(newUser);
-  }, []);
+    // Store access token in memory for cross-domain WS authentication
+    setWsToken(accessToken ?? null);
+
+    if (accessToken) {
+      saveAuthTokenExpiration(accessToken);
+      const decoded = decodeJwt(accessToken);
+      if (decoded && decoded.exp) {
+        scheduleRefresh(decoded.exp * 1000);
+      }
+    }
+  }, [scheduleRefresh]);
 
   // ── logout ───────────────────────────────────────────────────────────────
   /** Clears auth state, storage, and redirects to home. */
   const logout = useCallback(async (onSuccess) => {
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+    }
     try {
       await post("/dj-rest-auth/logout/");
     } catch {
       // Ignore — we always clear local state regardless
     } finally {
       // Clear state
-      setToken(null);
       setUser(null);
+      setWsToken(null);
       setPlan(null);
       setPlanError(null);
       setIsLoadingPlan(false);
 
       // Clear storage
-      localStorageUtil.remove(TOKEN);
       localStorageUtil.remove(POST_LOGIN_NAVIGATE_TO);
+      localStorageUtil.remove("auth_expires_at");
       localStorageUtil.set(USER_DETAILS, {});
       localStorageUtil.set(PLAN_DETAILS, {});
 
@@ -98,7 +323,7 @@ export const AuthProvider = ({ children }) => {
 
   // ── fetchPlan ─────────────────────────────────────────────────────────────
   const fetchPlan = useCallback(async () => {
-    if (!token) return;
+    if (!user) return;
     if (isFetchingPlanRef.current) return;
     isFetchingPlanRef.current = true;
 
@@ -112,7 +337,7 @@ export const AuthProvider = ({ children }) => {
         localStorageUtil.set(PLAN_DETAILS, res.data);
       } else {
         if (res.status === 401) {
-          // Token expired/invalid, logout to clear session
+          // Session expired — logout to clear state
           logout();
         } else {
           setPlanError(res.message || "Failed to fetch subscription plan");
@@ -124,23 +349,24 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingPlan(false);
       isFetchingPlanRef.current = false;
     }
-  }, [token, logout]);
+  }, [user, logout]);
 
-  // Automatically fetch subscription plan when token is present
+  // Automatically fetch subscription plan when user is authenticated
   useEffect(() => {
-    if (token) {
+    if (user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchPlan();
     } else {
       setPlan(null);
     }
-  }, [token, fetchPlan]);
+  }, [user, fetchPlan]);
 
   const value = {
-    token,
     user,
     userId: user?.pk ?? null,
-    isAuthenticated: Boolean(token),
+    isAuthenticated: Boolean(user),
+    isSessionChecked,
+    wsToken,
     plan,
     isLoadingPlan,
     planError,

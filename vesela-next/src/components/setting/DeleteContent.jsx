@@ -11,7 +11,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { AlertTriangle } from "lucide-react";
-import { useDeleteAccount } from "@/hooks/useDeleteAccount"; // Adjust path as needed
+import { useDeleteAccount } from "@/hooks/useDeleteAccount";
+import SettingSection from "./SettingSection";
 
 const DeleteContent = () => {
   const theme = useTheme();
@@ -26,21 +27,15 @@ const DeleteContent = () => {
   const onConfirmDelete = async () => {
     const success = await deleteAccount();
     if (!success) {
-      // Optional: Handle error UI here if you don't want to use the hook's error state
       alert("Failed to delete account. Please try again.");
     }
   };
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
-        Danger Zone
-      </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-        Deleting your account will permanently remove all your chat history,
-        subscription details, and personal data.
-      </Typography>
-
+    <SettingSection
+      title="Danger Zone"
+      description="Deleting your account will permanently remove all your chat history, subscription details, and personal data."
+    >
       <Button
         variant="contained"
         color="error"
@@ -65,7 +60,7 @@ const DeleteContent = () => {
         slots={{ backdrop: Backdrop }}
         slotProps={{
           backdrop: {
-              sx: {
+            sx: {
               backdropFilter: "blur(4px)",
               backgroundColor:
                 theme.palette.mode === "dark"
@@ -134,7 +129,7 @@ const DeleteContent = () => {
           </Box>
         </Box>
       </Modal>
-    </Box>
+    </SettingSection>
   );
 };
 

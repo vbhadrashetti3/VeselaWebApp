@@ -2,45 +2,90 @@ import { NextResponse } from "next/server";
 
 const BASE_URL = "https://portal.grayskyai.com";
 
-// 🔹 Common handler
+// Headers the browser sends that must be forwarded to the backend
+const FORWARDED_REQUEST_HEADERS = ["content-type", "accept", "accept-language"];
+
+// Extract a specific cookie value from a Cookie header string
+function parseCookieValue(cookieHeader, name) {
+  if (!cookieHeader) return null;
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+// ─── Common handler ───────────────────────────────────────────────────────────
 async function handleRequest(req, context, method) {
   try {
-    // ✅ FIX: params is async in Next 15+
+    // Next 15+: params is async
     const resolvedParams = await context.params;
     const path = resolvedParams.path.join("/");
 
-    // ✅ Preserve query params
+    // Preserve query params
     const search = req.nextUrl.search;
 
-    // ✅ FORCE trailing slash (important for Django backend)
+    // Force trailing slash (Django backend requirement)
     const url = `${BASE_URL}/${path}/${search}`;
 
     console.log(`➡️ Proxying ${method}: ${url}`);
 
-    // ✅ Get body only for required methods
+    // ── Build forwarded headers ───────────────────────────────────────────────
+
+    const forwardedHeaders = {};
+
+    // Forward safe request headers
+    for (const name of FORWARDED_REQUEST_HEADERS) {
+      const value = req.headers.get(name);
+      if (value) forwardedHeaders[name] = value;
+    }
+
+    // Forward cookies from the browser to the backend
+    const incomingCookies = req.headers.get("cookie") || "";
+    if (incomingCookies) {
+      forwardedHeaders["cookie"] = incomingCookies;
+    }
+
+    // CSRF: attach X-CSRFToken for state-mutating requests so Django accepts them
+    if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+      const csrfToken = parseCookieValue(incomingCookies, "csrftoken");
+      if (csrfToken) {
+        forwardedHeaders["x-csrftoken"] = csrfToken;
+      }
+    }
+
+    // ── Get body ─────────────────────────────────────────────────────────────
+
     let body = undefined;
     if (method !== "GET" && method !== "DELETE") {
       body = await req.text();
     }
 
-    // ✅ Forward request to backend
+    // ── Upstream fetch ────────────────────────────────────────────────────────
+
     const response = await fetch(url, {
       method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: req.headers.get("authorization") || "",
-      },
+      headers: forwardedHeaders,
       body,
     });
 
     const data = await response.text();
 
-    return new NextResponse(data, {
+    // ── Build the Next.js response ────────────────────────────────────────────
+
+    const nextResponse = new NextResponse(data, {
       status: response.status,
       headers: {
         "Content-Type": "application/json",
       },
     });
+
+    // Forward every Set-Cookie header from the backend back to the browser so
+    // auth cookies (my-app-auth, my-refresh-token, csrftoken, sessionid) are
+    // stored on the Next.js domain and sent automatically on future requests.
+    const setCookieHeaders = response.headers.getSetCookie?.() ?? [];
+    for (const cookie of setCookieHeaders) {
+      nextResponse.headers.append("Set-Cookie", cookie);
+    }
+
+    return nextResponse;
   } catch (error) {
     console.error("❌ Proxy Error:", error);
 
@@ -54,7 +99,7 @@ async function handleRequest(req, context, method) {
   }
 }
 
-// 🔹 Export methods
+// ─── Export HTTP methods ──────────────────────────────────────────────────────
 export async function GET(req, context) {
   return handleRequest(req, context, "GET");
 }

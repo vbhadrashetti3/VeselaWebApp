@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import { X } from "lucide-react";
 
-import PricingPlansContent from "../pricing/PricingPlansContent";
+import SubscriptionContent from "./SubscriptionContent";
 import AppearanceContent from "./AppearanceContent";
 import PrivacyContent from "./PrivacyContent";
 import AboutContent from "./AboutContent";
@@ -63,38 +63,12 @@ const SettingsModal = ({ open, onClose }) => {
     }
   };
 
-  const getSectionDetails = (section) => {
-    switch (section) {
-      case SETTINGS_MODAL.MySubscription:
-        return { title: "My Subscription", description: "Manage your plan and usage limits" };
-      case SETTINGS_MODAL.Appearance:
-        return { title: "Appearance", description: "Customize the application theme and styling" };
-      case SETTINGS_MODAL.Support:
-        return { title: "Support", description: "Get in touch with us on Discord" };
-      case SETTINGS_MODAL.FAQ:
-        return { title: "FAQ", description: "Frequently Asked Questions" };
-      case SETTINGS_MODAL.Terms:
-        return { title: "Terms of Use", description: "Read our Terms of Service" };
-      case SETTINGS_MODAL.Privacy:
-        return { title: "Privacy Policy", description: "Read our Privacy Policy" };
-      case SETTINGS_MODAL.About:
-        return { title: "About Vesela", description: "Learn more about Vesela" };
-      case SETTINGS_MODAL.ModelCard:
-        return {
-          title: "Vesela Model Card",
-          description: "Technical specifications, design philosophy, and parameters of the Vesela model",
-        };
-      case SETTINGS_MODAL.Delete:
-        return { title: "Delete Account", description: "Permanently delete your account" };
-      default:
-        return { title: "", description: "" };
-    }
-  };
+
 
   const renderSection = () => {
     switch (activeSection) {
       case SETTINGS_MODAL.MySubscription:
-        return <PricingPlansContent />;
+        return <SubscriptionContent />;
       case SETTINGS_MODAL.Appearance:
         return <AppearanceContent />;
       case SETTINGS_MODAL.Privacy:
@@ -132,7 +106,7 @@ const SettingsModal = ({ open, onClose }) => {
     { label: "Logout", value: SETTINGS_MODAL.Logout, isLogout: true },
   ];
 
-  const { title, description } = getSectionDetails(activeSection);
+
 
   return (
     <Dialog
@@ -147,8 +121,7 @@ const SettingsModal = ({ open, onClose }) => {
           width: "100%",
           display: "flex",
           flexDirection: "column",
-          borderRadius: isMobile ? 0 : 1,
-          // dvh = dynamic viewport height — accounts for mobile browser chrome
+          borderRadius: isMobile ? 0 : 0.8,
           height: isMobile ? "100dvh" : "90vh",
           maxHeight: isMobile ? "100dvh" : "90vh",
           overflow: "hidden",
@@ -274,29 +247,7 @@ const SettingsModal = ({ open, onClose }) => {
                 <CircularProgress size={24} />
               </Box>
             ) : (
-              <>
-                {/* Section header — migrated from VeselaAI (was not present in Vesela) */}
-                {title && (
-                  <Box sx={{ mb: 3 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 700, color: "text.primary" }}
-                    >
-                      {title}
-                    </Typography>
-                    {description && (
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary", mt: 0.5 }}
-                      >
-                        {description}
-                      </Typography>
-                    )}
-                  </Box>
-                )}
-                {/* Section content */}
-                <Box>{renderSection()}</Box>
-              </>
+              <Box sx={{ width: "100%" }}>{renderSection()}</Box>
             )}
           </Box>
         </DialogContent>

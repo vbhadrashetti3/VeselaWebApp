@@ -93,6 +93,7 @@ const GenericModalWrapper = ({
           // Remove focus ring injected by Framer Motion
           outline: "none",
           "&:focus-visible": { outline: "none" },
+          zIndex: 99
         }}
       >
         {/* ── Fixed close button (does not scroll with content) ── */}

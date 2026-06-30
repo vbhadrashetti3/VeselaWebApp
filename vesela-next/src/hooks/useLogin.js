@@ -17,7 +17,7 @@ export const useLogin = (handleNext, onSuccess) => {
 
       if (!response.error && response.status === 200) {
         // Persist auth state via context (which also writes localStorage)
-        login(response.data.access, response.data.user);
+        login(response.data.user, response.data.access ?? null);
 
         onSuccess?.();
         handleNext(MODALS.SUCCESS);

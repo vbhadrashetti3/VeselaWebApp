@@ -206,7 +206,7 @@ const SignUpForm = ({ handleNext }) => {
           Already have an account?{" "}
           <span
             onClick={goToLogin}
-            style={{ cursor: "pointer", fontWeight: 700, color: "inherit" }}
+            style={{ cursor: "pointer", fontWeight: 700, color: "#286ca8" }}
           >
             Sign In
           </span>

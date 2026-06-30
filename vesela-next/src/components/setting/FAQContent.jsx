@@ -11,6 +11,7 @@ import {
   Divider,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SettingSection from "./SettingSection";
 
 const faqList = [
   {
@@ -59,208 +60,62 @@ const faqList = [
       </>
     ),
   },
-  {
-    question: "How much does Vesela cost?",
-    answer: (
-      <>
-        Vesela costs $18.99/month on our website{" "}
-        <a
-          href="https://grayskyai.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "inherit", textDecoration: "underline" }}
-        >
-          grayskyai.com
-        </a>{" "}
-        or $19.99/month through the app stores. Every new user gets a 7-day free
-        trial.
-      </>
-    ),
-  },
-  {
-    question: "What do I get with a paid subscription?",
-    answer:
-      "You unlock our most advanced Vesela model, trained on proprietary counseling data, psychology research, and a custom cognitive architecture built for depth and guidance.",
-  },
-  {
-    question: "Is Vesela right for me?",
-    answer:
-      "Vesela is great if you think deeply, feel stuck or overwhelmed, want clarity, need support between therapy sessions, or prefer deeper, reflective conversations. Try the 7-day trial to see if she fits your style.",
-  },
-  {
-    question: "Can Vesela diagnose me?",
-    answer:
-      "No. Vesela cannot diagnose, treat, or cure mental health conditions. She helps you reflect and recognize patterns—not make medical decisions.",
-  },
-  {
-    question: "What if I need counseling but can’t afford this?",
-    answer: (
-      <>
-        Reach out to us using the contact form at{" "}
-        <a
-          href="https://grayskyai.com/contact"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "inherit", textDecoration: "underline" }}
-        >
-          grayskyai.com/contact
-        </a>
-        . We try to help when someone’s situation is genuinely difficult.
-      </>
-    ),
-  },
-  {
-    question: "What features are planned for the future?",
-    answer: (
-      <>
-        We’re working on a 5× larger dataset, physics-inspired psychological
-        modeling, and richer avatar-based interfaces. Updates are posted first
-        in our Discord community:{" "}
-        <a
-          href="https://grayskyai.com/community"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "inherit", textDecoration: "underline" }}
-        >
-          grayskyai.com/community
-        </a>
-        .
-      </>
-    ),
-  },
-  {
-    question: "Why not just use ChatGPT or Claude for counseling?",
-    answer:
-      "Generic models explain and advise; Vesela guides you toward your own insights. She's trained on proprietary counseling datasets, uses a custom cognitive architecture, and is overseen by licensed clinicians.",
-  },
-  {
-    question: "How is Vesela different from other AI counselor apps?",
-    answer:
-      "Most apps wrap generic models. Vesela uses proprietary counseling datasets, a custom self-actualization architecture, and clinician oversight—built from the ground up.",
-  },
-  {
-    question: "Is there a free version?",
-    answer:
-      "Not permanently, but every new user gets a 7-day free trial. We don’t run ads or sell your data.",
-  },
-  {
-    question: "Are my conversations confidential?",
-    answer: (
-      <>
-        Yes. Conversations are encrypted and confidential. Details are in our
-        Privacy Policy:{" "}
-        <a
-          href="https://grayskyai.com/privacy"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "inherit", textDecoration: "underline" }}
-        >
-          grayskyai.com/privacy
-        </a>
-        .
-      </>
-    ),
-  },
-  {
-    question: "What’s the purpose of the pre-session questions?",
-    answer:
-      "They help Vesela understand your emotional state and what you want to work on. Some technical questions also support future model improvements.",
-  },
-  {
-    question: "What happens after the 7-day free trial?",
-    answer: (
-      <>
-        Your account auto-renews unless you cancel. Full pricing details are at{" "}
-        <a
-          href="https://grayskyai.com/pricing"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "inherit", textDecoration: "underline" }}
-        >
-          grayskyai.com/pricing
-        </a>
-        .
-      </>
-    ),
-  },
-  {
-    question: "What if I’m in crisis or feel unsafe?",
-    answer: (
-      <>
-        {"Vesela is not a crisis service. If you're in danger or experiencing self-harm thoughts, contact your local emergency number. In the U.S., you can call or text 988 or visit "}
-        <a
-          href="https://988lifeline.org"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "inherit", textDecoration: "underline" }}
-        >
-          988lifeline.org
-        </a>
-        .
-      </>
-    ),
-  },
 ];
 
 const FAQContent = () => {
   const theme = useTheme();
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        p: { xs: 2, md: 3 },
-        height: "100%",
-        overflowY: "auto",
-      }}
-    >
-      {faqList.map((faq, index) => (
-        <Accordion
-          key={index}
-          disableGutters
-          elevation={0}
-          sx={{
-            mb: 1.5,
-            borderRadius: "8px !important", // Force rounded corners for individual accordions
-            bgcolor: theme.palette.background.paper,
-            border: `1px solid ${theme.palette.divider}`,
-            "&:before": { display: "none" },
-            overflow: "hidden",
-          }}
-        >
-          <AccordionSummary
-            expandIcon={
-              <ExpandMoreIcon sx={{ color: theme.palette.text.secondary }} />
-            }
+    <SettingSection title="FAQ" description="Frequently Asked Questions">
+      <Box sx={{ width: "100%" }}>
+        {faqList.map((faq, index) => (
+          <Accordion
+            key={index}
+            disableGutters
+            elevation={0}
             sx={{
-              px: 2,
-              "& .MuiTypography-root": {
-                fontWeight: 600,
-                color: theme.palette.text.primary,
-                fontSize: "0.95rem",
-              },
-              "&:hover": {
-                bgcolor: theme.palette.action.hover,
-              },
+              mb: 1.5,
+              borderRadius: "8px !important", // Force rounded corners for individual accordions
+              bgcolor: theme.palette.background.paper,
+              border: `1px solid ${theme.palette.divider}`,
+              "&:before": { display: "none" },
+              overflow: "hidden",
             }}
           >
-            <Typography variant="subtitle1">{faq.question}</Typography>
-          </AccordionSummary>
-          <AccordionDetails sx={{ px: 2, pb: 2 }}>
-            <Divider sx={{ mb: 2 }} />
-            <Typography
-              variant="body2"
+            <AccordionSummary
+              expandIcon={
+                <ExpandMoreIcon sx={{ color: theme.palette.text.secondary }} />
+              }
               sx={{
-                color: theme.palette.text.secondary,
-                lineHeight: 1.6,
+                px: 2,
+                "& .MuiTypography-root": {
+                  fontWeight: 600,
+                  color: theme.palette.text.primary,
+                  fontSize: "0.95rem",
+                },
+                "&:hover": {
+                  bgcolor: theme.palette.action.hover,
+                },
               }}
             >
-              {faq.answer}
-            </Typography>
-          </AccordionDetails>
-        </Accordion>
-      ))}
-    </Box>
+              <Typography variant="subtitle1">{faq.question}</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ px: 2, pb: 2 }}>
+              <Divider sx={{ mb: 2 }} />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: theme.palette.text.secondary,
+                  lineHeight: 1.6,
+                }}
+              >
+                {faq.answer}
+              </Typography>
+            </AccordionDetails>
+          </Accordion>
+        ))}
+      </Box>
+    </SettingSection>
   );
 };
 

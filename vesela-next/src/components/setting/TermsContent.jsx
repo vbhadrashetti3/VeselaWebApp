@@ -3,6 +3,7 @@
 import React from "react";
 import { Box, CircularProgress, Typography, useTheme } from "@mui/material";
 import { useFetchHtml } from "@/hooks/useFetchHtml";
+import SettingSection from "./SettingSection";
 
 const TermsContent = () => {
   const theme = useTheme();
@@ -28,51 +29,51 @@ const TermsContent = () => {
 
   if (error || !htmlContent) {
     return (
-      <Box sx={{ p: 3 }}>
+      <SettingSection title="Terms of Use" description="Read our Terms of Service">
         <Typography color="text.secondary">
           {error
             ? "Failed to load Terms and Conditions."
             : "No Terms and Conditions found."}
         </Typography>
-      </Box>
+      </SettingSection>
     );
   }
 
   return (
-    <Box
-      sx={{
-        p: { xs: 2, md: 3 },
-        height: "100%",
-        overflowY: "auto",
-        color: theme.palette.text.primary,
-        // Standardized document styling
-        "& h1, & h2, & h3": {
-          color: theme.palette.primary.main,
-          fontWeight: 600,
-          mt: 3,
-          mb: 2,
-        },
-        "& p": {
-          lineHeight: 1.8,
-          mb: 2,
-          color: theme.palette.text.secondary,
-          fontSize: "0.95rem",
-        },
-        "& strong": {
+    <SettingSection title="Terms of Use" description="Read our Terms of Service">
+      <Box
+        sx={{
+          width: "100%",
           color: theme.palette.text.primary,
-        },
-        "& ul, & ol": {
-          mb: 2,
-          pl: 4,
-          color: theme.palette.text.secondary,
-        },
-        "& li": {
-          mb: 1,
-        },
-      }}
-    >
-      <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-    </Box>
+          // Standardized document styling
+          "& h1, & h2, & h3": {
+            color: theme.palette.primary.main,
+            fontWeight: 600,
+            mt: 3,
+            mb: 2,
+          },
+          "& p": {
+            lineHeight: 1.8,
+            mb: 2,
+            color: theme.palette.text.secondary,
+            fontSize: "0.95rem",
+          },
+          "& strong": {
+            color: theme.palette.text.primary,
+          },
+          "& ul, & ol": {
+            mb: 2,
+            pl: 4,
+            color: theme.palette.text.secondary,
+          },
+          "& li": {
+            mb: 1,
+          },
+        }}
+      >
+        <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
+      </Box>
+    </SettingSection>
   );
 };
 

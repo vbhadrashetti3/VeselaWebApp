@@ -139,6 +139,7 @@ const LoginForm = ({ handleNext }) => {
             cursor: "pointer",
             fontWeight: 600,
             fontSize: 14,
+            color: "primary.main",
           }}
           onClick={() =>
             window.open(
@@ -158,7 +159,7 @@ const LoginForm = ({ handleNext }) => {
           Don’t have an account?{" "}
           <span
             onClick={() => handleNext(MODALS.SIGNUP)}
-            style={{ cursor: "pointer", fontWeight: 700 }}
+            style={{ cursor: "pointer", fontWeight: 700, color: "#286CA8" }}
           >
             Sign up
           </span>

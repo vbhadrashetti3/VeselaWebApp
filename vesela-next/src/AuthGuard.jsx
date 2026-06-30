@@ -6,16 +6,16 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function AuthGuard({ children }) {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isSessionChecked } = useAuth();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isSessionChecked && !isAuthenticated) {
       router.replace("/");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isSessionChecked, router]);
 
-  // Don't render children until we know the user is authenticated
-  if (!isAuthenticated) return null;
+  // Don't render children until the session check is done and the user is authenticated
+  if (!isSessionChecked || !isAuthenticated) return null;
 
   return <>{children}</>;
 }

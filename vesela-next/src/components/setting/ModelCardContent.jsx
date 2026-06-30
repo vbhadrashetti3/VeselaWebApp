@@ -17,6 +17,7 @@ import {
   Alert,
   AlertTitle,
 } from "@mui/material";
+import SettingSection from "./SettingSection";
 import {
   Cpu,
   Globe,
@@ -31,11 +32,7 @@ import {
 } from "lucide-react";
 
 // ─── ModelCardContent ──────────────────────────────────────────────────────────
-// Migrated from VeselaAIWebApp/src/features/settings/ModelCardContent.jsx
-// Changes from source:
-//   • Added "use client" directive (Next.js app-router requirement)
-//   • Removed bare `import React` (not needed in Next.js 13+, kept for clarity)
-//   • All MUI + lucide-react imports are unchanged — both available in Vesela
+
 
 const ModelCardContent = () => {
   const theme = useTheme();
@@ -83,7 +80,7 @@ const ModelCardContent = () => {
   ];
 
   return (
-    <Box sx={{ pr: 1, pb: 4 }}>
+    <SettingSection>
       {/* ── Header ── */}
       <Box sx={{ mb: 4, display: "flex", flexDirection: "column", gap: 1 }}>
         <Typography variant="h4" sx={{ fontWeight: 800, color: "text.primary" }}>
@@ -585,7 +582,7 @@ const ModelCardContent = () => {
           Vesela's central promise is not that it knows everything. Its promise is that it is built to help the user remain the author of their own life.
         </Typography>
       </Box>
-    </Box>
+    </SettingSection>
   );
 };
 

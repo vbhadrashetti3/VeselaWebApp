@@ -19,8 +19,8 @@ export const useDeleteAccount = () => {
       
       // Checking for common success statuses
       if ([200, 204].includes(response?.status)) {
-        // Clear all auth-related local storage
-        ["token", "userdetails", "plan_details"].forEach((key) => {
+        // Clear user-related local storage (no token to clear — cookies are handled by the backend)
+        ["userdetails", "plan_details"].forEach((key) => {
           localStorageUtil.remove(key);
         });
 

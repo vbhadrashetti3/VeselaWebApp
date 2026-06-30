@@ -1,4 +1,5 @@
 import { Box, Typography } from "@mui/material";
+import SettingSection from "./SettingSection";
 
 const AboutContents = [
   {
@@ -32,31 +33,32 @@ const AboutContents = [
 
 const AboutContent = () => {
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
-      {AboutContents.map((item, index) => {
-        return (
-          <Box key={index} sx={{ mb: 4 }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 700, mb: 2, color: "text.primary" }}
-            >
-              {item.heading}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.7 }}>
-              {item.content}
-            </Typography>
+    <SettingSection title="About Vesela" description="Learn more about Vesela">
+      <Box sx={{ width: "100%" }}>
+        {AboutContents.map((item, index) => {
+          return (
+            <Box key={index} sx={{ mb: 4 }}>
+              <Typography
+                variant="h6"
+                sx={{ fontWeight: 700, mb: 2, color: "text.primary" }}
+              >
+                {item.heading}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2, lineHeight: 1.7 }}>
+                {item.content}
+              </Typography>
 
-            {item?.contentImg && (
-              <Box sx={{ mb: 2, borderRadius: 1, overflow: "hidden" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img style={{ width: "100%", display: "block" }} src={item?.contentImg} alt={item.heading} />
-              </Box>
-            )}
-          </Box>
-        );
-      })}
-    </Box>
+              {item?.contentImg && (
+                <Box sx={{ mb: 2, borderRadius: 1, overflow: "hidden" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img style={{ width: "100%", display: "block" }} src={item?.contentImg} alt={item.heading} />
+                </Box>
+              )}
+            </Box>
+          );
+        })}
+      </Box>
+    </SettingSection>
   );
 };
 export default AboutContent;
-
