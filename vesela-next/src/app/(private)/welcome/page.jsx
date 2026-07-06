@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { useColorMode } from "@/theme/ThemeRegistry";
 import { useChatSession } from "@/context/ChatSessionContext";
 import GenericLottie from "@/components/ui/GenericLottie";
+import Header from "@/components/chat/Header";
 
 import VeselaLogoWhite from "@/../public/vesela_white_lottie.json";
 import VeselaLogoBlack from "@/../public/vesela_black_lottie.json";
@@ -68,6 +69,7 @@ const WelcomePage = () => {
         width: "100%",
       }}
     >
+      <Header />
       {/* ── Logo / Lottie ───────────────────────────────────────────────────── */}
       {animationData && (
         <motion.div

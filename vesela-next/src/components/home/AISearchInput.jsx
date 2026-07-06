@@ -41,19 +41,19 @@ export default function AISearchInput({
         display: "flex",
         alignItems: "center",
         width: "100%",
-        // Glass pill
+        // Glass pill — matches reference .glass + rounded-full + border border-white/10
         background: focused
-          ? "rgba(255,255,255,0.22)"
-          : "rgba(255,255,255,0.12)",
+          ? "rgba(242, 251, 255, 0.30)"
+          : "rgba(242, 251, 255, 0.20)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        border: `1px solid ${focused ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.15)"}`,
+        border: `1px solid ${focused ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.10)"}`,
         borderRadius: "9999px",
-        padding: "6px 6px 6px 24px",
+        padding: "8px 8px 8px 24px",
         boxShadow: focused
-          ? "0 0 0 1px rgba(255,255,255,0.25), 0 16px 48px rgba(0,0,0,0.45)"
-          : "0 8px 32px rgba(0,0,0,0.35)",
-        transition: "all 0.3s ease",
+          ? "0 0 0 1px rgba(255,255,255,0.15), 0 16px 48px rgba(0,0,0,0.35)"
+          : "0 8px 32px rgba(0,0,0,0.20)",
+        transition: "all 0.5s ease",
         cursor: "text",
       }}
       onClick={() => inputRef.current?.focus()}
@@ -75,11 +75,11 @@ export default function AISearchInput({
           border: "none",
           outline: "none",
           color: "white",
-          fontSize: "clamp(15px, 2vw, 18px)",
+          fontSize: "18px",
           lineHeight: 1.5,
-          padding: "10px 0",
+          padding: "16px 0",
           textAlign: "center",
-          fontFamily: "inherit",
+          fontFamily: "var(--font-inter), Inter, sans-serif",
         }}
       />
 
@@ -98,26 +98,27 @@ export default function AISearchInput({
           borderRadius: "50%",
           border: "none",
           cursor: canSubmit ? "pointer" : "default",
-          background: canSubmit ? "white" : "rgba(255,255,255,0.25)",
-          color: canSubmit ? "#250514" : "rgba(255,255,255,0.5)",
-          transition: "all 0.2s ease",
+          background: "white",
+          color: "#250514",
+          transition: "transform 0.2s ease",
           transform: "none",
           outline: "none",
+          marginRight: "4px",
         }}
         onMouseEnter={(e) => {
-          if (canSubmit) e.currentTarget.style.transform = "scale(1.07)";
+          e.currentTarget.style.transform = "scale(1.07)";
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = "none";
         }}
         onMouseDown={(e) => {
-          if (canSubmit) e.currentTarget.style.transform = "scale(0.93)";
+          e.currentTarget.style.transform = "scale(0.90)";
         }}
         onMouseUp={(e) => {
-          if (canSubmit) e.currentTarget.style.transform = "scale(1.07)";
+          e.currentTarget.style.transform = "scale(1.07)";
         }}
       >
-        {/* arrow_forward (Material Symbols) rendered as inline SVG for zero extra deps */}
+        {/* arrow_forward icon as inline SVG */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           height="20"

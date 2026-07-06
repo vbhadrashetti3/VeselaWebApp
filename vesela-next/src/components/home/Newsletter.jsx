@@ -1,40 +1,73 @@
 "use client";
+
 import { Box, Button, Container, Typography } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 export default function Newsletter() {
-  const theme = useTheme();
-
   return (
     <Box
       component="section"
       sx={{
-        bgcolor: theme.palette.custom.surface.sidebar,
-        py: { xs: 8, md: 12 },
-        transition: "background-color 0.3s ease",
+        // bg-surface → #f2fbff
+        bgcolor: "#f2fbff",
+        py: { xs: 12, md: 20 },
+        px: { xs: 2, md: 4 },
+        textAlign: "center",
       }}
     >
-      <Container maxWidth="lg">
-        <Box sx={{ textAlign: "center" }}>
+      <Container maxWidth="md">
+        <MotionBox
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7 }}
+          viewport={{ once: true }}
+        >
           <Typography
+            component="h2"
             sx={{
-              fontSize: { xs: "1.5rem", md: "2.5rem" },
-              fontWeight: 700,
-              color: "text.primary",
+              fontFamily: "var(--font-manrope), Manrope, sans-serif",
+              fontSize: { xs: "2.8rem", md: "4.5rem", lg: "5.5rem" },
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              lineHeight: 1.1,
+              color: "#250514",      // text-primary
+              mb: 5,
             }}
           >
             Step into the reflection.
           </Typography>
+
           <Button
             variant="contained"
-            sx={{ mt: 4, borderRadius: 3, px: 4, py: 1.5 }}
+            sx={{
+              // bg-gradient-to-br from-primary to-primary-container
+              background: "linear-gradient(135deg, #250514 0%, #3e1929 100%)",
+              color: "#ffffff",
+              fontFamily: "var(--font-manrope), Manrope, sans-serif",
+              fontSize: { xs: "1rem", md: "1.2rem" },
+              fontWeight: 700,
+              textTransform: "none",
+              letterSpacing: "-0.01em",
+              px: { xs: 6, md: 8 },
+              py: { xs: 2, md: 2.5 },
+              borderRadius: "12px",
+              boxShadow: "0 8px 24px rgba(37,5,20,0.25)",
+              transition: "all 0.3s ease",
+              "&:hover": {
+                opacity: 0.9,
+                transform: "translateY(-2px)",
+                boxShadow: "0 12px 30px rgba(37,5,20,0.30)",
+              },
+              "&:active": {
+                transform: "scale(0.95)",
+              },
+            }}
           >
             Start a Conversation
           </Button>
-        </Box>
+        </MotionBox>
       </Container>
     </Box>
   );

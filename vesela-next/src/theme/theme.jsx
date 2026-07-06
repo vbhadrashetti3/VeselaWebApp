@@ -225,13 +225,34 @@ const chatColorTokens = colorTokens;
 
 const typography = {
   fontFamily:
-    "var(--font-urbanist), Inter, -apple-system, BlinkMacSystemFont, sans-serif",
-  h1: { fontWeight: 700, letterSpacing: "-0.02em" },
-  h2: { fontWeight: 700, letterSpacing: "-0.02em" },
-  h3: { fontWeight: 650, letterSpacing: "-0.01em" },
-  h4: { fontWeight: 650 },
-  h5: { fontWeight: 600 },
-  h6: { fontWeight: 600 },
+    "var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, sans-serif",
+  h1: {
+    fontFamily: "var(--font-manrope), sans-serif",
+    fontWeight: 800,
+    letterSpacing: "-0.03em",
+  },
+  h2: {
+    fontFamily: "var(--font-manrope), sans-serif",
+    fontWeight: 800,
+    letterSpacing: "-0.02em",
+  },
+  h3: {
+    fontFamily: "var(--font-manrope), sans-serif",
+    fontWeight: 700,
+    letterSpacing: "-0.01em",
+  },
+  h4: {
+    fontFamily: "var(--font-manrope), sans-serif",
+    fontWeight: 700,
+  },
+  h5: {
+    fontFamily: "var(--font-manrope), sans-serif",
+    fontWeight: 600,
+  },
+  h6: {
+    fontFamily: "var(--font-manrope), sans-serif",
+    fontWeight: 600,
+  },
   subtitle1: { fontWeight: 600 },
   subtitle2: { fontWeight: 500 },
   body1: { lineHeight: 1.6 },

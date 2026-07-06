@@ -1,53 +1,54 @@
 "use client";
 
 import { Box, Typography, Container } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import { motion } from "framer-motion";
 
 const MotionBox = motion(Box);
 
 export default function PhilosophySection() {
-  const theme = useTheme();
-
   return (
     <Box
       component="section"
       sx={{
-        bgcolor: theme.palette.custom.surface.sidebar,
-        py: { xs: 8, md: 12 },
-        transition: "background-color 0.3s ease",
+        // bg-surface → #f2fbff
+        bgcolor: "#f2fbff",
+        py: { xs: 10, md: 16 },
       }}
     >
-      <Container maxWidth="lg">
+      <Container maxWidth="xl">
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+            gridTemplateColumns: { xs: "1fr", lg: "5fr 7fr" },
             gap: { xs: 6, md: 10 },
-            alignItems: "flex-start",
+            alignItems: "flex-end",
           }}
         >
-          {/* 🔹 LEFT SIDE */}
+          {/* ── LEFT: label + heading ── */}
           <Box>
             <Typography
               sx={{
+                fontFamily: "var(--font-manrope), Manrope, sans-serif",
                 fontSize: "0.8rem",
-                letterSpacing: "2px",
-                color: "text.secondary",
-                mb: 2,
+                fontWeight: 700,
+                letterSpacing: "0.15em",
+                textTransform: "uppercase",
+                color: "#3e1929",      // text-primary
+                mb: 3,
               }}
             >
-              FOUNDATIONAL PHILOSOPHY
+              Foundational Philosophy
             </Typography>
 
-            {/* ✅ FIXED: component="div" to avoid <p><div/></p> */}
             <Typography
               component="div"
               sx={{
-                fontSize: { xs: "2.5rem", md: "4rem" },
+                fontFamily: "var(--font-manrope), Manrope, sans-serif",
+                fontSize: { xs: "3rem", md: "4.5rem", lg: "5rem" },
                 fontWeight: 800,
-                lineHeight: 1.1,
-                color: "text.primary",
+                lineHeight: 1.0,
+                letterSpacing: "-0.03em",
+                color: "#3e1929",      // text-primary
               }}
             >
               <MotionBox
@@ -62,7 +63,7 @@ export default function PhilosophySection() {
               <MotionBox
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+                transition={{ duration: 0.6, delay: 0.15 }}
                 viewport={{ once: true, amount: 0.4 }}
               >
                 Alignment
@@ -71,7 +72,7 @@ export default function PhilosophySection() {
               <MotionBox
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
                 viewport={{ once: true, amount: 0.4 }}
               >
                 AI
@@ -79,8 +80,8 @@ export default function PhilosophySection() {
             </Typography>
           </Box>
 
-          {/* 🔹 RIGHT SIDE */}
-          <Box>
+          {/* ── RIGHT: quote + divider + body ── */}
+          <Box sx={{ maxWidth: "640px" }}>
             <MotionBox
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -89,43 +90,54 @@ export default function PhilosophySection() {
             >
               <Typography
                 sx={{
-                  fontSize: { xs: "1.3rem", md: "1.8rem" },
+                  fontFamily: "var(--font-inter), Inter, sans-serif",
+                  fontSize: { xs: "1.4rem", md: "1.75rem", lg: "2rem" },
                   fontStyle: "italic",
+                  fontWeight: 300,
                   lineHeight: 1.5,
-                  color: "text.primary",
+                  color: "#504447",    // text-on-surface-variant
+                  mb: 6,
                 }}
               >
-                {"“Think about the best conversation you've ever had with a close friend. That spark you feel when ideas are flowing... We don't need smarter monologues. We need better mirrors.”"}
+                &ldquo;Think about the best conversation you&rsquo;ve ever had
+                with a close friend. That spark you feel when ideas are
+                flowing&hellip; We don&rsquo;t need smarter monologues. We need
+                better mirrors.&rdquo;
               </Typography>
             </MotionBox>
 
-            {/* Divider Animation */}
+            {/* Divider */}
             <MotionBox
               initial={{ opacity: 0, width: 0 }}
-              whileInView={{ opacity: 1, width: 60 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              whileInView={{ opacity: 1, width: 96 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
               viewport={{ once: true }}
               sx={{
-                height: 2,
-                bgcolor: "primary.main",
-                my: 3,
+                height: "1px",
+                bgcolor: "#3e1929",   // bg-primary
+                mb: 6,
               }}
             />
 
             <MotionBox
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
               viewport={{ once: true }}
             >
               <Typography
                 sx={{
-                  fontSize: "1rem",
-                  lineHeight: 1.8,
-                  color: "text.secondary",
+                  fontFamily: "var(--font-inter), Inter, sans-serif",
+                  fontSize: "1.05rem",
+                  fontWeight: 400,
+                  lineHeight: 1.75,
+                  color: "#504447",   // text-on-surface-variant
                 }}
               >
-                {"Our architecture isn't built to dominate information; it's built to synchronize with the human experience. We leverage maeutics in our models to reflect the nuance of human emotion, intuition, and truth."}
+                Our architecture isn&rsquo;t built to dominate information;
+                it&rsquo;s built to synchronize with the human experience. We
+                leverage maeutics in our models to reflect the nuance of human
+                emotion, intuition, and truth.
               </Typography>
             </MotionBox>
           </Box>

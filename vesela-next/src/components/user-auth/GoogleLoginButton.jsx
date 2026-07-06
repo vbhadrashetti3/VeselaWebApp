@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Box, CircularProgress, Typography, useTheme } from "@mui/material";
 import { useAuth } from "@/context/AuthContext";
 import { post } from "@/lib/apiService";
@@ -17,6 +17,49 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
   const [errorMsg, setErrorMsg] = useState("");
 
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || FALLBACK_CLIENT_ID;
+
+  const handleCredentialResponse = useCallback(async (response) => {
+    if (!response.credential) return;
+
+    setLoading(true);
+    setErrorMsg("");
+
+    try {
+      // Send token to proxy path which redirects to https://portal.grayskyai.com/api/auth/google/
+      const apiResponse = await post("/api/auth/google/", {
+        id_token: response.credential,
+      });
+
+      if (!apiResponse.error && apiResponse.status === 200) {
+        const user = apiResponse.data.user;
+        const accessToken =
+          apiResponse.data.access ||
+          apiResponse.data.access_token ||
+          apiResponse.data.token ||
+          apiResponse.data.key ||
+          null;
+
+        if (user) {
+          login(user, accessToken);
+          setDarkMode?.();
+          handleNext(MODALS.SUCCESS);
+        } else {
+          setErrorMsg("User details not received from server.");
+        }
+      } else {
+        setErrorMsg(
+          apiResponse?.data?.detail ||
+            apiResponse?.data?.non_field_errors?.[0] ||
+            "Google Authentication failed.",
+        );
+      }
+    } catch (err) {
+      console.error("Google Auth Backend Call Failed:", err);
+      setErrorMsg("An unexpected error occurred during platform login.");
+    } finally {
+      setLoading(false);
+    }
+  }, [login, setDarkMode, handleNext]);
 
   useEffect(() => {
     let active = true;
@@ -62,50 +105,7 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
     return () => {
       active = false;
     };
-  }, [isLight, clientId]);
-
-  const handleCredentialResponse = async (response) => {
-    if (!response.credential) return;
-
-    setLoading(true);
-    setErrorMsg("");
-
-    try {
-      // Send token to proxy path which redirects to https://portal.grayskyai.com/api/auth/google/
-      const apiResponse = await post("/api/auth/google/", {
-        id_token: response.credential,
-      });
-
-      if (!apiResponse.error && apiResponse.status === 200) {
-        const user = apiResponse.data.user;
-        const accessToken =
-          apiResponse.data.access ||
-          apiResponse.data.access_token ||
-          apiResponse.data.token ||
-          apiResponse.data.key ||
-          null;
-
-        if (user) {
-          login(user, accessToken);
-          setDarkMode?.();
-          handleNext(MODALS.SUCCESS);
-        } else {
-          setErrorMsg("User details not received from server.");
-        }
-      } else {
-        setErrorMsg(
-          apiResponse?.data?.detail ||
-            apiResponse?.data?.non_field_errors?.[0] ||
-            "Google Authentication failed.",
-        );
-      }
-    } catch (err) {
-      console.error("Google Auth Backend Call Failed:", err);
-      setErrorMsg("An unexpected error occurred during platform login.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [isLight, clientId, handleCredentialResponse]);
 
   return (
     <Box

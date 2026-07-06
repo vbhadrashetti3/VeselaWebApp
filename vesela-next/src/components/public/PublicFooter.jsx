@@ -1,6 +1,6 @@
 "use client";
+
 import { Box, Typography, Link, Stack } from "@mui/material";
-import { CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 
 export default function PublicFooter() {
   return (
@@ -8,116 +8,82 @@ export default function PublicFooter() {
       component="footer"
       sx={{
         borderTop: "1px solid",
-        borderColor: "divider",
-        py: { xs: 4, sm: 3 },
-        px: { xs: 2, sm: 4 },
-        mt: 5,
-        backgroundColor: (theme) => theme.palette.background.default,
+        borderColor: "rgba(62, 25, 41, 0.08)", // Softer custom divider color matching your palette
+        py: { xs: 5, sm: 4 },
+        px: { xs: "1.25rem", sm: "2rem", md: "2.5rem", lg: "4rem" }, // Exact padding footprint matching your header
+        mt: "auto", // Ensures footer sticks to bottom if page content is short
+        backgroundColor: "transparent",
       }}
     >
       <Box
         sx={{
           display: "flex",
-          flexDirection: { xs: "column", sm: "row" },
-          justifyContent: { xs: "center", sm: "space-between" },
+          flexDirection: { xs: "column-reverse", sm: "row" }, // Clean stack swap for mobile devices
+          justifyContent: "space-between",
           alignItems: "center",
-          gap: { xs: 2.5, sm: 3 },
-          maxWidth: CHAT_CONTAINER_MAX_WIDTH,
+          gap: { xs: 3, sm: 2 },
+          // FIXED RESPONSIVE BOUNDARIES: Matches header containment parameters perfectly
+          maxWidth: { xs: "100%", md: "1280px", lg: "1440px", xl: "1536px" },
           mx: "auto",
           width: "100%",
         }}
       >
-        {/* Copyright */}
+        {/* Copyright Layout Block */}
         <Typography
           variant="body2"
-          color="text.secondary"
           sx={{
-            order: { xs: 2, sm: 1 },
+            fontFamily: "'Inter', sans-serif",
             fontSize: "14px",
+            color: "#504447",
+            opacity: 0.8,
             textAlign: { xs: "center", sm: "left" },
           }}
         >
           © 2026 Vesela. All rights reserved.
         </Typography>
 
-        {/* Links row */}
+        {/* Links Navigation Row Block */}
         <Stack
           direction={{ xs: "column", sm: "row" }}
-          spacing={{ xs: 1.5, sm: 3 }}
+          spacing={0}
           justifyContent="center"
           alignItems="center"
+          gap={{ xs: "1.25rem", sm: "2rem" }} // Responsive fluid gap distribution
           flexWrap="wrap"
           useFlexGap
           sx={{
-            order: { xs: 1, sm: 2 },
+            width: { xs: "100%", sm: "auto" },
           }}
         >
-          <Link
-            href="https://humanitybench.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="none"
-            color="text.secondary"
-            sx={{
-              fontSize: "14px",
-              transition: "color 0.2s ease-in-out",
-              "&:hover": { color: "text.primary" },
-            }}
-          >
-            Humanity Bench
-          </Link>
-          <Link
-            href="https://grayskyai.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="none"
-            color="text.secondary"
-            sx={{
-              fontSize: "14px",
-              transition: "color 0.2s ease-in-out",
-              "&:hover": { color: "text.primary" },
-            }}
-          >
-            Graysky AI
-          </Link>
-          <Link
-            href="https://humanalignmentai.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="none"
-            color="text.secondary"
-            sx={{
-              fontSize: "14px",
-              transition: "color 0.2s ease-in-out",
-              "&:hover": { color: "text.primary" },
-            }}
-          >
-            Human Alignment AI
-          </Link>
-          <Link
-            href="#"
-            underline="none"
-            color="text.secondary"
-            sx={{
-              fontSize: "14px",
-              transition: "color 0.2s ease-in-out",
-              "&:hover": { color: "text.primary" },
-            }}
-          >
-            Privacy
-          </Link>
-          <Link
-            href="#"
-            underline="none"
-            color="text.secondary"
-            sx={{
-              fontSize: "14px",
-              transition: "color 0.2s ease-in-out",
-              "&:hover": { color: "text.primary" },
-            }}
-          >
-            Terms
-          </Link>
+          {[
+            { label: "Humanity Bench", href: "https://humanitybench.org/", external: true },
+            { label: "Graysky AI", href: "https://grayskyai.com/", external: true },
+            { label: "Human Alignment AI", href: "https://humanalignmentai.com/", external: true },
+            { label: "Privacy", href: "#", external: false },
+            { label: "Terms", href: "#", external: false },
+          ].map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
+              underline="none"
+              sx={{
+                fontFamily: "'Manrope', sans-serif",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "#504447",
+                whiteSpace: "nowrap",
+                transition: "all 250ms ease-in-out",
+                "&:hover": {
+                  color: "#3e1929",
+                  opacity: 0.9
+                },
+              }}
+            >
+              {item.label}
+            </Link>
+          ))}
         </Stack>
       </Box>
     </Box>

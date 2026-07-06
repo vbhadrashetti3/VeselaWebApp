@@ -1,4 +1,4 @@
-import { Urbanist } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import { ModalProvider } from "@/context/ModalContext";
 import { ChatSessionProvider } from "@/context/ChatSessionContext";
 import { AuthProvider } from "@/context/AuthContext";
@@ -6,9 +6,16 @@ import ThemeRegistry from "@/theme/ThemeRegistry";
 import GlobalModals from "../components/modals/GlobalModals";
 import Script from "next/script";
 
-const urbanist = Urbanist({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-inter",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["200", "400", "700", "800"],
+  variable: "--font-manrope",
 });
 
 // Viewport meta — prevents iOS auto-zoom and sets correct initial scale
@@ -28,7 +35,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={urbanist.className}>
+    <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
       <body>
         <ThemeRegistry>
           <AuthProvider>

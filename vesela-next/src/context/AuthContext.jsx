@@ -74,10 +74,25 @@ export const AuthProvider = ({ children }) => {
   // doesn't flash a redirect before we know if the cookie session is valid.
   const [isSessionChecked, setIsSessionChecked] = useState(false);
 
-  // In-memory only — never persisted to localStorage.
-  // Used exclusively for the cross-domain WebSocket connection which cannot
-  // receive cookies automatically (cookies are domain-scoped).
-  const [wsToken, setWsToken] = useState(null);
+  // Sync wsToken with sessionStorage so it survives page reloads
+  // but gets cleared when the tab is closed.
+  const [wsToken, setWsTokenState] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("vesela_ws_token") || null;
+    }
+    return null;
+  });
+
+  const setWsToken = useCallback((token) => {
+    setWsTokenState(token);
+    if (typeof window !== "undefined") {
+      if (token) {
+        sessionStorage.setItem("vesela_ws_token", token);
+      } else {
+        sessionStorage.removeItem("vesela_ws_token");
+      }
+    }
+  }, []);
 
   const isFetchingPlanRef = useRef(false);
   const refreshTimeoutRef = useRef(null);
@@ -90,6 +105,8 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   // ── Automatic token refresh timer ──────────────────────────────────────────
+
+  const scheduleRefreshRef = useRef(null);
 
   const scheduleRefresh = useCallback((expiresAt) => {
     if (typeof window === "undefined" || !expiresAt) return;
@@ -112,7 +129,7 @@ export const AuthProvider = ({ children }) => {
           const decoded = decodeJwt(newToken);
           if (decoded && decoded.exp) {
             saveAuthTokenExpiration(newToken);
-            scheduleRefresh(decoded.exp * 1000);
+            scheduleRefreshRef.current?.(decoded.exp * 1000);
           }
         }
       });
@@ -126,13 +143,17 @@ export const AuthProvider = ({ children }) => {
             const decoded = decodeJwt(newToken);
             if (decoded && decoded.exp) {
               saveAuthTokenExpiration(newToken);
-              scheduleRefresh(decoded.exp * 1000);
+              scheduleRefreshRef.current?.(decoded.exp * 1000);
             }
           }
         });
       }, delay);
     }
-  }, []);
+  }, [setWsToken]);
+
+  useEffect(() => {
+    scheduleRefreshRef.current = scheduleRefresh;
+  }, [scheduleRefresh]);
 
   // ── Session hydration on mount ────────────────────────────────────────────
   // Uses native fetch (NOT the axios instance) so the refresh interceptor is
@@ -181,14 +202,12 @@ export const AuthProvider = ({ children }) => {
               }
             }
           } else {
-            const isLocalDev = typeof window !== "undefined" &&
-              (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
             const expiresAt = getAuthTokenExpiration();
             const oneHour = 60 * 60 * 1000;
             const isExpiringSoon = !expiresAt || (expiresAt - Date.now() < oneHour);
 
-            if (isExpiringSoon || isLocalDev) {
-              console.log("[Auth] Stored expiration indicates expired or expiring soon, or running in local dev. Refreshing.");
+            if (isExpiringSoon) {
+              console.log("[Auth] Stored expiration indicates expired or expiring soon. Refreshing.");
               const freshToken = await fetchFreshAccessToken();
               if (freshToken) {
                 setWsToken(freshToken);
@@ -197,10 +216,6 @@ export const AuthProvider = ({ children }) => {
                 if (freshDecoded && freshDecoded.exp) {
                   scheduleRefresh(freshDecoded.exp * 1000);
                 }
-              } else {
-                setUser(null);
-                setWsToken(null);
-                localStorageUtil.set(USER_DETAILS, {});
               }
             } else {
               console.log("[Auth] Stored expiration indicates valid token. Skipping refresh call on page load.");
@@ -223,7 +238,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkSession();
-  }, [scheduleRefresh]); // Runs once on mount
+  }, [scheduleRefresh, setWsToken]); // Runs once on mount
 
   // ── Listen for events from axios interceptor ─────────────────────────────
   useEffect(() => {
@@ -257,7 +272,7 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener("auth:sessionExpired", handleExpired);
       window.removeEventListener("auth:sessionRefreshed", handleRefreshed);
     };
-  }, [scheduleRefresh]);
+  }, [scheduleRefresh, setWsToken]);
 
   // Clean up timer on unmount
   useEffect(() => {
@@ -290,7 +305,7 @@ export const AuthProvider = ({ children }) => {
         scheduleRefresh(decoded.exp * 1000);
       }
     }
-  }, [scheduleRefresh]);
+  }, [scheduleRefresh, setWsToken]);
 
   // ── logout ───────────────────────────────────────────────────────────────
   /** Clears auth state, storage, and redirects to home. */
@@ -319,7 +334,7 @@ export const AuthProvider = ({ children }) => {
       onSuccess?.();
       router.push("/");
     }
-  }, [router]);
+  }, [router, setWsToken]);
 
   // ── fetchPlan ─────────────────────────────────────────────────────────────
   const fetchPlan = useCallback(async () => {
