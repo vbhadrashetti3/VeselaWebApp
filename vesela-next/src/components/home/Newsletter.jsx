@@ -2,10 +2,14 @@
 
 import { Box, Button, Container, Typography } from "@mui/material";
 import { motion } from "framer-motion";
+import { useModal } from "@/context/ModalContext";
+import { MODALS } from "@/components/modals/modalConstants";
 
 const MotionBox = motion(Box);
 
 export default function Newsletter() {
+  const { openModal } = useModal();
+
   return (
     <Box
       component="section"
@@ -41,6 +45,7 @@ export default function Newsletter() {
 
           <Button
             variant="contained"
+            onClick={() => openModal(MODALS.LOGIN, { source: "public" })}
             sx={{
               // bg-gradient-to-br from-primary to-primary-container
               background: "linear-gradient(135deg, #250514 0%, #3e1929 100%)",
