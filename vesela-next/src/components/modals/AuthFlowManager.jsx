@@ -36,22 +36,13 @@ const AuthFlowManager = ({
 
   const isFromChat = modalOptions?.source === "chat";
 
-  const localColorMode = useMemo(() => {
-    if (isFromChat) {
-      return rootColorMode;
-    } else {
-      return {
-        mode: "light",
-        toggleColorMode: () => { },
-      };
-    }
-  }, [isFromChat, rootColorMode]);
+  const localColorMode = rootColorMode;
 
   const modalTheme = useMemo(() => {
     if (isFromChat) {
       return getChatTheme(rootColorMode.mode);
     } else {
-      return getAppTheme("light");
+      return getAppTheme(rootColorMode.mode);
     }
   }, [isFromChat, rootColorMode.mode]);
 

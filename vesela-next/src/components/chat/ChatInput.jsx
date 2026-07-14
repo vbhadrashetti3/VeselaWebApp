@@ -79,8 +79,11 @@ export default function ChatInput({
         zIndex: 1000,
         pb: { xs: 2, sm: 4 },
         pt: { xs: 1.5, sm: 2 },
-        backdropFilter: "blur(10px)",
-        backgroundColor: alpha(theme.palette.background.default, 0.8),
+        background: theme.palette.mode === "dark"
+          ? "linear-gradient(to top, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.88) 70%, rgba(10,10,10,0.0) 100%)"
+          : "linear-gradient(to top, rgba(244,243,239,0.97) 0%, rgba(244,243,239,0.88) 70%, rgba(244,243,239,0.0) 100%)",
+        backdropFilter: "blur(18px)",
+        WebkitBackdropFilter: "blur(18px)",
       }}
     >
       <Container
@@ -204,15 +207,17 @@ export default function ChatInput({
                   ? theme.palette.primary.main
                   : isLight
                     ? "rgba(0, 0, 0, 0.04)"
-                    : "rgba(255, 255, 255, 0.03)",
-                color: isSendEnabled ? "#fff" : theme.palette.text.disabled,
+                    : "rgba(255, 255, 255, 0.06)",
+                color: isSendEnabled
+                  ? theme.palette.primary.contrastText
+                  : theme.palette.text.disabled,
                 transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                 "&:hover": {
                   backgroundColor: isSendEnabled
                     ? theme.palette.primary.dark
                     : isLight
-                      ? "rgba(0, 0, 0, 0.04)"
-                      : "rgba(255, 255, 255, 0.03)",
+                      ? "rgba(0, 0, 0, 0.06)"
+                      : "rgba(255, 255, 255, 0.08)",
                   transform: isSendEnabled ? "scale(1.05)" : "none",
                 },
                 "&:active": {

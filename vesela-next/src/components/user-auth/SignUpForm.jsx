@@ -204,12 +204,13 @@ const SignUpForm = ({ handleNext }) => {
       <Box sx={{ mt: 3, textAlign: "center" }}>
         <Typography>
           Already have an account?{" "}
-          <span
+          <Box
+            component="span"
             onClick={goToLogin}
-            style={{ cursor: "pointer", fontWeight: 700, color: "#286ca8" }}
+            sx={{ cursor: "pointer", fontWeight: 700, color: "primary.main" }}
           >
             Sign In
-          </span>
+          </Box>
         </Typography>
       </Box>
       <Box sx={{ textAlign: "center", mt: 3 }}>

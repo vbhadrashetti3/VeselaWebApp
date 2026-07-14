@@ -2,21 +2,21 @@
 
 import PublicFooter from "@/components/public/PublicFooter";
 import PublicHeader from "@/components/public/PublicHeader";
-import { Box } from "@mui/material";
 import { PublicThemeRegistry } from "@/theme/ThemeRegistry";
+import { usePathname } from "next/navigation";
 
-/**
- * Layout for all public-facing pages.
- * Always rendered in light mode — no dark-mode toggle available.
- */
 export default function PublicLayout({ children }) {
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const layoutClass = isHome ? "home-page" : "inner-page";
+
   return (
     <PublicThemeRegistry>
-      <Box>
+      <div className={layoutClass}>
         <PublicHeader />
         {children}
         <PublicFooter />
-      </Box>
+      </div>
     </PublicThemeRegistry>
   );
 }

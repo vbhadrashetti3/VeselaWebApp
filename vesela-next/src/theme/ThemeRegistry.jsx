@@ -25,7 +25,7 @@ function useModeState() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorageUtil.get("theme");
+    const saved = localStorageUtil.get("theme") || (typeof window !== "undefined" ? window.localStorage.getItem("vesela-theme") : null);
     if (saved) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMode(saved);
@@ -35,6 +35,12 @@ function useModeState() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (mounted) {
+      document.documentElement.dataset.theme = mode;
+    }
+  }, [mode, mounted]);
+
   const colorMode = useMemo(
     () => ({
       mode,
@@ -42,6 +48,9 @@ function useModeState() {
         setMode((prev) => {
           const next = prev === "light" ? "dark" : "light";
           localStorageUtil.set("theme", next);
+          if (typeof window !== "undefined") {
+            window.localStorage.setItem("vesela-theme", next);
+          }
           return next;
         });
       },
@@ -88,54 +97,30 @@ export default function ThemeRegistry({ children }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PUBLIC WEBSITE THEME REGISTRY
-// Always light mode — no toggle exposed.
-// Primary brand colour: #3e1929
+// Overrides the theme styling for the public website.
 // ─────────────────────────────────────────────────────────────────────────────
-
-/** Light-mode-only context value — toggle is a no-op. */
-const LIGHT_MODE_CONTEXT = {
-  mode: "light",
-  toggleColorMode: () => {},
-};
-
 export function PublicThemeRegistry({ children }) {
-  const theme = useMemo(() => getAppTheme("light"), []);
+  const { mode } = useColorMode();
+  const theme = useMemo(() => getAppTheme(mode), [mode]);
 
   return (
-    <ColorModeContext.Provider value={LIGHT_MODE_CONTEXT}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        {children}
-      </ThemeProvider>
-    </ColorModeContext.Provider>
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CHAT APPLICATION THEME REGISTRY
-// Uses the chat primary brand colour: #1f222a
-// Wrap chat pages with this instead of the default ThemeRegistry.
+// Overrides the theme styling for the internal chat pages.
 // ─────────────────────────────────────────────────────────────────────────────
 export function ChatThemeRegistry({ children }) {
-  const { mode, mounted, colorMode } = useModeState();
+  const { mode } = useColorMode();
   const theme = useMemo(() => getChatTheme(mode), [mode]);
 
-  if (!mounted) {
-    return (
-      <ThemeProvider theme={theme}>
-        <div style={{ visibility: "hidden" }}>{children}</div>
-      </ThemeProvider>
-    );
-  }
-
   return (
-    <ColorModeContext.Provider value={colorMode}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          {children}
-        </LocalizationProvider>
-      </ThemeProvider>
-    </ColorModeContext.Provider>
+    <ThemeProvider theme={theme}>
+      {children}
+    </ThemeProvider>
   );
 }

@@ -7,68 +7,69 @@ import { createTheme, alpha } from "@mui/material/styles";
 // ─────────────────────────────────────────────
 
 /** Primary brand color */
-const BRAND_PRIMARY = "#286CA8";
+const BRAND_PRIMARY = "#176f9c";
+const BRAND_PRIMARY_DARK = "#60b7e5";
 
 const colorTokens = {
   light: {
     brand: {
       main: BRAND_PRIMARY,
-      light: "#4c87bb",
-      dark: "#1f5b8d",
+      light: "#b9dbeb",
+      dark: "#101113",
       contrastText: "#ffffff",
     },
     primary: {
-      main: BRAND_PRIMARY,
-      dark: "#1f5b8d",
-      light: "#4c87bb",
-      contrastText: "#ffffff",
+      main: "#101113",
+      dark: "#000000",
+      light: "#66686d",
+      contrastText: "#f4f3ef",
     },
     secondary: {
-      main: "#E0E0E0",
-      dark: "#b0b0b0",
-      light: "#f0f0f0",
-      contrastText: "#000000",
+      main: "#ebe9e3",
+      dark: "#66686d",
+      light: "#faf9f6",
+      contrastText: "#101113",
     },
     text: {
-      primary: "#000000",
-      secondary: "#555555",
-      disabled: "#9e9e9e",
+      primary: "#101113",
+      secondary: "#66686d",
+      disabled: "rgba(16, 17, 19, 0.38)",
     },
     background: {
-      default: "#f5f5f5",
-      paper: "#ffffff",
-      overlay: "#ffffff",
+      default: "#f4f3ef",
+      paper: "#faf9f6",
+      overlay: "#faf9f6",
     },
     surface: {
-      surface: "#ffffff",
-      surfaceElevated: "#ffffff",
-      surfaceHover: "#f5f5f5",
-      modal: "#ffffff",
-      sidebar: "#f5f5f5",
-      card: "#ffffff",
+      surface: "#faf9f6",
+      surfaceElevated: "#faf9f6",
+      surfaceHover: "#ebe9e3",
+      modal: "#ebe9e3",
+      sidebar: "#ebe9e3",
+      card: "#faf9f6",
     },
     border: {
-      soft: "#E0E0E0",
-      strong: "#cccccc",
+      soft: "rgba(16, 17, 19, 0.16)",
+      strong: "rgba(16, 17, 19, 0.34)",
     },
-    divider: "#E0E0E0",
+    divider: "rgba(16, 17, 19, 0.16)",
     state: {
-      hover: "rgba(40, 108, 168, 0.04)",
-      selected: "rgba(40, 108, 168, 0.10)",
-      focusRing: "rgba(40, 108, 168, 0.25)",
+      hover: "rgba(23, 111, 156, 0.04)",
+      selected: "rgba(23, 111, 156, 0.10)",
+      focusRing: "rgba(23, 111, 156, 0.25)",
       disabledBg: "#e0e0e0",
     },
     header: {
-      background: "#ffffff",
-      border: "#E0E0E0",
+      background: "#f4f3ef",
+      border: "rgba(16, 17, 19, 0.16)",
     },
     chat: {
-      userBubble: "#E0E0E0",
-      assistantBubble: "#ffffff",
-      bubbleBorder: "#E0E0E0",
-      inputBg: "#FAFAFA",
-      welcomeBg: "#FAFAFA",
-      welcomeText: "#9E9E9E",
+      userBubble: "rgba(16, 17, 19, 0.10)",
+      assistantBubble: "transparent",
+      bubbleBorder: "rgba(16, 17, 19, 0.16)",
+      inputBg: "#ebe9e3",
+      welcomeBg: "#ebe9e3",
+      welcomeText: "#66686d",
     },
     success: {
       main: "#10b981",
@@ -95,11 +96,11 @@ const colorTokens = {
       contrastText: "#ffffff",
     },
     shadows: {
-      shadow: "0 10px 24px rgba(0, 0, 0, 0.04)",
-      modalShadow: "0 20px 52px rgba(0, 0, 0, 0.12)",
+      shadow: "none",
+      modalShadow: "none",
     },
     radius: {
-      small: "6px",
+      small: "8px",
       medium: "12px",
       large: "18px",
       full: "9999px",
@@ -114,63 +115,63 @@ const colorTokens = {
   },
   dark: {
     brand: {
-      main: BRAND_PRIMARY,
-      light: "#4c87bb",
-      dark: "#1f5b8d",
-      contrastText: "#ffffff",
+      main: BRAND_PRIMARY_DARK,
+      light: "#153b50",
+      dark: "#f7f7f3",
+      contrastText: "#0a0a0a",
     },
     primary: {
-      main: BRAND_PRIMARY,
-      dark: "#1f5b8d",
-      light: "#4c87bb",
-      contrastText: "#ffffff",
+      main: "#f7f7f3",
+      dark: "#ffffff",
+      light: "#9a9da3",
+      contrastText: "#0a0a0a",
     },
     secondary: {
-      main: "#35383F",
-      dark: "#1c1e22",
-      light: "#4e525c",
-      contrastText: "#ffffff",
+      main: "#121315",
+      dark: "#9a9da3",
+      light: "#17181a",
+      contrastText: "#f7f7f3",
     },
     text: {
-      primary: "#ffffff",
-      secondary: "#aaaaaa",
-      disabled: "#777777",
+      primary: "#f7f7f3",
+      secondary: "#9a9da3",
+      disabled: "rgba(255, 255, 255, 0.38)",
     },
     background: {
-      default: "#000000",
-      paper: "#1e1e1e",
-      overlay: "#1e1e1e",
+      default: "#0a0a0a",
+      paper: "#17181a",
+      overlay: "#17181a",
     },
     surface: {
-      surface: "#1e1e1e",
-      surfaceElevated: "#1e1e1e",
-      surfaceHover: "#2a2a2a",
-      modal: "#1F222A",
-      sidebar: "#1F222A",
-      card: "#1e1e1e",
+      surface: "#17181a",
+      surfaceElevated: "#17181a",
+      surfaceHover: "#121315",
+      modal: "#121315",
+      sidebar: "#121315",
+      card: "#17181a",
     },
     border: {
-      soft: "#35383F",
-      strong: "#4e525c",
+      soft: "rgba(255, 255, 255, 0.13)",
+      strong: "rgba(255, 255, 255, 0.32)",
     },
-    divider: "#35383F",
+    divider: "rgba(255, 255, 255, 0.13)",
     state: {
-      hover: "rgba(40, 108, 168, 0.06)",
-      selected: "rgba(40, 108, 168, 0.25)",
-      focusRing: "rgba(40, 108, 168, 0.40)",
+      hover: "rgba(96, 183, 229, 0.06)",
+      selected: "rgba(96, 183, 229, 0.25)",
+      focusRing: "rgba(96, 183, 229, 0.40)",
       disabledBg: "#424242",
     },
     header: {
-      background: "#1e1e1e",
-      border: "#35383F",
+      background: "#0a0a0a",
+      border: "rgba(255, 255, 255, 0.13)",
     },
     chat: {
-      userBubble: "#1F222A",
-      assistantBubble: "#000000",
-      bubbleBorder: "#35383F",
-      inputBg: "#161618",
-      welcomeBg: "#1F222A",
-      welcomeText: "#BDBDBD",
+      userBubble: "rgba(255, 255, 255, 0.10)",
+      assistantBubble: "transparent",
+      bubbleBorder: "rgba(255, 255, 255, 0.13)",
+      inputBg: "#121315",
+      welcomeBg: "#121315",
+      welcomeText: "#9a9da3",
     },
     success: {
       main: "#10b981",
@@ -197,11 +198,11 @@ const colorTokens = {
       contrastText: "#ffffff",
     },
     shadows: {
-      shadow: "0 14px 40px rgba(0, 0, 0, 0.40)",
-      modalShadow: "0 22px 56px rgba(0, 0, 0, 0.46)",
+      shadow: "none",
+      modalShadow: "none",
     },
     radius: {
-      small: "6px",
+      small: "8px",
       medium: "12px",
       large: "18px",
       full: "9999px",
@@ -227,30 +228,30 @@ const typography = {
   fontFamily:
     "var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, sans-serif",
   h1: {
-    fontFamily: "var(--font-manrope), sans-serif",
-    fontWeight: 800,
+    fontFamily: "var(--font-inter), sans-serif",
+    fontWeight: 400,
     letterSpacing: "-0.03em",
   },
   h2: {
-    fontFamily: "var(--font-manrope), sans-serif",
-    fontWeight: 800,
+    fontFamily: "var(--font-inter), sans-serif",
+    fontWeight: 400,
     letterSpacing: "-0.02em",
   },
   h3: {
-    fontFamily: "var(--font-manrope), sans-serif",
-    fontWeight: 700,
+    fontFamily: "var(--font-inter), sans-serif",
+    fontWeight: 400,
     letterSpacing: "-0.01em",
   },
   h4: {
-    fontFamily: "var(--font-manrope), sans-serif",
-    fontWeight: 700,
+    fontFamily: "var(--font-inter), sans-serif",
+    fontWeight: 500,
   },
   h5: {
-    fontFamily: "var(--font-manrope), sans-serif",
-    fontWeight: 600,
+    fontFamily: "var(--font-inter), sans-serif",
+    fontWeight: 500,
   },
   h6: {
-    fontFamily: "var(--font-manrope), sans-serif",
+    fontFamily: "var(--font-inter), sans-serif",
     fontWeight: 600,
   },
   subtitle1: { fontWeight: 600 },
@@ -276,7 +277,7 @@ const buildComponents = () => ({
   MuiAppBar: {
     styleOverrides: {
       root: ({ theme }) => ({
-        backgroundColor: theme.palette.background.paper,
+        backgroundColor: theme.palette.background.default,
         color: theme.palette.text.primary,
         boxShadow: "none",
         backgroundImage: "none",
@@ -346,8 +347,11 @@ const buildComponents = () => ({
     },
     styleOverrides: {
       root: ({ theme }) => ({
-        borderRadius: 12,
-        paddingInline: 14,
+        borderRadius: 9999, // Pill shape
+        paddingInline: 18,
+        paddingBlock: 6,
+        textTransform: "none",
+        fontFamily: "var(--font-inter), sans-serif",
         "&.Mui-disabled": {
           color: theme.palette.text.disabled,
         },
@@ -377,7 +381,7 @@ const buildComponents = () => ({
     styleOverrides: {
       root: ({ theme }) => ({
         backgroundColor: theme.palette.custom.chat.inputBg,
-        borderRadius: 10,
+        borderRadius: 8, // 8px radius
         transition: "all 0.2s ease",
         "& .MuiOutlinedInput-notchedOutline": {
           borderColor: theme.palette.custom.border.soft,

@@ -1,4 +1,5 @@
-import { Inter, Manrope } from "next/font/google";
+import "./globals.css";
+import { Inter, Manrope, IBM_Plex_Mono } from "next/font/google";
 import { ModalProvider } from "@/context/ModalContext";
 import { ChatSessionProvider } from "@/context/ChatSessionContext";
 import { AuthProvider } from "@/context/AuthContext";
@@ -18,6 +19,12 @@ const manrope = Manrope({
   variable: "--font-manrope",
 });
 
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-mono",
+});
+
 // Viewport meta — prevents iOS auto-zoom and sets correct initial scale
 export const viewport = {
   width: "device-width",
@@ -35,7 +42,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
+    <html lang="en" className={`${inter.variable} ${manrope.variable} ${ibmPlexMono.variable}`}>
       <body>
         <ThemeRegistry>
           <AuthProvider>

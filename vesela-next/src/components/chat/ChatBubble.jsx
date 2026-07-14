@@ -1,9 +1,9 @@
 "use client";
 
-import { Box, Button, Typography, Paper } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import React from "react";
 import GenericLottie from "@/components/ui/GenericLottie";
 import barsTyping from "@/../public/bars-typing.json";
+import { useTheme } from "@mui/material/styles";
 
 export default function ChatBubble({
   role,
@@ -19,51 +19,27 @@ export default function ChatBubble({
     theme.palette.mode === "dark" ? "invert(1) brightness(2)" : "none";
 
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         display: "flex",
-        flexDirection: isAI ? "row" : "row-reverse",
-        mb: 3,
+        justifyContent: isAI ? "flex-start" : "flex-end",
+        width: "100%",
+        marginBottom: "24px",
       }}
     >
-      <Paper
-        sx={{
-          padding: "10px 14px",
-          maxWidth: { xs: "95%", sm: "85%", md: "78%" },
-          border: "none",
-          bgcolor: isAI
-            ? theme.palette.chat?.bot || "#ffffff"
-            : theme.palette.chat?.user || "#E0E0E0",
-          color: theme.palette.text.primary,
-          borderRadius: "8px",
-          wordBreak: "break-word",
-          overflowWrap: "anywhere",
-        }}
-      >
+      <div className={`bubble ${isAI ? "ai" : "user"}`}>
 
-        <Typography
-          component="div"
-          sx={{
-            fontSize: "15px",
-            lineHeight: 1.6,
-            display: "flex",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "4px",
-            minHeight: "22px", // prevents zero-height flash before first chunk
-          }}
-        >
+        <div style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
           {message}
 
           {/* Inline loader — visible the entire time isStreaming is true */}
           {isAI && isStreaming && (
-            <Box
-              component="span"
-              sx={{
+            <span
+              style={{
                 display: "inline-flex",
                 alignItems: "center",
                 verticalAlign: "middle",
-                flexShrink: 0,
+                marginLeft: "8px",
                 filter: lottieFilter,
               }}
             >
@@ -73,28 +49,36 @@ export default function ChatBubble({
                 height={message ? 14 : 22}
                 loop={true}
               />
-            </Box>
+            </span>
           )}
-        </Typography>
+        </div>
 
-        {/* Error UI — unchanged */}
+        {/* Error UI */}
         {isError && (
-          <Box sx={{ mt: 0.8, display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography sx={{ fontSize: 12, color: "error.main" }}>
+          <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "12px", color: "var(--accent)" }}>
               Something failed.
-            </Typography>
+            </span>
             {onRetry && (
-              <Button
-                size="small"
+              <button
+                type="button"
                 onClick={onRetry}
-                sx={{ minWidth: "auto", p: 0, fontSize: 12 }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  fontSize: "12px",
+                  color: "var(--accent)",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
               >
                 Retry
-              </Button>
+              </button>
             )}
-          </Box>
+          </div>
         )}
-      </Paper>
-    </Box>
+      </div>
+    </div>
   );
 }

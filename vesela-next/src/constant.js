@@ -3,4 +3,7 @@ export const USER_DETAILS = "userdetails";
 export const PLAN_DETAILS = "plan_details";
 export const POST_LOGIN_NAVIGATE_TO = "postLoginNavigateTo";
 export const ASSESSMENT_STORAGE_KEY = "assessmentData";
-export const CHAT_CONTAINER_MAX_WIDTH = "700px";
+
+// Golden Ratio layout: conversation takes φ/(1+φ) ≈ 61.8% of viewport
+// clamp(min, fluid, max) — scales from mobile comfort to ultrawide cap
+export const CHAT_CONTAINER_MAX_WIDTH = "clamp(480px, 61.8vw, 960px)";

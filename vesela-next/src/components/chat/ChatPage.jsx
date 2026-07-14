@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Container } from "@mui/material";
+import { Box } from "@mui/material";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import ChatBubble from "./ChatBubble";
@@ -132,9 +132,12 @@ export default function ChatPage() {
 
       <Box sx={{ display: "flex", flexDirection: "column", pt: { xs: 8, sm: 9, md: 10 }, pb: { xs: 14, sm: 13 } }}>
         <Box ref={containerRef} sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
-          <Container
-            maxWidth={false}
-            sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%", px: { xs: 1.5, sm: 2, md: 3 } }}
+          <Box
+            sx={{
+              width: CHAT_CONTAINER_MAX_WIDTH,
+              mx: "auto",
+              px: { xs: 2, sm: 2.5 },
+            }}
           >
             {mergedMessages.map((msg, i) => {
               const isLastAssistant =
@@ -156,7 +159,7 @@ export default function ChatPage() {
             })}
 
             <div ref={bottomRef} />
-          </Container>
+          </Box>
         </Box>
 
         <ChatInput
