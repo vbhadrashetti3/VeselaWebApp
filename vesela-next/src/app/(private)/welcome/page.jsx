@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -14,6 +14,8 @@ import { useColorMode } from "@/theme/ThemeRegistry";
 import { useChatSession } from "@/context/ChatSessionContext";
 import GenericLottie from "@/components/ui/GenericLottie";
 import Header from "@/components/chat/Header";
+import { localStorageUtil } from "@/utils/localStorageUtil";
+import { WELCOME_COMPLETED } from "@/constant";
 
 import VeselaLogoWhite from "@/../public/vesela_white_lottie.json";
 import VeselaLogoBlack from "@/../public/vesela_black_lottie.json";
@@ -33,6 +35,12 @@ const WelcomePage = () => {
   const { setPendingHeroMessage } = useChatSession();
 
   const animationData = mode === "dark" ? VeselaLogoWhite : VeselaLogoBlack;
+
+  // Mark welcome as seen on first visit so ClientRedirect (on "/")
+  // sends this user to /chat on all future visits instead of /welcome.
+  useEffect(() => {
+    localStorageUtil.set(WELCOME_COMPLETED, true);
+  }, []);
 
   const isTyping = text.length > 0;
   const isMultiline = text.split("\n").length > 1 || text.length > 60;

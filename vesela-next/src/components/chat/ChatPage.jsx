@@ -1,6 +1,6 @@
 "use client";
 
-import { Box } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import ChatBubble from "./ChatBubble";
@@ -16,6 +16,7 @@ import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
   const { isAuthenticated, isSessionChecked, wsToken, userId } = useAuth();
+  const theme = useTheme();
   const socketToken = isSessionChecked && isAuthenticated
     ? (wsToken || "cookie-auth")
     : null;
@@ -128,6 +129,27 @@ export default function ChatPage() {
             ? "Free message limit reached. Upgrade to Pro to continue."
             : "Free guest limit reached. Login or upgrade to continue."
         }
+      />
+
+      {/* Gradient overlay — fades the page background into the transparent header.
+          Must live here (not inside AppBar) because AppBar's own background would
+          cover it. fixed + zIndex keeps it above scrolling messages, below AppBar
+          controls. Matches the reference ChatWindow gradient exactly. */}
+      <Box
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "100px",
+          background:
+            theme.palette.mode === "light"
+              ? "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0) 100%)"
+              : "linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgb(0 0 0 / 90%) 40%, rgba(0, 0, 0, 0) 100%)",
+          // Allow clicks to pass through to the AppBar menu icon above
+          pointerEvents: "none",
+          zIndex: (t) => t.zIndex.appBar - 1,
+        }}
       />
 
       <Box sx={{ display: "flex", flexDirection: "column", pt: { xs: 8, sm: 9, md: 10 }, pb: { xs: 14, sm: 13 } }}>

@@ -80,7 +80,7 @@ export default function ChatInput({
         pb: { xs: 2, sm: 4 },
         pt: { xs: 1.5, sm: 2 },
         background: theme.palette.mode === "dark"
-          ? "linear-gradient(to top, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.88) 70%, rgba(10,10,10,0.0) 100%)"
+          ? "linear-gradient(to top, rgba(10,10,10,0.97) 0%, 100%, rgba(10,10,10,0.0) 100%)"
           : "linear-gradient(to top, rgba(244,243,239,0.97) 0%, rgba(244,243,239,0.88) 70%, rgba(244,243,239,0.0) 100%)",
         backdropFilter: "blur(18px)",
         WebkitBackdropFilter: "blur(18px)",

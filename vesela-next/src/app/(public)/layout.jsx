@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 
 export default function PublicLayout({ children }) {
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isHome = pathname === "/" || pathname === "/home";
   const layoutClass = isHome ? "home-page" : "inner-page";
 
   return (

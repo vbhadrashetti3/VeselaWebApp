@@ -74,7 +74,7 @@ export default function Header() {
     {
       label: "Vesela",
       icon: <Link sx={{ fontSize: 18 }} />,
-      action: () => router.push("/"),
+      action: () => router.push("/home"),
       disabled: false,
     },
     ...(token
@@ -92,17 +92,21 @@ export default function Header() {
   return (
     <AppBar
       position="fixed"
+      elevation={0}
       color="inherit"
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        background: theme.palette.mode === "dark"
-          ? "linear-gradient(to bottom, rgba(10,10,10,0.97) 0%, rgba(10,10,10,0.88) 70%, rgba(10,10,10,0.0) 100%)"
-          : "linear-gradient(to bottom, rgba(244,243,239,0.97) 0%, rgba(244,243,239,0.88) 70%, rgba(244,243,239,0.0) 100%)",
-        backdropFilter: "blur(18px)",
-        WebkitBackdropFilter: "blur(18px)",
-        border: 0,
+        backgroundColor: "transparent",
+        backgroundImage: "none",
+        backdropFilter: "none",
+        WebkitBackdropFilter: "none",
         boxShadow: "none",
+        border: 0,
         color: theme.palette.text.primary,
+        width: "100%",
+        overflow: "hidden",
+        left: 0,
+        right: 0,
       }}
     >
       <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>

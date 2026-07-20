@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Lottie from "lottie-react";
+import { localStorageUtil } from "@/utils/localStorageUtil";
 
 import { useModal } from "@/context/ModalContext";
 import { useColorMode } from "@/theme/ThemeRegistry";
@@ -11,12 +12,17 @@ import { MODALS } from "../modals/modalConstants";
 
 import VeselaLogoBlack from "../../../public/vesela_black_lottie.json";
 import VeselaLogoWhite from "../../../public/vesela_white_lottie.json";
+import { POST_LOGIN_NAVIGATE_TO, WELCOME_COMPLETED } from "@/constant";
+import { useAuth } from "@/context/AuthContext";
 
 export default function PublicHeader() {
   const { openModal } = useModal();
   const { mode, toggleColorMode } = useColorMode();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  // Both "/" and "/home" are the home experience — treat them identically
+  const isHome = pathname === "/" || pathname === "/home";
 
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -40,6 +46,14 @@ export default function PublicHeader() {
   }, []);
 
   const handleSignIn = () => {
+    // If already authenticated, skip the modal and navigate directly
+    if (isAuthenticated) {
+      const hasCompletedWelcome = localStorageUtil.get(WELCOME_COMPLETED);
+      router.push(hasCompletedWelcome ? "/chat" : "/welcome");
+      return;
+    }
+    // Signal SuccessfulModal to send new users to /welcome after login
+    localStorageUtil.set(POST_LOGIN_NAVIGATE_TO, "/welcome");
     openModal(MODALS.LOGIN, { source: "public" });
   };
 
@@ -69,7 +83,7 @@ export default function PublicHeader() {
     <>
       <header className={`site-header ${scrolled ? "scrolled" : ""}`}>
         <div className="header-inner">
-          <Link href="/" className="brand" aria-label="Vesela home" onClick={closeMenu}>
+          <Link href="/home" className="brand" aria-label="Vesela home" onClick={closeMenu}>
             <div className="lottie-logo">
               <Lottie
                 animationData={logoData}

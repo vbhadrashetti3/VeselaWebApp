@@ -2,6 +2,9 @@
 export const USER_DETAILS = "userdetails";
 export const PLAN_DETAILS = "plan_details";
 export const POST_LOGIN_NAVIGATE_TO = "postLoginNavigateTo";
+// Set to "true" once the user has visited /welcome, so ClientRedirect
+// knows to send them to /chat instead of /welcome on future visits.
+export const WELCOME_COMPLETED = "welcomeCompleted";
 export const ASSESSMENT_STORAGE_KEY = "assessmentData";
 
 // Golden Ratio layout: conversation takes φ/(1+φ) ≈ 61.8% of viewport

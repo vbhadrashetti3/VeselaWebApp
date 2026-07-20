@@ -163,7 +163,9 @@ export default function HeroSection() {
   const { vid1Ref, vid2Ref } = useCrossfadeVideos(1.2);
 
   const handleSearch = (message) => {
-    setPendingHeroMessage(message);
+    if (message) {
+      setPendingHeroMessage(message);
+    }
     router.push("/chat");
   };
 
