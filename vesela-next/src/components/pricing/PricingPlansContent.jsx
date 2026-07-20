@@ -20,22 +20,22 @@ const plans = [
     price: "Free",
     period: "/month",
     features: [
-      "Limited to 20 messages per day",
-      "No day to day memory",
-      "Smaller model",
+      "20 messages per day",
+      "Vesela Mini model",
       "Human connection expert",
+      "No day to day memory",
     ],
   },
   {
     id: "pro",
     name: "Vesela 2 Pro",
-    price: "$19.99",
+    price: "$18.99",
     period: "/month",
     features: [
       "Unlimited usage",
       "Memory included",
-      "State of the Art Vesela 2 model",
-      "Leader on humanitybench.org",
+      "State-of-the-art Vesela model",
+      "Vesela 3 — Humanity Bench leader",
     ],
     link: "https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007",
     popular: true,
@@ -61,15 +61,21 @@ export default function PricingPlansContent({ mdSize = 4 }) {
               sx={{
                 width: "100%",
                 borderRadius: 1,
-                bgcolor: theme.palette.background.modalBackground,
-                color: theme.palette.text.primary,
-                boxShadow: 4,
+                bgcolor: "background.paper",
+                color: "text.primary",
+                border: `1px solid ${theme.palette.divider}`,
+                boxShadow: theme.palette.mode === "dark"
+                  ? "0 4px 24px rgba(0,0,0,0.5)"
+                  : "0 2px 12px rgba(16,17,19,0.08)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                transition: "0.25s",
+                transition: "transform 0.25s, box-shadow 0.25s",
                 "&:hover": {
                   transform: "translateY(-4px)",
+                  boxShadow: theme.palette.mode === "dark"
+                    ? "0 8px 32px rgba(0,0,0,0.65)"
+                    : "0 6px 24px rgba(16,17,19,0.14)",
                 },
               }}
             >
@@ -121,19 +127,17 @@ export default function PricingPlansContent({ mdSize = 4 }) {
                 <Button
                   fullWidth
                   size="medium"
-                  variant={activePlanId === plan.id ? "contained" : plan.id === "free" ? "outlined" : "contained"}
-                  color={activePlanId === plan.id ? "success" : "primary"}
+                  variant="contained"
+                  color="primary"
                   disabled={activePlanId === plan.id}
                   sx={{
                     mt: 1,
                     fontSize: { xs: "11px", md: "13px" },
                     ...(activePlanId === plan.id && {
-                      bgcolor: "success.main",
-                      color: "common.white",
                       "&.Mui-disabled": {
-                        bgcolor: "success.main",
-                        color: "common.white",
-                        opacity: 0.9,
+                        bgcolor: "text.secondary",
+                        color: "background.default",
+                        opacity: 0.7,
                       },
                     }),
                   }}

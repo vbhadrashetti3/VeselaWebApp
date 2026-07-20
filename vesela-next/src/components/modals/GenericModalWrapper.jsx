@@ -72,6 +72,7 @@ const GenericModalWrapper = ({
         initial={variants.initial}
         animate={open ? variants.animate : variants.exit}
         sx={{
+          position: "relative",
           // ── Background & shape ──────────────────────────────────────────
           bgcolor: modalBg,
           border: `1px solid ${divider}`,
@@ -98,46 +99,37 @@ const GenericModalWrapper = ({
       >
         {/* ── Fixed close button (does not scroll with content) ── */}
         <Box
+          role="button"
+          aria-label="Close"
+          tabIndex={0}
+          onClick={onClose}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClose?.()}
           sx={{
-            flexShrink: 0,
-            position: "relative",
-            height: "40px",
-            // The X is absolutely positioned within this slim header strip
+            position: "absolute",
+            top: { xs: "18px", sm: "22px", md: "26px" },
+            right: { xs: "18px", sm: "22px", md: "26px" },
+            cursor: "pointer",
+            width: "32px",
+            height: "32px",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: "50%",
+            transition: "background-color 0.2s ease, transform 0.2s ease",
+            zIndex: 10,
+            // 44×44 touch target without affecting visual size
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              inset: "-6px",
+            },
+            "&:hover": {
+              backgroundColor: hoverState,
+              transform: "scale(1.06)",
+            },
           }}
         >
-          <Box
-            role="button"
-            aria-label="Close"
-            tabIndex={0}
-            onClick={onClose}
-            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClose?.()}
-            sx={{
-              position: "absolute",
-              top: "8px",
-              right: "12px",
-              cursor: "pointer",
-              width: "32px",
-              height: "32px",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: "50%",
-              transition: "background-color 0.2s ease, transform 0.2s ease",
-              zIndex: 10,
-              // 44×44 touch target without affecting visual size
-              "&::before": {
-                content: '""',
-                position: "absolute",
-                inset: "-6px",
-              },
-              "&:hover": {
-                backgroundColor: hoverState,
-                transform: "scale(1.06)",
-              },
-            }}
-          >
-            <X size={20} color={textColor} strokeWidth={2.5} />
-          </Box>
+          <X size={20} color={textColor} strokeWidth={2.5} />
         </Box>
 
         {/* ── Scrollable content area ── */}
@@ -146,8 +138,7 @@ const GenericModalWrapper = ({
             flex: 1,
             overflowY: "auto",
             overflowX: "hidden",
-            p: { xs: 2, sm: 2.5, md: 3 },
-            pt: 0, // top spacing comes from the close-button strip above
+            p: { xs: 2.5, sm: 3, md: 3.5 },
             // Reuse the app-wide scrollbar utility for visual consistency
             ...scrollbarStyles(theme),
           }}

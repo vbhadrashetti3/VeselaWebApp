@@ -1,30 +1,13 @@
-import EcosystemSection from "@/components/home/EcosystemSection";
-import HeroSection from "@/components/home/HeroSection";
-import Newsletter from "@/components/home/Newsletter";
-import PhilosophySection from "@/components/home/PhilosophySection";
-import { Box } from "@mui/material";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import HomePageContent from "@/components/home/HomePageContent";
 import ClientRedirect from "@/components/home/ClientRedirect";
 
-// Prevent static prerendering — page uses client-only theme context
-export const dynamic = "force-dynamic";
-
-export default async function HomePage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("my-app-auth")?.value;
-
-  if (token) {
-    redirect("/chat");
-  }
-
+export default function RootPage() {
   return (
-    <Box component="main">
+    <>
+      {/* ClientRedirect only lives here — not in HomePageContent — so
+          authenticated users navigating to /home stay on /home. */}
       <ClientRedirect />
-      <HeroSection />
-      <PhilosophySection />
-      <EcosystemSection />
-      <Newsletter />
-    </Box>
+      <HomePageContent />
+    </>
   );
 }

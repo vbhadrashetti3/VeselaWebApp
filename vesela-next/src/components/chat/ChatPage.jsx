@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Container } from "@mui/material";
+import { Box, useTheme } from "@mui/material";
 import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
 
 import ChatBubble from "./ChatBubble";
@@ -16,6 +16,7 @@ import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
   const { isAuthenticated, isSessionChecked, wsToken, userId } = useAuth();
+  const theme = useTheme();
   const socketToken = isSessionChecked && isAuthenticated
     ? (wsToken || "cookie-auth")
     : null;
@@ -130,11 +131,35 @@ export default function ChatPage() {
         }
       />
 
+      {/* Gradient overlay — fades the page background into the transparent header.
+          Must live here (not inside AppBar) because AppBar's own background would
+          cover it. fixed + zIndex keeps it above scrolling messages, below AppBar
+          controls. Matches the reference ChatWindow gradient exactly. */}
+      <Box
+        sx={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "100px",
+          background:
+            theme.palette.mode === "light"
+              ? "linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0) 100%)"
+              : "linear-gradient(to bottom, rgba(0, 0, 0, 1) 10%, rgb(0 0 0 / 90%) 40%, rgba(0, 0, 0, 0) 100%)",
+          // Allow clicks to pass through to the AppBar menu icon above
+          pointerEvents: "none",
+          zIndex: (t) => t.zIndex.appBar - 1,
+        }}
+      />
+
       <Box sx={{ display: "flex", flexDirection: "column", pt: { xs: 8, sm: 9, md: 10 }, pb: { xs: 14, sm: 13 } }}>
         <Box ref={containerRef} sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
-          <Container
-            maxWidth={false}
-            sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%", px: { xs: 1.5, sm: 2, md: 3 } }}
+          <Box
+            sx={{
+              width: CHAT_CONTAINER_MAX_WIDTH,
+              mx: "auto",
+              px: { xs: 2, sm: 2.5 },
+            }}
           >
             {mergedMessages.map((msg, i) => {
               const isLastAssistant =
@@ -156,7 +181,7 @@ export default function ChatPage() {
             })}
 
             <div ref={bottomRef} />
-          </Container>
+          </Box>
         </Box>
 
         <ChatInput

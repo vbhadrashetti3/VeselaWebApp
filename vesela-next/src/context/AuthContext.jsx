@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { localStorageUtil } from "@/utils/localStorageUtil";
-import { USER_DETAILS, PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO } from "@/constant";
+import { USER_DETAILS, PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO, WELCOME_COMPLETED } from "@/constant";
 import { post } from "@/lib/apiService";
 import { getPlan } from "@/services/auth.service";
 import {
@@ -327,6 +327,7 @@ export const AuthProvider = ({ children }) => {
 
       // Clear storage
       localStorageUtil.remove(POST_LOGIN_NAVIGATE_TO);
+      localStorageUtil.remove(WELCOME_COMPLETED);
       localStorageUtil.remove("auth_expires_at");
       localStorageUtil.set(USER_DETAILS, {});
       localStorageUtil.set(PLAN_DETAILS, {});

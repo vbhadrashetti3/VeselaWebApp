@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Lottie from "lottie-react";
 import {
   AppBar,
   Toolbar,
@@ -23,8 +24,9 @@ import {
   OpenInNew as Link,
   Logout as LogoutIcon,
 } from "@mui/icons-material";
-import GenreicLottie from "../ui/GenericLottie";
-import VeselaLogo from "../../../public/Grace-Logo-Bars.json";
+import VeselaLogoBlack from "../../../public/vesela_black_lottie.json";
+import VeselaLogoWhite from "../../../public/vesela_white_lottie.json";
+import GraceLogoBlack from "../../../public/Grace-Logo-Bars.json";
 import { CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 import HistoryModal from "../chat-history/HistoryModal";
 import SettingsModal from "../setting/SettingModal";
@@ -72,7 +74,7 @@ export default function Header() {
     {
       label: "Vesela",
       icon: <Link sx={{ fontSize: 18 }} />,
-      action: () => router.push("/"),
+      action: () => router.push("/home"),
       disabled: false,
     },
     ...(token
@@ -90,12 +92,21 @@ export default function Header() {
   return (
     <AppBar
       position="fixed"
+      elevation={0}
+      color="inherit"
       sx={{
         zIndex: (theme) => theme.zIndex.drawer + 1,
-        bgcolor: theme.palette.background.default,
-        color: theme.palette.text.primary,
+        backgroundColor: "transparent",
+        backgroundImage: "none",
+        backdropFilter: "none",
+        WebkitBackdropFilter: "none",
         boxShadow: "none",
-        border: 0
+        border: 0,
+        color: theme.palette.text.primary,
+        width: "100%",
+        overflow: "hidden",
+        left: 0,
+        right: 0,
       }}
     >
       <Container maxWidth={false} sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}>
@@ -119,7 +130,11 @@ export default function Header() {
               alignItems: "center",
             }}
           >
-            <GenreicLottie animationData={VeselaLogo} width={100} />
+            <Lottie
+              animationData={GraceLogoBlack}
+              loop={false}
+              style={{ width: "100px", height: "auto" }}
+            />
           </Box>
 
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "flex-end" }}>

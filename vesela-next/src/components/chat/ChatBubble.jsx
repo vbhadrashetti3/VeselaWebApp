@@ -1,9 +1,11 @@
 "use client";
 
-import { Box, Button, Typography, Paper } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import React from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import GenericLottie from "@/components/ui/GenericLottie";
 import barsTyping from "@/../public/bars-typing.json";
+import { useTheme } from "@mui/material/styles";
 
 export default function ChatBubble({
   role,
@@ -18,83 +20,95 @@ export default function ChatBubble({
   const lottieFilter =
     theme.palette.mode === "dark" ? "invert(1) brightness(2)" : "none";
 
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: isAI ? "row" : "row-reverse",
-        mb: 3,
+  // Inline streaming indicator — rendered as a plain span so it flows
+  // naturally after the last word of the streamed Markdown text.
+  const streamingIndicator = isAI && isStreaming ? (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        verticalAlign: "middle",
+        marginLeft: "8px",
+        filter: lottieFilter,
       }}
     >
-      <Paper
-        sx={{
-          padding: "10px 14px",
-          maxWidth: { xs: "95%", sm: "85%", md: "78%" },
-          border: "none",
-          bgcolor: isAI
-            ? theme.palette.chat?.bot || "#ffffff"
-            : theme.palette.chat?.user || "#E0E0E0",
-          color: theme.palette.text.primary,
-          borderRadius: "8px",
-          wordBreak: "break-word",
-          overflowWrap: "anywhere",
-        }}
-      >
+      <GenericLottie
+        animationData={barsTyping}
+        width={message ? 40 : 80}
+        height={message ? 14 : 22}
+        loop={true}
+      />
+    </span>
+  ) : null;
 
-        <Typography
-          component="div"
-          sx={{
-            fontSize: "15px",
-            lineHeight: 1.6,
-            display: "flex",
-            alignItems: "center",
-            flexWrap: "wrap",
-            gap: "4px",
-            minHeight: "22px", // prevents zero-height flash before first chunk
-          }}
-        >
-          {message}
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: isAI ? "flex-start" : "flex-end",
+        width: "100%",
+        marginBottom: "24px",
+      }}
+    >
+      <div className={`bubble ${isAI ? "ai" : "user"}`}>
 
-          {/* Inline loader — visible the entire time isStreaming is true */}
-          {isAI && isStreaming && (
-            <Box
-              component="span"
-              sx={{
-                display: "inline-flex",
-                alignItems: "center",
-                verticalAlign: "middle",
-                flexShrink: 0,
-                filter: lottieFilter,
-              }}
-            >
-              <GenericLottie
-                animationData={barsTyping}
-                width={message ? 40 : 80}
-                height={message ? 14 : 22}
-                loop={true}
-              />
-            </Box>
+        <div className="bubble-content" style={{ wordBreak: "break-word", overflowWrap: "anywhere" }}>
+          {isAI ? (
+            /* ── AI bubbles: render as rich Markdown ── */
+            <div className="md-body">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  // Append the streaming indicator after the last paragraph
+                  // so the Lottie dots appear inline with the final streamed word.
+                  p: ({ children, ...props }) => (
+                    <p {...props}>
+                      {children}
+                      {/* Only the very last <p> gets the indicator; we can't know
+                          which is last here, so we render it on every p but hide
+                          via CSS (last-of-type). The span is always present in the
+                          DOM but only the last one is visible. */}
+                    </p>
+                  ),
+                }}
+              >
+                {message || ""}
+              </ReactMarkdown>
+              {/* Streaming indicator sits after all markdown output */}
+              {streamingIndicator}
+            </div>
+          ) : (
+            /* ── User bubbles: plain text (preserve whitespace) ── */
+            <span style={{ whiteSpace: "pre-wrap" }}>{message}</span>
           )}
-        </Typography>
+        </div>
 
-        {/* Error UI — unchanged */}
+        {/* Error UI */}
         {isError && (
-          <Box sx={{ mt: 0.8, display: "flex", alignItems: "center", gap: 1 }}>
-            <Typography sx={{ fontSize: 12, color: "error.main" }}>
+          <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "12px", color: "var(--accent)" }}>
               Something failed.
-            </Typography>
+            </span>
             {onRetry && (
-              <Button
-                size="small"
+              <button
+                type="button"
                 onClick={onRetry}
-                sx={{ minWidth: "auto", p: 0, fontSize: 12 }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  fontSize: "12px",
+                  color: "var(--accent)",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                }}
               >
                 Retry
-              </Button>
+              </button>
             )}
-          </Box>
+          </div>
         )}
-      </Paper>
-    </Box>
+      </div>
+    </div>
   );
 }

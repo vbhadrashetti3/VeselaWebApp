@@ -24,7 +24,12 @@ const SuccessfulModal = ({ handleNext, successMsg }) => {
   }, [closeModal, router]);
 
   return (
-    <Box sx={{ textAlign: "center" }}>
+    <Box sx={{
+      textAlign: "center", display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
       <Image
         src="/log-successful.png"
         alt="success"
