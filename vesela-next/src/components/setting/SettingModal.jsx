@@ -19,7 +19,6 @@ import { X } from "lucide-react";
 import SubscriptionContent from "./SubscriptionContent";
 import AppearanceContent from "./AppearanceContent";
 import PrivacyContent from "./PrivacyContent";
-import AboutContent from "./AboutContent";
 import TermsContent from "./TermsContent";
 import FAQContent from "./FAQContent";
 import SupportContent from "./SupportContent";
