@@ -31,9 +31,12 @@ const WelcomePage = () => {
   const isTyping = text.length > 0;
   const isSendDisabled = !text.trim();
 
-  // Mark welcome as completed so returning visits go directly to /chat
+  // Mark welcome as completed and clear active conversation ID to start fresh
   useEffect(() => {
     localStorageUtil.set(WELCOME_COMPLETED, true);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("vesela_active_conversation_id");
+    }
   }, []);
 
   // Auto-focus input on page load
@@ -82,23 +85,6 @@ const WelcomePage = () => {
       {/* ── Top Header / Menu ────────────────────────────────────────────── */}
       <Header />
 
-      <Box
-        style={{
-          position: 'absolute',
-          top: '20%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '370px',
-          height: '340px',
-          borderRadius: '50%',
-          background: 'radial-gradient(rgba(147, 51, 234, 0.25) 0%, rgba(126, 34, 206, 0.08) 45%, transparent 80%)',
-          pointerEvents: 'none',
-          zIndex: '1',
-          filter: 'blur(40px)'
-        }}
-      />
-
-
       {/* ── Center Content Container (Logo + Input) ───────────────────────── */}
       <Box
         sx={{
@@ -114,19 +100,39 @@ const WelcomePage = () => {
           mt: "-2vh",
         }}
       >
-        {/* Logo */}
+        {/* Logo and Centered Gradient */}
         {animationData && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 0 }}
-            // animate={{ opacity: isTyping ? 0 : 1, y: isTyping ? -20 : 0 }}
             animate={{
               opacity: isTyping ? 0 : 1,
               scale: 1,
               y: isTyping ? -36 : 0,
             }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-            style={{ marginBottom: "32px" }}
+            style={{ marginBottom: "32px", position: "relative" }}
           >
+            {/* The Gradient Background anchored strictly behind the logo */}
+            <Box
+              sx={{
+                position: 'absolute',
+                top: '90%',
+                left: '50%',
+                WebkitTransform: 'translate(-50%, -50%)',
+                MozTransform: 'translate(-50%, -50%)',
+                MsTransform: 'translate(-50%, -50%)',
+                transform: 'translate(-50%, -50%)',
+                width: '100%',
+                height: '120px',
+                borderRadius: '50%',
+                background: 'radial-gradient(ellipse at center, rgba(183, 201, 212, 0.30) 0%, rgba(183, 201, 212, 0.09) 60%, transparent 75%)',
+                pointerEvents: 'none',
+                zIndex: '-1',
+                WebkitFilter: 'blur(25px)',
+                filter: 'blur(30px)'
+              }}
+            />
+
             <Box
               sx={{
                 width: "min(240px, 65vw)",
@@ -134,12 +140,11 @@ const WelcomePage = () => {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
+                position: "relative",
+                zIndex: 1,
               }}
             >
-              <GenericLottie
-                animationData={animationData}
-                width="100%"
-              />
+              <GenericLottie animationData={animationData} width="100%" />
             </Box>
           </motion.div>
         )}
@@ -178,7 +183,8 @@ const WelcomePage = () => {
                 : isLight
                   ? "0 4px 16px rgba(0, 0, 0, 0.03)"
                   : "0 4px 20px rgba(0, 0, 0, 0.35)",
-              transition: "border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease",
+              transition:
+                "border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease",
               padding: "6px 6px 6px 22px",
               boxSizing: "border-box",
               cursor: "text",

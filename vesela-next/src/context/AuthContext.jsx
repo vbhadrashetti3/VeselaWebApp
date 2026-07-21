@@ -329,6 +329,9 @@ export const AuthProvider = ({ children }) => {
       localStorageUtil.remove(POST_LOGIN_NAVIGATE_TO);
       localStorageUtil.remove(WELCOME_COMPLETED);
       localStorageUtil.remove("auth_expires_at");
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("vesela_active_conversation_id");
+      }
       localStorageUtil.set(USER_DETAILS, {});
       localStorageUtil.set(PLAN_DETAILS, {});
 

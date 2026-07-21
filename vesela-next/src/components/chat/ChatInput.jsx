@@ -88,7 +88,12 @@ export default function ChatInput({
     >
       <Container
         maxWidth={false}
-        sx={{ maxWidth: CHAT_CONTAINER_MAX_WIDTH, width: "100%" }}
+        sx={{
+          maxWidth: CHAT_CONTAINER_MAX_WIDTH,
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+        }}
       >
         <Box
           ref={containerRef}
@@ -105,7 +110,7 @@ export default function ChatInput({
               : "none",
             transition: "border-color 0.2s, box-shadow 0.2s, border-radius 0.2s",
             padding: isMultiline ? "10px 12px 8px 16px" : "4px 8px 4px 16px",
-            width: "100%",
+            width: { xs: "100%", md: "61.8%" },
             boxSizing: "border-box",
             overflow: "hidden",
             "&:hover": {

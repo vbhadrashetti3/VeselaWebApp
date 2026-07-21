@@ -78,9 +78,19 @@ const LoginForm = ({ handleNext }) => {
         subtitle="Please enter your email & password"
       />
 
-      {errorMsg && (
-        <Typography sx={{ color: "error.main", mb: 1 }}>{errorMsg}</Typography>
-      )}
+      {errorMsg ? (
+        <Typography
+          sx={{
+            color: "error.main",
+            mb: 1.5,
+            fontSize: 14,
+            fontWeight: 500,
+            textAlign: "center",
+          }}
+        >
+          {errorMsg}
+        </Typography>
+      ) : null}
 
       <LabeledInput
         label="Email"
@@ -104,8 +114,8 @@ const LoginForm = ({ handleNext }) => {
         helperText={formik.touched.password ? formik.errors.password : ""}
         startIcon={<LockOutlinedIcon />}
         endIcon={
-          <div style={{ cursor: "pointer" }} onClick={() => setShow(!show)}>
-            {show ? <VisibilityOffOutlinedIcon /> : <VisibilityOutlinedIcon />}
+          <div style={{ cursor: "pointer", display: "flex", alignItems: "center" }} onClick={() => setShow(!show)}>
+            {show ? <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} /> : <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />}
           </div>
         }
       />
@@ -115,12 +125,14 @@ const LoginForm = ({ handleNext }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          mt: -0.5,
+          mb: 1,
         }}
       >
         <FormControlLabel
           control={
             <Checkbox
-              size="medium"
+              size="small"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
             />
@@ -128,7 +140,7 @@ const LoginForm = ({ handleNext }) => {
           label="Remember me"
           sx={{
             "& .MuiFormControlLabel-label": {
-              fontSize: "14px",
+              fontSize: "13px",
               fontWeight: 500,
             },
           }}
@@ -138,8 +150,9 @@ const LoginForm = ({ handleNext }) => {
           sx={{
             cursor: "pointer",
             fontWeight: 600,
-            fontSize: 14,
+            fontSize: 13,
             color: "primary.main",
+            "&:hover": { textDecoration: "underline" },
           }}
           onClick={() =>
             window.open(
@@ -152,27 +165,16 @@ const LoginForm = ({ handleNext }) => {
         </Typography>
       </Box>
 
-      <Divider sx={{ my: 2 }} />
-
-      <Box sx={{ textAlign: "center" }}>
-        <Typography>
-          Don’t have an account?{" "}
-          <Box
-            component="span"
-            onClick={() => handleNext(MODALS.SIGNUP)}
-            sx={{ cursor: "pointer", fontWeight: 700, color: "primary.main" }}
-          >
-            Sign up
-          </Box>
-        </Typography>
-      </Box>
-
       <Box sx={{ textAlign: "center", mt: 2 }}>
         <CustomButton
-          style={{
+          sx={{
             width: "100%",
-            maxWidth: "200px",
-            borderRadius: "26px",
+            maxWidth: "320px",
+            height: 44,
+            borderRadius: "24px",
+            fontSize: "15px",
+            fontWeight: 600,
+            mx: "auto",
           }}
           type="submit"
           loading={formik.isSubmitting}
@@ -181,9 +183,27 @@ const LoginForm = ({ handleNext }) => {
         </CustomButton>
       </Box>
 
+      <Box sx={{ textAlign: "center", mt: 2 }}>
+        <Typography variant="body2" sx={{ fontSize: 13, color: "text.secondary" }}>
+          Don’t have an account?{" "}
+          <Box
+            component="span"
+            onClick={() => handleNext(MODALS.SIGNUP)}
+            sx={{
+              cursor: "pointer",
+              fontWeight: 700,
+              color: "primary.main",
+              "&:hover": { textDecoration: "underline" },
+            }}
+          >
+            Sign up
+          </Box>
+        </Typography>
+      </Box>
+
       <Box sx={{ display: "flex", alignItems: "center", my: 2 }}>
         <Divider sx={{ flex: 1 }} />
-        <Typography variant="body2" sx={{ mx: 2, color: "text.secondary" }}>
+        <Typography variant="body2" sx={{ mx: 2, color: "text.secondary", fontSize: 13 }}>
           or
         </Typography>
         <Divider sx={{ flex: 1 }} />

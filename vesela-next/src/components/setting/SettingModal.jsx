@@ -75,8 +75,6 @@ const SettingsModal = ({ open, onClose }) => {
         return <PrivacyContent />;
       case SETTINGS_MODAL.Terms:
         return <TermsContent />;
-      case SETTINGS_MODAL.About:
-        return <AboutContent />;
       case SETTINGS_MODAL.ModelCard:
         return <ModelCardContent />;
       case SETTINGS_MODAL.FAQ:
@@ -100,7 +98,6 @@ const SettingsModal = ({ open, onClose }) => {
     { label: "FAQ", value: SETTINGS_MODAL.FAQ },
     { label: "Terms", value: SETTINGS_MODAL.Terms },
     { label: "Privacy", value: SETTINGS_MODAL.Privacy },
-    { label: "About", value: SETTINGS_MODAL.About },
     { label: "Model Card", value: SETTINGS_MODAL.ModelCard },
     { label: "Delete", value: SETTINGS_MODAL.Delete },
     { label: "Logout", value: SETTINGS_MODAL.Logout, isLogout: true },

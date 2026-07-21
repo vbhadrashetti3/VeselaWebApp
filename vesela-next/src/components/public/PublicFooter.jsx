@@ -27,7 +27,7 @@ export default function PublicFooter() {
           </Link>
 
           <nav className="footer-links" aria-label="Footer">
-            <Link href="/#philosophy">Philosophy</Link>
+            <Link href="/home#philosophy">Philosophy</Link>
             <Link href="/pricing">Pricing</Link>
             <a href="https://humanitybench.org" target="_blank" rel="noopener noreferrer">
               Humanity Bench

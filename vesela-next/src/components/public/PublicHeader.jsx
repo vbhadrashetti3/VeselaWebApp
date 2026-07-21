@@ -42,6 +42,9 @@ export default function PublicHeader() {
     return () => {
       window.removeEventListener("scroll", handleScroll);
       document.removeEventListener("scroll", handleScroll);
+      if (typeof document !== "undefined") {
+        document.body.classList.remove("menu-open");
+      }
     };
   }, []);
 
@@ -55,6 +58,11 @@ export default function PublicHeader() {
     // Signal SuccessfulModal to send new users to /welcome after login
     localStorageUtil.set(POST_LOGIN_NAVIGATE_TO, "/welcome");
     openModal(MODALS.LOGIN, { source: "public" });
+  };
+
+  const handleSignInClick = () => {
+    closeMenu();
+    handleSignIn();
   };
 
   const toggleMenu = () => {
@@ -94,9 +102,9 @@ export default function PublicHeader() {
           </Link>
 
           <nav className="desktop-nav" aria-label="Primary">
-            <Link href={isHome ? "#philosophy" : "/#philosophy"}>Philosophy</Link>
-            <Link href={isHome ? "#experience" : "/#experience"}>Experience</Link>
-            <Link href={isHome ? "#proof" : "/#proof"}>Proof</Link>
+            <Link href={isHome ? "#philosophy" : "/home#philosophy"}>Philosophy</Link>
+            <Link href={isHome ? "#experience" : "/home#experience"}>Experience</Link>
+            <Link href={isHome ? "#proof" : "/home#proof"}>Proof</Link>
             <Link href="/pricing" aria-current={pathname === "/pricing" ? "page" : undefined}>Pricing</Link>
           </nav>
 
@@ -130,13 +138,30 @@ export default function PublicHeader() {
       </header>
 
       <nav className={`mobile-menu ${menuOpen ? "open" : ""}`} aria-label="Mobile">
-        <Link href={isHome ? "#philosophy" : "/#philosophy"} onClick={toggleMenu}>Philosophy</Link>
-        <Link href={isHome ? "#experience" : "/#experience"} onClick={toggleMenu}>Experience</Link>
-        <Link href={isHome ? "#proof" : "/#proof"} onClick={toggleMenu}>Proof</Link>
-        <Link href="/pricing" onClick={toggleMenu}>Pricing</Link>
-        <Link href={isHome ? "#download" : "/pricing#plans"} onClick={toggleMenu}>
-          {isHome ? "Get the app" : "Choose a plan"}
-        </Link>
+        <div className="mobile-nav-links">
+          <Link href={isHome ? "#philosophy" : "/home#philosophy"} onClick={closeMenu}>Philosophy</Link>
+          <Link href={isHome ? "#experience" : "/home#experience"} onClick={closeMenu}>Experience</Link>
+          <Link href={isHome ? "#proof" : "/home#proof"} onClick={closeMenu}>Proof</Link>
+          <Link href="/pricing" onClick={closeMenu}>Pricing</Link>
+        </div>
+
+        <div className="mobile-actions">
+          <button
+            className="button primary mobile-cta-btn"
+            type="button"
+            onClick={handleSignInClick}
+          >
+            Sign In
+          </button>
+          <Link
+            href={isHome ? "#download" : "/pricing#plans"}
+            className="button secondary mobile-secondary-btn"
+            onClick={closeMenu}
+          >
+            {isHome ? "Get the app" : "Choose a plan"}
+          </Link>
+        </div>
+
         <p className="mobile-meta">Human alignment AI · Gray Sky AI</p>
       </nav>
     </>

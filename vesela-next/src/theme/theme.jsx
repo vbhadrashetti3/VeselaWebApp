@@ -382,19 +382,27 @@ const buildComponents = () => ({
       root: ({ theme }) => ({
         backgroundColor: theme.palette.custom.chat.inputBg,
         borderRadius: 8, // 8px radius
-        transition: "all 0.2s ease",
+        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
         "& .MuiOutlinedInput-notchedOutline": {
           borderColor: theme.palette.custom.border.soft,
+          borderWidth: "1px !important",
         },
         "&:hover .MuiOutlinedInput-notchedOutline": {
           borderColor: theme.palette.custom.border.strong,
         },
         "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
           borderColor: theme.palette.primary.main,
-          borderWidth: 1.5,
+          borderWidth: "1px !important",
         },
         "&.Mui-disabled": {
           backgroundColor: theme.palette.action.disabledBackground,
+        },
+        "& .MuiOutlinedInput-input:-webkit-autofill, & .MuiOutlinedInput-input:-webkit-autofill:hover, & .MuiOutlinedInput-input:-webkit-autofill:focus, & .MuiOutlinedInput-input:-webkit-autofill:active": {
+          WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.modalBackground || theme.palette.background.paper} inset !important`,
+          WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+          caretColor: `${theme.palette.text.primary} !important`,
+          borderRadius: "inherit",
+          transition: "background-color 5000s ease-in-out 0s",
         },
       }),
     },
