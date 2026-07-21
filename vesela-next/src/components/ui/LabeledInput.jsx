@@ -32,9 +32,11 @@ const LabeledInput = ({
   const theme = useTheme();
 
   const inputId = `input-${name}`;
+  const hasHelper = Boolean(helperText);
+  const showError = Boolean(error && helperText);
 
   return (
-    <Box sx={{ mb: 2 }}>
+    <Box sx={{ mb: 1 }}>
       {label && (
         <Typography
           htmlFor={inputId}
@@ -43,6 +45,7 @@ const LabeledInput = ({
           sx={{
             fontWeight: 600,
             mb: 0.5,
+            display: "block",
             color: theme.palette.text.primary,
             fontSize: 13,
           }}
@@ -63,32 +66,68 @@ const LabeledInput = ({
         disabled={disabled}
         multiline={multiline}
         rows={multiline ? rows : undefined}
-        error={error}
+        error={Boolean(error)}
         inputProps={inputProps}
         sx={{
-          borderRadius: "5px",
+          borderRadius: "8px",
           backgroundColor: theme.palette.background.modalBackground,
           color: theme.palette.text.primary,
-          minHeight: multiline ? "auto" : 40,
+          minHeight: multiline ? "auto" : 42,
+          height: multiline ? "auto" : 42,
+          boxSizing: "border-box",
+          transition: "box-shadow 0.2s ease, border-color 0.2s ease",
 
           "& .MuiOutlinedInput-input": {
-            padding: "8px 10px",
+            padding: "8px 12px",
             fontSize: "14px",
-            letterSpacing: type === "password" ? "0.1em" : "normal",
+            lineHeight: "1.5",
+            fontFamily: "inherit",
+            height: multiline ? "auto" : "100%",
+            boxSizing: "border-box",
+            letterSpacing: "normal",
+
+            "&:-webkit-autofill, &:-webkit-autofill:hover, &:-webkit-autofill:focus, &:-webkit-autofill:active": {
+              WebkitBoxShadow: `0 0 0 1000px ${theme.palette.background.modalBackground} inset !important`,
+              WebkitTextFillColor: `${theme.palette.text.primary} !important`,
+              caretColor: `${theme.palette.text.primary} !important`,
+              borderRadius: "inherit",
+              transition: "background-color 5000s ease-in-out 0s",
+            },
+          },
+
+          "& .MuiInputAdornment-root": {
+            color: theme.palette.text.secondary,
+            height: "100%",
+            maxHeight: "100%",
+            display: "flex",
+            alignItems: "center",
           },
 
           "& .MuiOutlinedInput-notchedOutline": {
+            borderWidth: "1px !important",
             borderColor: error
               ? theme.palette.error.main
               : theme.palette.divider,
+            transition: "border-color 0.2s ease",
           },
 
           "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: theme.palette.primary.main,
+            borderColor: error
+              ? theme.palette.error.main
+              : theme.palette.primary.main,
           },
 
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderWidth: 1,
+            borderWidth: "1px !important",
+            borderColor: error
+              ? theme.palette.error.main
+              : theme.palette.primary.main,
+          },
+
+          "&.Mui-focused": {
+            boxShadow: error
+              ? `0 0 0 3px ${theme.palette.error.main}25`
+              : `0 0 0 3px ${theme.palette.primary.main}25`,
           },
 
           ...sx,
@@ -98,7 +137,7 @@ const LabeledInput = ({
             <InputAdornment
               sx={{
                 "& svg": {
-                  fontSize: 16,
+                  fontSize: 18,
                 },
               }}
               position="start"
@@ -112,7 +151,7 @@ const LabeledInput = ({
             <InputAdornment
               sx={{
                 "& svg": {
-                  fontSize: 16,
+                  fontSize: 18,
                 },
               }}
               position="end"
@@ -123,17 +162,20 @@ const LabeledInput = ({
         }
       />
 
-      {error && helperText && (
-        <FormHelperText
-          sx={{
-            color: theme.palette.error.main,
-            mt: 0.5,
-            ml: 0,
-          }}
-        >
-          {helperText}
-        </FormHelperText>
-      )}
+      <FormHelperText
+        sx={{
+          color: showError ? theme.palette.error.main : theme.palette.text.secondary,
+          mt: 0.5,
+          ml: 0,
+          minHeight: "18px",
+          lineHeight: "1.3",
+          fontSize: "12px",
+          visibility: showError || hasHelper ? "visible" : "hidden",
+          display: "block",
+        }}
+      >
+        {showError ? helperText : hasHelper ? helperText : "\u00A0"}
+      </FormHelperText>
     </Box>
   );
 };

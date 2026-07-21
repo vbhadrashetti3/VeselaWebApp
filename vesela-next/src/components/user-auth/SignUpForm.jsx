@@ -115,11 +115,19 @@ const SignUpForm = ({ handleNext }) => {
         subtitle="We will send a verification link to your email."
       />
 
-      {errorMsg && (
-        <Typography sx={{ fontSize: 14, fontWeight: 600, mb: 1, color: "error.main" }}>
+      {errorMsg ? (
+        <Typography
+          sx={{
+            fontSize: 14,
+            fontWeight: 500,
+            mb: 1.5,
+            color: "error.main",
+            textAlign: "center",
+          }}
+        >
           {errorMsg}
         </Typography>
-      )}
+      ) : null}
 
       <LabeledInput
         label="Email"
@@ -129,7 +137,7 @@ const SignUpForm = ({ handleNext }) => {
         onBlur={formik.handleBlur}
         error={formik.touched.email && formik.errors.email}
         helperText={formik.touched.email ? formik.errors.email : ""}
-        startIcon={<EmailOutlinedIcon sx={{ fontSize: 16 }} />}
+        startIcon={<EmailOutlinedIcon sx={{ fontSize: 18 }} />}
       />
 
       <LabeledInput
@@ -141,13 +149,13 @@ const SignUpForm = ({ handleNext }) => {
         onBlur={formik.handleBlur}
         error={formik.touched.password && formik.errors.password}
         helperText={formik.touched.password ? formik.errors.password : ""}
-        startIcon={<LockOutlinedIcon sx={{ fontSize: 16 }} />}
+        startIcon={<LockOutlinedIcon sx={{ fontSize: 18 }} />}
         endIcon={
-          <div onClick={handlePasswordToggle} style={{ cursor: "pointer" }}>
+          <div onClick={handlePasswordToggle} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
             {showPwd ? (
-              <VisibilityOffOutlinedIcon />
+              <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} />
             ) : (
-              <VisibilityOutlinedIcon />
+              <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />
             )}
           </div>
         }
@@ -164,61 +172,62 @@ const SignUpForm = ({ handleNext }) => {
         helperText={
           formik.touched.confirmPassword ? formik.errors.confirmPassword : ""
         }
-        startIcon={<LockOutlinedIcon sx={{ fontSize: 16 }} />}
+        startIcon={<LockOutlinedIcon sx={{ fontSize: 18 }} />}
         endIcon={
-          <div onClick={handlePasswordToggle} style={{ cursor: "pointer" }}>
+          <div onClick={handlePasswordToggle} style={{ cursor: "pointer", display: "flex", alignItems: "center" }}>
             {showPwd ? (
-              <VisibilityOffOutlinedIcon />
+              <VisibilityOffOutlinedIcon sx={{ fontSize: 18 }} />
             ) : (
-              <VisibilityOutlinedIcon />
+              <VisibilityOutlinedIcon sx={{ fontSize: 18 }} />
             )}
           </div>
         }
       />
 
-      <FormControlLabel
-        control={
-          <Checkbox
-            size="medium"
-            name="agreeToTerms"
-            checked={formik.values.agreeToTerms}
-            onChange={formik.handleChange}
-          />
-        }
-        label="I agree to Terms & Privacy Policy"
-        sx={{
-          "& .MuiFormControlLabel-label": {
-            fontSize: "14px",
-            fontWeight: 500,
-          },
-        }}
-      />
+      <Box sx={{ mt: -0.5, mb: 1 }}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              name="agreeToTerms"
+              checked={formik.values.agreeToTerms}
+              onChange={formik.handleChange}
+            />
+          }
+          label="I agree to Terms & Privacy Policy"
+          sx={{
+            "& .MuiFormControlLabel-label": {
+              fontSize: "13px",
+              fontWeight: 500,
+            },
+          }}
+        />
 
-      {showErrors && formik.errors.agreeToTerms && (
-        <Typography sx={{ fontSize: 12, color: "error.main" }}>
-          {formik.errors.agreeToTerms}
-        </Typography>
-      )}
-
-      <Divider sx={{ my: 2 }} />
-      <Box sx={{ mt: 3, textAlign: "center" }}>
-        <Typography>
-          Already have an account?{" "}
-          <Box
-            component="span"
-            onClick={goToLogin}
-            sx={{ cursor: "pointer", fontWeight: 700, color: "primary.main" }}
-          >
-            Sign In
-          </Box>
+        <Typography
+          sx={{
+            fontSize: 12,
+            color: "error.main",
+            minHeight: "18px",
+            lineHeight: "1.3",
+            ml: 4,
+            display: "block",
+            visibility: showErrors && formik.errors.agreeToTerms ? "visible" : "hidden",
+          }}
+        >
+          {showErrors && formik.errors.agreeToTerms ? formik.errors.agreeToTerms : "\u00A0"}
         </Typography>
       </Box>
-      <Box sx={{ textAlign: "center", mt: 3 }}>
+
+      <Box sx={{ textAlign: "center", mt: 1 }}>
         <CustomButton
-          style={{
+          sx={{
             width: "100%",
-            maxWidth: "200px",
-            borderRadius: "26px",
+            maxWidth: "320px",
+            height: 44,
+            borderRadius: "24px",
+            fontSize: "15px",
+            fontWeight: 600,
+            mx: "auto",
           }}
           loading={formik.isSubmitting}
           onClick={handleSubmitClick}
@@ -227,9 +236,27 @@ const SignUpForm = ({ handleNext }) => {
         </CustomButton>
       </Box>
 
+      <Box sx={{ textAlign: "center", mt: 2 }}>
+        <Typography variant="body2" sx={{ fontSize: 13, color: "text.secondary" }}>
+          Already have an account?{" "}
+          <Box
+            component="span"
+            onClick={goToLogin}
+            sx={{
+              cursor: "pointer",
+              fontWeight: 700,
+              color: "primary.main",
+              "&:hover": { textDecoration: "underline" },
+            }}
+          >
+            Sign In
+          </Box>
+        </Typography>
+      </Box>
+
       <Box sx={{ display: "flex", alignItems: "center", my: 2 }}>
         <Divider sx={{ flex: 1 }} />
-        <Typography variant="body2" sx={{ mx: 2, color: "text.secondary" }}>
+        <Typography variant="body2" sx={{ mx: 2, color: "text.secondary", fontSize: 13 }}>
           or
         </Typography>
         <Divider sx={{ flex: 1 }} />

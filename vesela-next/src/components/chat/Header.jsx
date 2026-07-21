@@ -52,7 +52,12 @@ export default function Header() {
     {
       label: "New Chat",
       icon: <Plus sx={{ fontSize: 18 }} />,
-      action: () => router.push("/welcome"),
+      action: () => {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("vesela_active_conversation_id");
+        }
+        router.push("/welcome");
+      },
       disabled: !token,
       tooltip: "Please log in to start a new chat",
     },

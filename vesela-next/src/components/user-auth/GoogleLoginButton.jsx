@@ -49,8 +49,8 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
       } else {
         setErrorMsg(
           apiResponse?.data?.detail ||
-            apiResponse?.data?.non_field_errors?.[0] ||
-            "Google Authentication failed.",
+          apiResponse?.data?.non_field_errors?.[0] ||
+          "Google Authentication failed.",
         );
       }
     } catch (err) {
@@ -77,8 +77,9 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
           theme: isLight ? "outline" : "filled_black",
           size: "large",
           text: "continue_with",
-          shape: "circle",
-          width: 320, // Responsive premium width
+          shape: "pill",
+          logo_alignment: "left",
+          width: 320,
         });
       } catch (err) {
         console.error("Failed to initialize Google Sign-In:", err);
@@ -116,28 +117,84 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
         justifyContent: "center",
         width: "100%",
         mt: 1.5,
-        gap: 1,
+        fontFamily: 'Inter, "Inter Fallback", sans-serif',
       }}
     >
-      {loading ? (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 1 }}>
-          <CircularProgress size={20} thickness={4} />
-          <Typography variant="body2" sx={{ color: "text.secondary" }}>
-            Signing in with Google...
-          </Typography>
-        </Box>
-      ) : (
-        <div ref={containerRef} style={{ minHeight: "44px" }} />
-      )}
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: "320px",
+          height: "44px",
+          minHeight: "44px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          mx: "auto",
+          borderRadius: "22px",
+          boxSizing: "border-box",
+        }}
+      >
+        {loading ? (
+          <Box
+            key="loading-box"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1.5,
+              width: "100%",
+              height: "44px",
+              borderRadius: "22px",
+              border: `1px solid ${theme.palette.divider}`,
+              backgroundColor: theme.palette.background.paper,
+              boxSizing: "border-box",
+              fontFamily: 'Inter, "Inter Fallback", sans-serif',
+            }}
+          >
+            <CircularProgress size={18} thickness={4} color="inherit" />
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                color: "text.secondary",
+                fontSize: "15px",
+                fontFamily: 'Inter, "Inter Fallback", sans-serif',
+              }}
+            >
+              Signing in with Google...
+            </Typography>
+          </Box>
+        ) : (
+          <Box
+            key="google-btn-box"
+            ref={containerRef}
+            sx={{
+              width: "100%",
+              height: "44px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          />
+        )}
+      </Box>
 
-      {errorMsg && (
-        <Typography
-          variant="caption"
-          sx={{ color: "error.main", mt: 0.5, textAlign: "center", maxWidth: "320px" }}
-        >
-          {errorMsg}
-        </Typography>
-      )}
+      <Typography
+        variant="caption"
+        sx={{
+          color: "error.main",
+          mt: 0.75,
+          textAlign: "center",
+          maxWidth: "320px",
+          minHeight: "18px",
+          lineHeight: "1.3",
+          display: "block",
+          visibility: errorMsg ? "visible" : "hidden",
+          fontFamily: 'Inter, "Inter Fallback", sans-serif',
+        }}
+      >
+        {errorMsg || "\u00A0"}
+      </Typography>
     </Box>
   );
 }

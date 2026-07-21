@@ -94,6 +94,15 @@ export const useChatSocket = (token, userId) => {
 
     console.log(`[WS] Processing message type: "${data.type}"`, data);
 
+    // Universal conversation_id sync: capture it from any server payload
+    if (data.conversation_id && data.conversation_id !== conversationIdRef.current) {
+      conversationIdRef.current = data.conversation_id;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("vesela_active_conversation_id", data.conversation_id);
+      }
+      console.log("[WS] Captured and updated conversationId from server payload:", data.conversation_id);
+    }
+
     switch (data.type) {
       case "thinking":
         setIsStreaming(true);
@@ -102,13 +111,6 @@ export const useChatSocket = (token, userId) => {
       case "stream_start":
         // A new assistant turn is beginning.
         setIsStreaming(true);
-        if (data.conversation_id) {
-          conversationIdRef.current = data.conversation_id;
-          if (typeof window !== "undefined") {
-            localStorage.setItem("vesela_active_conversation_id", data.conversation_id);
-          }
-          console.log("[WS] Set conversationId:", data.conversation_id);
-        }
         // Insert an empty assistant bubble to stream into.
         {
           const id = crypto.randomUUID();
