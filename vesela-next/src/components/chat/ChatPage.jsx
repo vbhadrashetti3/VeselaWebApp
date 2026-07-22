@@ -156,9 +156,11 @@ export default function ChatPage() {
         <Box ref={containerRef} sx={{ flex: 1, overflowY: "auto", pb: "30px" }}>
           <Box
             sx={{
-              width: CHAT_CONTAINER_MAX_WIDTH,
+              width: "100%",
+              maxWidth: CHAT_CONTAINER_MAX_WIDTH,
               mx: "auto",
               px: { xs: 2, sm: 2.5 },
+              boxSizing: "border-box",
             }}
           >
             {mergedMessages.map((msg, i) => {
