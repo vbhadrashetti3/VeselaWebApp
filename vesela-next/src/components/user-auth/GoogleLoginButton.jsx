@@ -25,7 +25,6 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
     setErrorMsg("");
 
     try {
-      // Send token to proxy path which redirects to https://portal.grayskyai.com/api/auth/google/
       const apiResponse = await post("/api/auth/google/", {
         id_token: response.credential,
       });
@@ -68,6 +67,9 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
       if (!window.google || !containerRef.current || !active) return;
 
       try {
+        // FIX 1: Clear the container to prevent iframe stacking during hydration/theme toggles
+        containerRef.current.innerHTML = "";
+
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleCredentialResponse,
@@ -89,7 +91,6 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
     if (window.google) {
       initializeGis();
     } else {
-      // Poll until the GIS library script is fully loaded and interactive
       const interval = setInterval(() => {
         if (window.google) {
           clearInterval(interval);
@@ -174,6 +175,14 @@ export default function GoogleLoginButton({ handleNext, setDarkMode }) {
               display: "flex",
               justifyContent: "center",
               alignItems: "center",
+              // FIX 2: Force transparent backgrounds on the injected elements
+              "& > div": {
+                backgroundColor: "transparent !important",
+              },
+              "& iframe": {
+                backgroundColor: "transparent !important",
+                colorScheme: "normal !important",
+              },
             }}
           />
         )}
