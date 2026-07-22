@@ -72,11 +72,6 @@ const Sidebar = ({ activeSection, handleClick, compact = false }) => {
       value: SETTINGS_MODAL.Privacy,
       icon: <LockKeyhole size={16} />,
     },
-    {
-      text: "About Vesela",
-      value: SETTINGS_MODAL.About,
-      icon: <Info size={16} />,
-    },
     // Migrated from VeselaAI — was missing in Vesela
     {
       text: "Vesela Model Card",

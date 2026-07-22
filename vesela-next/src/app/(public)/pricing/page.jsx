@@ -81,12 +81,16 @@ export default function PricingPage() {
     if (isAuthenticated) {
       window.open("https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007", "_blank", "noopener,noreferrer");
     } else {
-      openModal(MODALS.LOGIN, { source: "public" });
+      openModal(MODALS.SIGNUP, { source: "public" });
     }
   };
 
   const handleFreeSelect = () => {
-    window.location.href = "/chat";
+    if (isAuthenticated) {
+      window.location.href = "/chat";
+    } else {
+      openModal(MODALS.LOGIN, { source: "public" });
+    }
   };
 
   const isPro = isAuthenticated && currentPlan === "pro";
