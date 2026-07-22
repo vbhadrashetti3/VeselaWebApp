@@ -54,6 +54,19 @@ export default function RootLayout({ children }) {
                   src="https://accounts.google.com/gsi/client"
                   strategy="afterInteractive"
                 />
+                <Script
+                  src="https://www.googletagmanager.com/gtag/js?id=G-CLPP6EXFWT"
+                  strategy="afterInteractive"
+                />
+                <Script id="google-analytics" strategy="afterInteractive">
+                  {`
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+
+                    gtag('config', 'G-CLPP6EXFWT');
+                  `}
+                </Script>
               </ModalProvider>
             </ChatSessionProvider>
           </AuthProvider>

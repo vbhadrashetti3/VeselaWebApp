@@ -206,8 +206,12 @@ export const AuthProvider = ({ children }) => {
             const oneHour = 60 * 60 * 1000;
             const isExpiringSoon = !expiresAt || (expiresAt - Date.now() < oneHour);
 
-            if (isExpiringSoon) {
-              console.log("[Auth] Stored expiration indicates expired or expiring soon. Refreshing.");
+            // We must have a wsToken in memory / sessionStorage to authenticate the WebSocket.
+            // If it is missing (e.g. new tab or page reload with HttpOnly cookies), we must refresh.
+            const hasWsToken = typeof window !== "undefined" && !!sessionStorage.getItem("vesela_ws_token");
+
+            if (isExpiringSoon || !hasWsToken) {
+              console.log("[Auth] Stored expiration indicates expired/expiring soon, or wsToken is missing. Refreshing.");
               const freshToken = await fetchFreshAccessToken();
               if (freshToken) {
                 setWsToken(freshToken);
@@ -218,7 +222,7 @@ export const AuthProvider = ({ children }) => {
                 }
               }
             } else {
-              console.log("[Auth] Stored expiration indicates valid token. Skipping refresh call on page load.");
+              console.log("[Auth] Stored expiration indicates valid token and wsToken is present. Skipping refresh call on page load.");
               scheduleRefresh(expiresAt);
             }
           }
