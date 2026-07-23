@@ -39,8 +39,11 @@ export default function ChatInput({
   const containerRef = useRef(null);
   const inputRef = useRef(null);
 
+  const wordCount = inputValue.trim().split(/\s+/).filter(Boolean).length;
+  const isOverLimit = wordCount > 2000;
+
   const isSendEnabled =
-    inputValue.trim().length > 0 && isConnected && !isGuestLocked;
+    inputValue.trim().length > 0 && isConnected && !isGuestLocked && !isOverLimit;
 
   const handleSend = () => {
     if (!isSendEnabled) return;
@@ -92,7 +95,8 @@ export default function ChatInput({
           maxWidth: CHAT_CONTAINER_MAX_WIDTH,
           width: "100%",
           display: "flex",
-          justifyContent: "center",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
         <Box
@@ -234,6 +238,21 @@ export default function ChatInput({
             </IconButton>
           </Box>
         </Box>
+        {isOverLimit && (
+          <Box
+            sx={{
+              color: theme.palette.error.main,
+              fontSize: "12px",
+              marginTop: "8px",
+              width: { xs: "100%", md: "61.8%" },
+              textAlign: "left",
+              fontWeight: 500,
+              userSelect: "none",
+            }}
+          >
+            Message cannot exceed 2000 words.
+          </Box>
+        )}
       </Container>
     </Box>
   );

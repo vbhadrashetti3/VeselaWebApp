@@ -212,7 +212,7 @@ export const ChatSessionProvider = ({ children }) => {
           };
 
         const { status, data, error } = await post(
-          "/api/sales_incoming/",
+          "/api/sales_incoming_vesela/",
           body,
         );
 
