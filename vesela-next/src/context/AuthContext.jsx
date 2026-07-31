@@ -74,6 +74,12 @@ export const AuthProvider = ({ children }) => {
   // doesn't flash a redirect before we know if the cookie session is valid.
   const [isSessionChecked, setIsSessionChecked] = useState(false);
 
+  // Tracks whether the token is fully ready for use (refresh check complete).
+  // The WebSocket must NOT connect until this is true — otherwise it connects
+  // before a fresh token is available and the server closes it with a 4xxx code,
+  // which permanently halts auto-reconnect and leaves the UI unresponsive.
+  const [isTokenReady, setIsTokenReady] = useState(false);
+
   // Sync wsToken with sessionStorage so it survives page reloads
   // but gets cleared when the tab is closed.
   const [wsToken, setWsTokenState] = useState(() => {
@@ -195,6 +201,8 @@ export const AuthProvider = ({ children }) => {
                   if (freshDecoded && freshDecoded.exp) {
                     scheduleRefresh(freshDecoded.exp * 1000);
                   }
+                } else {
+                  console.warn("[Auth] Token refresh failed for cookie token on page load.");
                 }
               } else {
                 console.log("[Auth] Cookie token is still valid. Skipping refresh call on page load.");
@@ -220,22 +228,33 @@ export const AuthProvider = ({ children }) => {
                 if (freshDecoded && freshDecoded.exp) {
                   scheduleRefresh(freshDecoded.exp * 1000);
                 }
+              } else {
+                console.warn("[Auth] Token refresh failed on page load. Clearing session so user can re-login.");
+                // Refresh failed — clear stale state so AuthGuard redirects to login
+                setUser(null);
+                setWsToken(null);
+                localStorageUtil.set(USER_DETAILS, {});
               }
             } else {
               console.log("[Auth] Stored expiration indicates valid token and wsToken is present. Skipping refresh call on page load.");
               scheduleRefresh(expiresAt);
             }
           }
+          // Mark token as ready — all refresh/validation work is now complete.
+          // ChatPage reads this flag before creating the WebSocket connection.
+          setIsTokenReady(true);
         } else {
           // Not authenticated — clear any stale local data silently
           setUser(null);
           setWsToken(null);
+          setIsTokenReady(false);
           localStorageUtil.set(USER_DETAILS, {});
         }
       } catch {
         // Network failure — treat as unauthenticated; do not redirect
         setUser(null);
         setWsToken(null);
+        setIsTokenReady(false);
       } finally {
         setIsSessionChecked(true);
       }
@@ -262,6 +281,7 @@ export const AuthProvider = ({ children }) => {
       const token = e.detail?.token;
       if (token) {
         setWsToken(token);
+        setIsTokenReady(true);
         const decoded = decodeJwt(token);
         if (decoded && decoded.exp) {
           scheduleRefresh(decoded.exp * 1000);
@@ -309,6 +329,8 @@ export const AuthProvider = ({ children }) => {
         scheduleRefresh(decoded.exp * 1000);
       }
     }
+    // Token is immediately ready after a fresh login
+    setIsTokenReady(true);
   }, [scheduleRefresh, setWsToken]);
 
   // ── logout ───────────────────────────────────────────────────────────────
@@ -328,6 +350,7 @@ export const AuthProvider = ({ children }) => {
       setPlan(null);
       setPlanError(null);
       setIsLoadingPlan(false);
+      setIsTokenReady(false);
 
       // Clear storage
       localStorageUtil.remove(POST_LOGIN_NAVIGATE_TO);
@@ -389,6 +412,7 @@ export const AuthProvider = ({ children }) => {
     userId: user?.pk ?? null,
     isAuthenticated: Boolean(user),
     isSessionChecked,
+    isTokenReady,
     wsToken,
     plan,
     isLoadingPlan,

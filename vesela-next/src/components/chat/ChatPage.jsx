@@ -15,10 +15,17 @@ import { useModal } from "@/context/ModalContext";
 import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
-  const { isAuthenticated, isSessionChecked, wsToken, userId } = useAuth();
+  const { isAuthenticated, isSessionChecked, isTokenReady, wsToken, userId } = useAuth();
   const theme = useTheme();
-  const socketToken = isSessionChecked && isAuthenticated
-    ? (wsToken || "cookie-auth")
+
+  // Gate the WebSocket on isTokenReady so it never connects before the async
+  // token refresh on page load has finished. Passing null keeps the socket
+  // dormant; the hook connects the moment we pass a real JWT string.
+  // The "cookie-auth" fallback is intentionally removed — the WS server
+  // requires a JWT in the query-string, and connecting without one causes a
+  // 4xxx close that permanently halts auto-reconnect, leaving the UI frozen.
+  const socketToken = isSessionChecked && isAuthenticated && isTokenReady
+    ? (wsToken || null)
     : null;
 
   const {

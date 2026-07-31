@@ -23,6 +23,11 @@ let isRefreshing = false;
 // Each item: { resolve, reject, config }
 let refreshQueue = [];
 
+// Safety timeout: if a refresh call hangs (backend unresponsive), we force-
+// release the lock after 15 s so queued requests are rejected rather than
+// blocked forever, which would leave the UI permanently frozen.
+let refreshSafetyTimer = null;
+
 function processQueue(error) {
   for (const item of refreshQueue) {
     if (error) {
@@ -34,11 +39,25 @@ function processQueue(error) {
   refreshQueue = [];
 }
 
+/** Drains the queue, clears the safety timer, and resets the lock. */
+function releaseRefreshLock(error) {
+  clearTimeout(refreshSafetyTimer);
+  refreshSafetyTimer = null;
+  processQueue(error);
+  isRefreshing = false;
+}
+
 /**
  * Executes a token refresh call.
  * Centralized so both request and response interceptors can trigger it.
  */
 async function performTokenRefresh() {
+  // Arm safety timer: if the backend hangs, force-release the lock after 15 s.
+  refreshSafetyTimer = setTimeout(() => {
+    console.warn("[Auth] Token refresh timed out after 15 s. Force-releasing refresh lock.");
+    releaseRefreshLock(new Error("Token refresh timed out"));
+  }, 15_000);
+
   const refreshResponse = await axios.post(
     "/api/proxy/dj-rest-auth/token/refresh/",
     {},
@@ -91,16 +110,14 @@ api.interceptors.request.use(async (config) => {
 
         try {
           await performTokenRefresh();
-          processQueue(null);
+          releaseRefreshLock(null);
         } catch (refreshError) {
-          processQueue(refreshError);
+          releaseRefreshLock(refreshError);
 
           // Force session logout and redirect on failure
           window.dispatchEvent(new CustomEvent("auth:sessionExpired"));
           window.location.href = "/";
           return Promise.reject(refreshError);
-        } finally {
-          isRefreshing = false;
         }
       }
     }
@@ -130,10 +147,10 @@ api.interceptors.response.use(
 
       try {
         await performTokenRefresh();
-        processQueue(null);
+        releaseRefreshLock(null);
         return api(originalRequest);
       } catch (refreshError) {
-        processQueue(refreshError);
+        releaseRefreshLock(refreshError);
 
         // Force session logout and redirect on failure
         if (typeof window !== "undefined") {
@@ -142,8 +159,6 @@ api.interceptors.response.use(
         }
 
         return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
       }
     }
 

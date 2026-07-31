@@ -226,12 +226,11 @@ export const useChatSocket = (token, userId) => {
     setStatus("connecting");
 
     try {
-      // Pass the in-memory access token as a query parameter for WS auth,
-      // or connect without query params if token is 'cookie-auth' (relying on cookies)
-      const url = currentToken && currentToken !== "cookie-auth"
-        ? `${WS_URL}?token=${currentToken}`
-        : WS_URL;
-      console.log(`[WS] Connecting to WebSocket with URL: ${url} (Token type: ${currentToken === "cookie-auth" ? "cookie-auth" : currentToken ? "JWT" : "none"})`);
+      // Always connect with the JWT as a query parameter.
+      // socketToken is null until isTokenReady, so connect() is only called
+      // once we are guaranteed to have a real token.
+      const url = `${WS_URL}?token=${currentToken}`;
+      console.log(`[WS] Connecting to WebSocket with JWT token.`);
       const ws = new WebSocket(url);
       socketRef.current = ws;
 
@@ -395,6 +394,26 @@ export const useChatSocket = (token, userId) => {
     if (ws?.readyState === WebSocket.OPEN) {
       console.log("[WS] Socket is OPEN. Sending payload immediately.");
       ws.send(JSON.stringify(payload));
+    } else if (ws?.readyState === WebSocket.CONNECTING) {
+      // Socket is mid-handshake. Calling connect() would bail immediately because
+      // it sees readyState === CONNECTING and skips. Instead, queue the message
+      // and attach a one-shot onopen listener to drain the queue the moment
+      // THIS socket's handshake completes.
+      console.log("[WS] Socket is CONNECTING. Queuing message; attaching one-shot drain to pending onopen.");
+      messageQueueRef.current.push(payload);
+      const existingOnOpen = ws.onopen;
+      ws.onopen = (event) => {
+        existingOnOpen?.(event); // run original handler first (sets status, drains queue)
+        // Drain any remaining items queued after the original handler ran
+        while (messageQueueRef.current.length > 0) {
+          const queued = messageQueueRef.current.shift();
+          if (conversationIdRef.current && !queued.conversation_id) {
+            queued.conversation_id = conversationIdRef.current;
+          }
+          console.log("[WS] Draining message queued during CONNECTING:", queued);
+          ws.send(JSON.stringify(queued));
+        }
+      };
     } else {
       const stateString = ws ? `readyState: ${ws.readyState}` : "null";
       console.log(`[WS] Socket is not open (${stateString}). Queuing message and initiating connection.`);
