@@ -18,7 +18,7 @@ import { scrollbarStyles } from "@/utils/scrollbar";
 // ─── Props ─────────────────────────────────────────────────────────────────────
 // onSelectChat  : (chatId) => void
 // selectedChatId: string | null
-// chatHistory   : { id, date }[]
+// chatHistory   : { id, date, title, share_url }[]
 // isVisible     : boolean — suppresses scrollIntoView when panel is off-screen
 
 const ChatList = ({
@@ -97,6 +97,10 @@ const ChatList = ({
       >
         {chatHistory.map((chat) => {
           const isSelected = selectedChatId === chat.id;
+          const displayTitle =
+            chat?.title && String(chat.title).trim().length > 0
+              ? chat.title.trim()
+              : formatDate(chat?.date);
 
           return (
             // ListItem wrapper provides correct DOM nesting for a11y
@@ -110,6 +114,7 @@ const ChatList = ({
             >
               <ListItemButton
                 onClick={() => onSelectChat(chat.id)}
+                title={displayTitle}
                 sx={{
                   borderRadius: "8px",
                   transition: "all 0.18s ease",
@@ -139,7 +144,7 @@ const ChatList = ({
                   <MessageCircleMore size={16} />
                 </ListItemIcon>
                 <ListItemText
-                  primary={formatDate(chat.date)}
+                  primary={displayTitle}
                   primaryTypographyProps={{
                     fontSize: "13px",
                     fontWeight: isSelected ? 600 : 400,
