@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { useAuth } from "@/context/AuthContext";
+import { getStripePaymentUrl } from "@/utils/stripeUtil";
 
 const plans = [
   {
@@ -29,7 +30,7 @@ const plans = [
   {
     id: "pro",
     name: "Vesela 2 Pro",
-    price: "$19.99",
+    price: "$18.99",
     period: "/month",
     features: [
       "Unlimited messages",
@@ -44,7 +45,7 @@ const plans = [
 
 export default function PricingPlansContent({ mdSize = 4 }) {
   const theme = useTheme();
-  const { plan: currentPlan, isAuthenticated } = useAuth();
+  const { plan: currentPlan, isAuthenticated, user } = useAuth();
 
   const activePlanId = isAuthenticated ? (currentPlan || "free") : null;
 
@@ -143,7 +144,8 @@ export default function PricingPlansContent({ mdSize = 4 }) {
                   }}
                   onClick={() => {
                     if (plan.link) {
-                      window.open(plan.link, "_blank");
+                      const finalUrl = getStripePaymentUrl(plan.link, user);
+                      window.open(finalUrl, "_blank");
                     }
                   }}
                 >

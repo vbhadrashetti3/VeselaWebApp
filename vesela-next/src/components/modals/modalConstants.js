@@ -10,6 +10,7 @@ export const MODALS = Object.freeze({
 
   SUCCESS: "success-modal",
   PLANS: "plans-modal",
+  FORGOT_PASSWORD: "forgot-password",
 });
 
 export const SETTINGS_MODAL = Object.freeze({

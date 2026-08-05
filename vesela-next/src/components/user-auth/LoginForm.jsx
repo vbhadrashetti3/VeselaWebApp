@@ -154,12 +154,7 @@ const LoginForm = ({ handleNext }) => {
             color: "primary.main",
             "&:hover": { textDecoration: "underline" },
           }}
-          onClick={() =>
-            window.open(
-              "https://portal.grayskyai.com/accounts/password/reset/",
-              "_blank",
-            )
-          }
+          onClick={() => handleNext(MODALS.FORGOT_PASSWORD)}
         >
           Forgot password?
         </Typography>

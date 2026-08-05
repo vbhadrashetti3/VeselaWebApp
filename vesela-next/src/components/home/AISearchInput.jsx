@@ -10,7 +10,7 @@ import { useState, useRef } from "react";
  *   onSearch(str) – callback invoked when the user submits a query
  */
 export default function AISearchInput({
-  placeholder = "Start a conversation with Vesela",
+  placeholder = "Discover Vesela",
   onSearch,
 }) {
   const [value, setValue] = useState("");

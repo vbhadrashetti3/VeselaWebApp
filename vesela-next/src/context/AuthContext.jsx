@@ -33,16 +33,23 @@ const AuthContext = createContext(null);
  */
 async function fetchFreshAccessToken() {
   try {
+    // Try to read the refresh token from document.cookie.
+    // If the cookie is HttpOnly (JS-unreadable), this returns null and we send
+    // {} — the browser still forwards the HttpOnly cookie automatically via
+    // credentials:"include", so Django reads it from the cookie header.
+    const refreshToken = getCookie("my-refresh-token");
+
     const res = await fetch("/api/proxy/dj-rest-auth/token/refresh/", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify(refreshToken ? { refresh: refreshToken } : {}),
     });
     if (res.ok) {
       const data = await res.json();
       return data.access ?? data.access_token ?? null;
     }
+    console.warn("[Auth] Token refresh returned", res.status);
   } catch {
     // Swallow — caller handles null
   }
@@ -79,11 +86,17 @@ export const AuthProvider = ({ children }) => {
   // before a fresh token is available and the server closes it with a 4xxx code.
   const [isTokenReady, setIsTokenReady] = useState(false);
 
-  // Sync wsToken with sessionStorage so it survives page reloads
-  // but gets cleared when the tab is closed.
+  // Sync wsToken with localStorage and sessionStorage so it survives page reloads,
+  // new tabs, and browser restarts.
   const [wsToken, setWsTokenState] = useState(() => {
     if (typeof window !== "undefined") {
-      return sessionStorage.getItem("vesela_ws_token") || null;
+      const stored = sessionStorage.getItem("vesela_ws_token") || localStorage.getItem("vesela_ws_token");
+      if (stored) {
+        const decoded = decodeJwt(stored);
+        if (decoded && decoded.exp && decoded.exp * 1000 > Date.now()) {
+          return stored;
+        }
+      }
     }
     return null;
   });
@@ -93,8 +106,10 @@ export const AuthProvider = ({ children }) => {
     if (typeof window !== "undefined") {
       if (token) {
         sessionStorage.setItem("vesela_ws_token", token);
+        localStorage.setItem("vesela_ws_token", token);
       } else {
         sessionStorage.removeItem("vesela_ws_token");
+        localStorage.removeItem("vesela_ws_token");
       }
     }
   }, []);
@@ -213,12 +228,13 @@ export const AuthProvider = ({ children }) => {
             const oneHour = 60 * 60 * 1000;
             const isExpiringSoon = !expiresAt || (expiresAt - Date.now() < oneHour);
 
-            // We must have a wsToken in memory / sessionStorage to authenticate the WebSocket.
-            // If it is missing (e.g. new tab or page reload with HttpOnly cookies), we must refresh.
-            const hasWsToken = typeof window !== "undefined" && !!sessionStorage.getItem("vesela_ws_token");
+            const currentWsToken = typeof window !== "undefined"
+              ? (sessionStorage.getItem("vesela_ws_token") || localStorage.getItem("vesela_ws_token"))
+              : null;
 
-            if (isExpiringSoon || !hasWsToken) {
-              console.log("[Auth] Stored expiration indicates expired/expiring soon, or wsToken is missing. Refreshing.");
+            // Fetch a fresh token if wsToken is missing or expiring soon
+            if (!currentWsToken || isExpiringSoon) {
+              console.log("[Auth] wsToken is missing or expiring soon. Refreshing access token on session check...");
               const freshToken = await fetchFreshAccessToken();
               if (freshToken) {
                 setWsToken(freshToken);
@@ -228,31 +244,41 @@ export const AuthProvider = ({ children }) => {
                   scheduleRefresh(freshDecoded.exp * 1000);
                 }
               } else {
-                console.warn("[Auth] Token refresh failed on page load. Session may be stale.");
-                // Refresh failed — clear auth state so AuthGuard redirects to login
-                setUser(null);
-                setWsToken(null);
-                localStorageUtil.set(USER_DETAILS, {});
+                console.warn(
+                  "[Auth] WS token refresh failed on page load. Session is valid; user can reconnect when online.",
+                );
               }
             } else {
-              console.log("[Auth] Stored expiration indicates valid token and wsToken is present. Skipping refresh call on page load.");
-              scheduleRefresh(expiresAt);
+              console.log("[Auth] Stored wsToken is valid. Skipping refresh call on page load.");
+              if (!wsToken && currentWsToken) {
+                setWsToken(currentWsToken);
+              }
+              if (expiresAt) {
+                scheduleRefresh(expiresAt);
+              }
             }
           }
-          // Mark token as ready — all refresh/validation work is complete
+          // Mark session as ready. User is authenticated regardless of whether
+          // the WS token refresh succeeded — that is a secondary concern.
           setIsTokenReady(true);
-        } else {
-          // Not authenticated — clear any stale local data silently
+         } else if (res.status === 401 || res.status === 403) {
+          // Definitive unauthenticated response from the backend — clear state.
           setUser(null);
           setWsToken(null);
           setIsTokenReady(false);
           localStorageUtil.set(USER_DETAILS, {});
+        } else {
+          // 503 (upstream unreachable), 500, or any other non-auth error:
+          // treat as a transient failure. Keep existing user state from
+          // localStorage so the UI doesn't flash the login page on a brief
+          // network outage. isSessionChecked will still be set to true below
+          // so the app doesn't block forever.
+          console.warn(`[Auth] Session check returned ${res.status} — treating as transient, preserving cached state.`);
         }
       } catch {
-        // Network failure — treat as unauthenticated; do not redirect
-        setUser(null);
-        setWsToken(null);
-        setIsTokenReady(false);
+        // Network/fetch failure (e.g. no internet, CORS, DNS).
+        // Same policy as 503: keep existing state, do not clear the user.
+        console.warn("[Auth] Session check fetch failed (network error) — preserving cached state.");
       } finally {
         setIsSessionChecked(true);
       }

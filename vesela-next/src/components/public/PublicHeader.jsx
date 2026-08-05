@@ -12,7 +12,7 @@ import { MODALS } from "../modals/modalConstants";
 
 import VeselaLogoBlack from "../../../public/vesela_black_lottie.json";
 import VeselaLogoWhite from "../../../public/vesela_white_lottie.json";
-import { POST_LOGIN_NAVIGATE_TO, WELCOME_COMPLETED } from "@/constant";
+
 import { useAuth } from "@/context/AuthContext";
 
 export default function PublicHeader() {
@@ -49,14 +49,12 @@ export default function PublicHeader() {
   }, []);
 
   const handleSignIn = () => {
-    // If already authenticated, skip the modal and navigate directly
+    // If already authenticated, skip the modal and navigate directly to Hero Chat.
     if (isAuthenticated) {
-      const hasCompletedWelcome = localStorageUtil.get(WELCOME_COMPLETED);
-      router.push(hasCompletedWelcome ? "/chat" : "/welcome");
+      router.push("/welcome");
       return;
     }
-    // Signal SuccessfulModal to send new users to /welcome after login
-    localStorageUtil.set(POST_LOGIN_NAVIGATE_TO, "/welcome");
+    // Open the login modal. SuccessfulModal will navigate to /welcome on success.
     openModal(MODALS.LOGIN, { source: "public" });
   };
 

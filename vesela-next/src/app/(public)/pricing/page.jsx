@@ -7,13 +7,14 @@ import { useAuth } from "@/context/AuthContext";
 import { useModal } from "@/context/ModalContext";
 import { MODALS } from "@/components/modals/modalConstants";
 import { useColorMode } from "@/theme/ThemeRegistry";
+import { getStripePaymentUrl } from "@/utils/stripeUtil";
 
 import VeselaLogoBlack from "../../../../public/vesela_black_lottie.json";
 import VeselaLogoWhite from "../../../../public/vesela_white_lottie.json";
 
 export default function PricingPage() {
   const { mode } = useColorMode();
-  const { plan: currentPlan, isAuthenticated } = useAuth();
+  const { plan: currentPlan, isAuthenticated, user } = useAuth();
   const { openModal } = useModal();
 
   const isLightMode = mode === "light";
@@ -79,11 +80,13 @@ export default function PricingPage() {
 
   const handleProSelect = () => {
     if (isAuthenticated) {
-      window.open("https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007", "_blank", "noopener,noreferrer");
+      const stripeUrl = getStripePaymentUrl("https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007", user);
+      window.open(stripeUrl, "_blank", "noopener,noreferrer");
     } else {
       openModal(MODALS.SIGNUP, { source: "public" });
     }
   };
+
 
   const handleFreeSelect = () => {
     if (isAuthenticated) {

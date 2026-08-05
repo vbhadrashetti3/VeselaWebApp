@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 import LoginForm from "../user-auth/LoginForm";
 import SignUpForm from "../user-auth/SignUpForm";
+import ForgotPasswordForm from "../user-auth/ForgotPasswordForm";
 import UpdateInfoForm from "../onboarding/UpdateInfoForm";
 import AssessmentOneForm from "../onboarding/AssessmentOneForm";
 import AssessmentTwoForm from "../onboarding/AssessmentTwoForm";
@@ -51,6 +52,8 @@ const AuthFlowManager = ({
 
     [MODALS.SIGNUP]: <SignUpForm handleNext={handleNext} />,
 
+    [MODALS.FORGOT_PASSWORD]: <ForgotPasswordForm handleNext={handleNext} />,
+
     [MODALS.UPDATE_INFO]: (
       <UpdateInfoForm setUserInfo={setUserInfo} handleNext={handleNext} />
     ),
@@ -78,6 +81,7 @@ const AuthFlowManager = ({
 
     [MODALS.PLANS]: <PricingPlansContent handleNext={handleNext} mdSize={6} />,
   };
+
 
   if (!modalStepName) return null;
 

@@ -17,11 +17,17 @@ const SILENT_TYPES = new Set(["ping", "pong", "heartbeat", "keepalive"]);
 
 async function refreshAccessToken() {
   try {
+    let refreshToken = null;
+    if (typeof document !== "undefined") {
+      const match = document.cookie.match(/(?:^|;\s*)my-refresh-token=([^;]*)/);
+      if (match) refreshToken = decodeURIComponent(match[1]);
+    }
+
     const res = await fetch("/api/proxy/dj-rest-auth/token/refresh/", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      body: JSON.stringify(refreshToken ? { refresh: refreshToken } : {}),
     });
     if (res.ok) {
       const data = await res.json();
@@ -38,13 +44,9 @@ async function refreshAccessToken() {
         return;
       }
     }
+    console.warn("[WS] Token refresh endpoint returned status:", res.status);
   } catch (err) {
     console.error("[WS] Failed to refresh token:", err);
-  }
-  // Clear token state if refresh failed
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent("auth:sessionExpired"));
-    window.location.href = "/";
   }
 }
 
@@ -224,7 +226,8 @@ export const useChatSocket = (token, userId) => {
   const connect = useCallback(() => {
     const currentToken = tokenRef.current;
     if (!currentToken) {
-      console.log("[WS] Connection skipped: No token available.");
+      console.log("[WS] Connection skipped: No token available. Requesting refresh...");
+      refreshAccessToken();
       return;
     }
     if (isDisposedRef.current) {
@@ -459,6 +462,28 @@ export const useChatSocket = (token, userId) => {
     }
   }, [connect]);
 
+  // ─── Manual Reconnect Handler ──────────────────────────────────────────────
+  const handleUserReconnect = useCallback(() => {
+    console.log("[WS] Reconnect Now triggered.");
+    retryCountRef.current = 0;
+    clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = null;
+
+    const old = socketRef.current;
+    if (old) {
+      old.onopen = old.onmessage = old.onclose = old.onerror = null;
+      try { old.close(); } catch { /* ignore */ }
+      socketRef.current = null;
+    }
+
+    if (!tokenRef.current) {
+      console.log("[WS] Reconnect: No token available. Requesting token refresh...");
+      refreshAccessToken();
+    } else {
+      connect();
+    }
+  }, [connect]);
+
   return {
     messages,
     sendMessage,
@@ -466,6 +491,6 @@ export const useChatSocket = (token, userId) => {
     isConnected: status === "connected",
     isStreaming,
     isLocked,
-    reconnect: connect,
+    reconnect: handleUserReconnect,
   };
 };
