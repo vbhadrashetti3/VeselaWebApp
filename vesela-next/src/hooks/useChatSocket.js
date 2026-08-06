@@ -69,7 +69,6 @@ export const useChatSocket = (token, userId) => {
       const saved = localStorage.getItem("vesela_active_conversation_id");
       if (saved) {
         conversationIdRef.current = saved;
-        console.log("[WS] Restored conversationId from localStorage:", saved);
       }
     }
   }, []);
@@ -113,11 +112,8 @@ export const useChatSocket = (token, userId) => {
     }
 
     if (SILENT_TYPES.has(data.type)) {
-      console.log(`[WS] Received silent message type: "${data.type}"`);
       return;
     }
-
-    console.log(`[WS] Processing message type: "${data.type}"`, data);
 
     // Universal conversation_id sync: capture it from any server payload
     if (data.conversation_id && data.conversation_id !== conversationIdRef.current) {
@@ -125,7 +121,6 @@ export const useChatSocket = (token, userId) => {
       if (typeof window !== "undefined") {
         localStorage.setItem("vesela_active_conversation_id", data.conversation_id);
       }
-      console.log("[WS] Captured and updated conversationId from server payload:", data.conversation_id);
     }
 
     // Check if the backend indicates that the daily message limit has been reached
@@ -176,7 +171,6 @@ export const useChatSocket = (token, userId) => {
       case "done":
       case "complete":
         // Stream finished — this is the ONLY place we hide the loader.
-        console.log(`[WS] Stream completed for message type: "${data.type}"`);
         setIsStreaming(false);
         currentAssistantIdRef.current = null;
         break;
@@ -226,12 +220,10 @@ export const useChatSocket = (token, userId) => {
   const connect = useCallback(() => {
     const currentToken = tokenRef.current;
     if (!currentToken) {
-      console.log("[WS] Connection skipped: No token available. Requesting refresh...");
       refreshAccessToken();
       return;
     }
     if (isDisposedRef.current) {
-      console.log("[WS] Connection skipped: Hook is disposed.");
       return;
     }
 
@@ -239,10 +231,8 @@ export const useChatSocket = (token, userId) => {
     const old = socketRef.current;
     if (old) {
       if (old.readyState === WebSocket.OPEN) {
-        console.log("[WS] Socket already open. Skipping connect.");
         return;
       }
-      console.log(`[WS] Closing existing non-open socket (readyState: ${old.readyState}) before reconnecting.`);
       old.onopen = old.onmessage = old.onclose = old.onerror = null;
       try { old.close(); } catch (err) { console.error("[WS] Error closing stale socket:", err); }
       socketRef.current = null;
@@ -257,28 +247,23 @@ export const useChatSocket = (token, userId) => {
       // Always pass the JWT as a query parameter — socketToken is null until isTokenReady,
       // so by the time connect() is called we are guaranteed to have a real token.
       const url = `${WS_URL}?token=${currentToken}`;
-      console.log(`[WS] Connecting to WebSocket with JWT token.`);
       const ws = new WebSocket(url);
       socketRef.current = ws;
 
       ws.onopen = () => {
         if (isDisposedRef.current) {
-          console.log("[WS] Socket opened but hook is disposed. Closing socket.");
           return ws.close();
         }
         retryCountRef.current = 0;
         setStatus("connected");
-        console.log("[WS] Connection successfully established.");
 
         currentAssistantIdRef.current = null;
-        console.log(`[WS] Draining message queue. Queue length: ${messageQueueRef.current.length}`);
         while (messageQueueRef.current.length > 0) {
           const payload = messageQueueRef.current.shift();
           // Ensure we attach the correct conversation_id if it got generated in the meantime
           if (conversationIdRef.current && !payload.conversation_id) {
             payload.conversation_id = conversationIdRef.current;
           }
-          console.log("[WS] Sending queued message payload:", payload);
           ws.send(JSON.stringify(payload));
         }
       };
@@ -289,7 +274,6 @@ export const useChatSocket = (token, userId) => {
 
       ws.onclose = (event) => {
         if (isDisposedRef.current) {
-          console.log("[WS] Socket closed (hook disposed).");
           return;
         }
         socketRef.current = null;
@@ -298,7 +282,6 @@ export const useChatSocket = (token, userId) => {
 
         setIsStreaming((prev) => {
           if (prev) {
-            console.log("[WS] Connection lost during streaming. Appending error message.");
             setMessages((msgs) => {
               const last = msgs[msgs.length - 1];
               if (last?.isError) return msgs;
@@ -347,8 +330,6 @@ export const useChatSocket = (token, userId) => {
           30_000,
         );
         retryCountRef.current += 1;
-        console.log(`[WS] Reconnecting in ${Math.round(delay)}ms (attempt ${retryCountRef.current})`);
-
         retryTimerRef.current = setTimeout(() => connectRef.current?.(), delay);
       };
 
@@ -372,7 +353,6 @@ export const useChatSocket = (token, userId) => {
 
     const handleActivity = () => {
       if (tokenRef.current && (!socketRef.current || socketRef.current.readyState === WebSocket.CLOSED)) {
-        console.log("[WS] App active/online. Reconnecting immediately...");
         retryCountRef.current = 0;
         connectRef.current?.();
       }
@@ -437,8 +417,6 @@ export const useChatSocket = (token, userId) => {
       time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
 
-    console.log(`[WS] sendMessage called with text: "${text.trim()}"`);
-
     // Optimistically add the user message to the UI
     setMessages((prev) => [
       ...prev,
@@ -450,13 +428,10 @@ export const useChatSocket = (token, userId) => {
 
     const ws = socketRef.current;
     if (ws?.readyState === WebSocket.OPEN) {
-      console.log("[WS] Socket is OPEN. Sending payload immediately.");
       ws.send(JSON.stringify(payload));
     } else {
-      console.log("[WS] Socket is not open. Queuing message.");
       messageQueueRef.current.push(payload);
       if (!ws || ws.readyState === WebSocket.CLOSED) {
-        console.log("[WS] Initiating connection from sendMessage.");
         connect();
       }
     }
@@ -464,7 +439,6 @@ export const useChatSocket = (token, userId) => {
 
   // ─── Manual Reconnect Handler ──────────────────────────────────────────────
   const handleUserReconnect = useCallback(() => {
-    console.log("[WS] Reconnect Now triggered.");
     retryCountRef.current = 0;
     clearTimeout(retryTimerRef.current);
     retryTimerRef.current = null;
@@ -477,7 +451,6 @@ export const useChatSocket = (token, userId) => {
     }
 
     if (!tokenRef.current) {
-      console.log("[WS] Reconnect: No token available. Requesting token refresh...");
       refreshAccessToken();
     } else {
       connect();

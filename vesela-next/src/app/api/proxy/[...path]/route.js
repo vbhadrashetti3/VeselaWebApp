@@ -49,8 +49,6 @@ async function handleRequest(req, context, method) {
     // Force single trailing slash (Django backend requirement)
     const url = `${BASE_URL}/${path}/${search}`;
 
-    console.log(`➡️ Proxying ${method}: ${url}`);
-
     // ── Build forwarded headers ───────────────────────────────────────────────
 
     const forwardedHeaders = {};

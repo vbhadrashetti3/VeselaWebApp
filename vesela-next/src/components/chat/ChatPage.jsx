@@ -6,7 +6,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ChatBubble from "./ChatBubble";
 import ChatInput from "./ChatInput";
 import GuestLimitBanner from "./GuestLimitBanner";
-import ConnectionStatusBanner from "./ConnectionStatusBanner";
 
 import { useAuth } from "@/context/AuthContext";
 import { useChatSocket } from "@/hooks/useChatSocket";
@@ -37,8 +36,6 @@ export default function ChatPage() {
     messages,
     sendMessage,
     isConnected,
-    status,
-    reconnect,
     isStreaming: isAuthStreaming,
     isLocked: isAuthLocked,
   } = useChatSocket(socketToken, userId);
@@ -69,7 +66,6 @@ export default function ChatPage() {
 
     // If authenticated, wait until the socket is connected
     if (isAuthenticated && !isConnected) {
-      console.log("[ChatPage] Waiting for WebSocket connection before sending pending message...");
       return;
     }
 
@@ -77,13 +73,10 @@ export default function ChatPage() {
     if (!pending) return;
 
     pendingFiredRef.current = true;
-    console.log(`[ChatPage] Consumed pending hero message: "${pending}". Authenticated: ${isAuthenticated}`);
 
     if (isAuthenticated) {
-      console.log("[ChatPage] Sending pending message via WebSocket");
       sendMessage(pending);
     } else {
-      console.log("[ChatPage] Sending pending message as guest via HTTP");
       sendGuestMessage(pending).then((result) => {
         if (!result.ok && result.reason === "locked") {
           openModal(MODALS.LOGIN, { source: "chat" });
@@ -131,29 +124,20 @@ export default function ChatPage() {
 
   return (
     <>
-      {isMounted && (
-        isLimitLocked ? (
-          <GuestLimitBanner
-            open={isLimitLocked}
-            onClick={() => {
-              openModal(isAuthenticated ? MODALS.PLANS : MODALS.LOGIN, {
-                source: "chat",
-              });
-            }}
-            message={
-              isAuthenticated
-                ? "Free message limit reached. Upgrade to Pro to continue."
-                : "Free guest limit reached. Login or upgrade to continue."
-            }
-          />
-        ) : (
-          isAuthenticated && (
-            <ConnectionStatusBanner
-              status={status}
-              onReconnect={reconnect}
-            />
-          )
-        )
+      {isMounted && isLimitLocked && (
+        <GuestLimitBanner
+          open={isLimitLocked}
+          onClick={() => {
+            openModal(isAuthenticated ? MODALS.PLANS : MODALS.LOGIN, {
+              source: "chat",
+            });
+          }}
+          message={
+            isAuthenticated
+              ? "Free message limit reached. Upgrade to Pro to continue."
+              : "Free guest limit reached. Login or upgrade to continue."
+          }
+        />
       )}
 
       {/* Gradient overlay — fades the page background into the transparent header.

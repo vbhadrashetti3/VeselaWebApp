@@ -13,6 +13,7 @@ import {
 import CheckIcon from "@mui/icons-material/Check";
 import { useAuth } from "@/context/AuthContext";
 import { getStripePaymentUrl } from "@/utils/stripeUtil";
+import ManagePlanButton from "../subscription/ManagePlanButton";
 
 const plans = [
   {
@@ -38,14 +39,14 @@ const plans = [
       "Live internet search",
       "#1 on HumanityBench.org",
     ],
-    link: "https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007",
+    link: "https://buy.stripe.com/3cIaEX5Ktai56dR08h2400a",
     popular: true,
   },
 ];
 
 export default function PricingPlansContent({ mdSize = 4 }) {
   const theme = useTheme();
-  const { plan: currentPlan, isAuthenticated, user } = useAuth();
+  const { plan: currentPlan, isAuthenticated, user, canManageStripeBilling } = useAuth();
 
   const activePlanId = isAuthenticated ? (currentPlan || "free") : null;
 
@@ -125,32 +126,54 @@ export default function PricingPlansContent({ mdSize = 4 }) {
                   ))}
                 </Box>
 
-                <Button
-                  fullWidth
-                  size="medium"
-                  variant="contained"
-                  color="primary"
-                  disabled={activePlanId === plan.id}
-                  sx={{
-                    mt: 1,
-                    fontSize: { xs: "11px", md: "13px" },
-                    ...(activePlanId === plan.id && {
-                      "&.Mui-disabled": {
-                        bgcolor: "text.secondary",
-                        color: "background.default",
-                        opacity: 0.7,
-                      },
-                    }),
-                  }}
-                  onClick={() => {
-                    if (plan.link) {
-                      const finalUrl = getStripePaymentUrl(plan.link, user);
-                      window.open(finalUrl, "_blank");
-                    }
-                  }}
-                >
-                  {activePlanId === plan.id ? "Current Plan" : "Select Plan"}
-                </Button>
+                {activePlanId === plan.id && canManageStripeBilling ? (
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}>
+                    <Button
+                      fullWidth
+                      size="medium"
+                      variant="outlined"
+                      disabled
+                      sx={{
+                        fontSize: { xs: "11px", md: "13px" },
+                        "&.Mui-disabled": {
+                          borderColor: "divider",
+                          color: "text.secondary",
+                          opacity: 0.7,
+                        },
+                      }}
+                    >
+                      Current Plan
+                    </Button>
+                    <ManagePlanButton fullWidth size="medium" />
+                  </Box>
+                ) : (
+                  <Button
+                    fullWidth
+                    size="medium"
+                    variant="contained"
+                    color="primary"
+                    disabled={activePlanId === plan.id}
+                    sx={{
+                      mt: 1,
+                      fontSize: { xs: "11px", md: "13px" },
+                      ...(activePlanId === plan.id && {
+                        "&.Mui-disabled": {
+                          bgcolor: "text.secondary",
+                          color: "background.default",
+                          opacity: 0.7,
+                        },
+                      }),
+                    }}
+                    onClick={() => {
+                      if (plan.link) {
+                        const finalUrl = getStripePaymentUrl(plan.link, user);
+                        window.open(finalUrl, "_blank");
+                      }
+                    }}
+                  >
+                    {activePlanId === plan.id ? "Current Plan" : "Select Plan"}
+                  </Button>
+                )}
               </CardContent>
             </Card>
           </Grid>
