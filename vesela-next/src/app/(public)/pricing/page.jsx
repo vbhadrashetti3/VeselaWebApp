@@ -96,7 +96,7 @@ export default function PricingPage() {
     }
   };
 
-  const isPro = isAuthenticated && currentPlan === "pro";
+  const isPro = isAuthenticated && Boolean(currentPlan) && currentPlan !== "free";
 
   return (
     <main id="main">
@@ -156,7 +156,7 @@ export default function PricingPage() {
                 type="button"
                 className="button"
                 onClick={handleFreeSelect}
-                disabled={isAuthenticated && currentPlan === "free"}
+                disabled={isPro || (isAuthenticated && currentPlan === "free")}
               >
                 {isAuthenticated && currentPlan === "free" ? "Current Plan" : "Start free"} <span className="arrow">→</span>
               </button>

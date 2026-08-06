@@ -9,8 +9,10 @@ import {
   Grid,
   useTheme,
   Chip,
+  alpha,
 } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { useAuth } from "@/context/AuthContext";
 import { getStripePaymentUrl } from "@/utils/stripeUtil";
 import ManagePlanButton from "../subscription/ManagePlanButton";
@@ -48,12 +50,21 @@ export default function PricingPlansContent({ mdSize = 4 }) {
   const theme = useTheme();
   const { plan: currentPlan, isAuthenticated, user, canManageStripeBilling } = useAuth();
 
-  const activePlanId = isAuthenticated ? (currentPlan || "free") : null;
+  const isProUser = isAuthenticated && Boolean(currentPlan) && currentPlan !== "free";
+
+  const isPlanActive = (planId) => {
+    if (!isAuthenticated) return false;
+    if (planId === "pro") return isProUser;
+    if (planId === "free") return !isProUser;
+    return false;
+  };
 
   return (
-    <Box sx={{ p: { xs: 1.5, md: 2 } }}>
-      <Grid container spacing={{ xs: 1.5, md: 2 }}>
-        {plans.map((plan) => (
+    <Grid container spacing={{ xs: 2, md: 3 }}>
+      {plans.map((plan) => {
+        const active = isPlanActive(plan.id);
+
+        return (
           <Grid
             key={plan.id}
             size={{ xs: 12, sm: 6, md: mdSize }}
@@ -61,124 +72,207 @@ export default function PricingPlansContent({ mdSize = 4 }) {
           >
             <Card
               sx={{
+                position: "relative",
                 width: "100%",
-                borderRadius: 1,
-                bgcolor: "background.paper",
+                borderRadius: 2,
+                bgcolor: active
+                  ? theme.palette.mode === "dark"
+                    ? "rgba(23, 111, 156, 0.08)"
+                    : "rgba(23, 111, 156, 0.03)"
+                  : "background.paper",
                 color: "text.primary",
-                border: `1px solid ${theme.palette.divider}`,
-                boxShadow: theme.palette.mode === "dark"
-                  ? "0 4px 24px rgba(0,0,0,0.5)"
-                  : "0 2px 12px rgba(16,17,19,0.08)",
+                border: "2px solid",
+                borderColor: active
+                  ? theme.palette.primary.main
+                  : theme.palette.divider,
+                boxShadow: active
+                  ? theme.palette.mode === "dark"
+                    ? `0 8px 32px rgba(0, 0, 0, 0.6), 0 0 16px ${alpha(theme.palette.primary.main, 0.25)}`
+                    : `0 8px 24px ${alpha(theme.palette.primary.main, 0.18)}`
+                  : theme.palette.mode === "dark"
+                    ? "0 4px 20px rgba(0,0,0,0.4)"
+                    : "0 2px 12px rgba(16,17,19,0.06)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                transition: "transform 0.25s, box-shadow 0.25s",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: theme.palette.mode === "dark"
-                    ? "0 8px 32px rgba(0,0,0,0.65)"
-                    : "0 6px 24px rgba(16,17,19,0.14)",
-                },
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                ...(!active && {
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    borderColor: alpha(theme.palette.primary.main, 0.5),
+                    boxShadow: theme.palette.mode === "dark"
+                      ? "0 8px 32px rgba(0,0,0,0.6)"
+                      : "0 6px 24px rgba(16,17,19,0.12)",
+                  },
+                }),
               }}
             >
+              {/* Prominent Current Plan Badge */}
+              {active && (
+                <Chip
+                  label="Current Plan"
+                  size="small"
+                  color="primary"
+                  icon={<CheckCircleIcon sx={{ fontSize: "14px !important", color: "inherit" }} />}
+                  sx={{
+                    position: "absolute",
+                    top: 14,
+                    right: 14,
+                    fontWeight: 700,
+                    fontSize: "11px",
+                    height: "24px",
+                    letterSpacing: "0.03em",
+                    textTransform: "uppercase",
+                    px: 0.5,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                  }}
+                />
+              )}
+
               <CardContent
                 sx={{
                   display: "flex",
                   flexDirection: "column",
                   flexGrow: 1,
-                  p: { xs: 1.5, md: 2 },
-                  "&:last-child": { pb: { xs: 1.5, md: 2 } },
+                  p: { xs: 2, md: 2.5 },
+                  "&:last-child": { pb: { xs: 2, md: 2.5 } },
                 }}
               >
+                {/* Plan Name */}
                 <Typography
-                  textAlign="center"
-                  fontWeight={600}
-                  fontSize={{ xs: "12px", md: "14px" }}
-                  noWrap
+                  fontWeight={700}
+                  fontSize={{ xs: "15px", md: "17px" }}
+                  color={active ? "primary.main" : "text.primary"}
+                  sx={{ pr: active ? 12 : 0, mb: 1.5 }}
                 >
                   {plan.name}
                 </Typography>
 
-                <Box textAlign="center" py={{ xs: 1, md: 2 }}>
+                {/* Price Display */}
+                <Box py={{ xs: 1, md: 1.5 }} mb={2}>
                   <Typography
-                    fontSize={{ xs: 22, md: 28 }}
-                    fontWeight={700}
-                    lineHeight={1.2}
+                    fontSize={{ xs: 26, md: 32 }}
+                    fontWeight={800}
+                    lineHeight={1.1}
+                    color="text.primary"
                   >
                     {plan.price}
                     <Box
                       component="span"
-                      sx={{ fontSize: "12px", fontWeight: 400, display: "block" }}
+                      sx={{
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        color: "text.secondary",
+                        display: "block",
+                        mt: 0.5,
+                      }}
                     >
                       / month
                     </Box>
                   </Typography>
                 </Box>
 
-                <Box sx={{ flexGrow: 1 }}>
+                {/* Features List */}
+                <Box sx={{ flexGrow: 1, mb: 3 }}>
                   {plan.features.map((f, i) => (
-                    <Box key={i} display="flex" mb={0.75} alignItems="flex-start">
-                      <CheckIcon fontSize="small" sx={{ fontSize: 14, mt: "2px", flexShrink: 0 }} />
-                      <Typography ml={0.75} fontSize={{ xs: "11px", md: "14px" }} lineHeight={1.4}>
+                    <Box
+                      key={i}
+                      display="flex"
+                      mb={1.25}
+                      alignItems="center"
+                      sx={{ gap: 1 }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 18,
+                          height: 18,
+                          borderRadius: "50%",
+                          bgcolor: active
+                            ? alpha(theme.palette.primary.main, 0.15)
+                            : alpha(theme.palette.text.secondary, 0.1),
+                          color: active ? "primary.main" : "text.secondary",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <CheckIcon sx={{ fontSize: 12 }} />
+                      </Box>
+                      <Typography
+                        fontSize={{ xs: "12px", md: "13.5px" }}
+                        lineHeight={1.5}
+                        color={active ? "text.primary" : "text.secondary"}
+                        fontWeight={active ? 500 : 400}
+                      >
                         {f}
                       </Typography>
                     </Box>
                   ))}
                 </Box>
 
-                {activePlanId === plan.id && canManageStripeBilling ? (
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}>
+                {/* Action Area */}
+                <Box sx={{ mt: "auto" }}>
+                  {active ? (
+                    canManageStripeBilling && plan.id !== "free" ? (
+                      <ManagePlanButton fullWidth size="medium" />
+                    ) : (
+                      <Button
+                        fullWidth
+                        size="medium"
+                        variant="contained"
+                        color="primary"
+                        disabled
+                        sx={{
+                          borderRadius: 1,
+                          fontWeight: 600,
+                          textTransform: "none",
+                          fontSize: { xs: "12px", md: "13px" },
+                          "&.Mui-disabled": {
+                            bgcolor: alpha(theme.palette.primary.main, 0.2),
+                            color: theme.palette.primary.main,
+                          },
+                        }}
+                      >
+                        Current Plan
+                      </Button>
+                    )
+                  ) : (
                     <Button
                       fullWidth
                       size="medium"
-                      variant="outlined"
-                      disabled
+                      variant="contained"
+                      color="primary"
+                      disabled={isProUser && plan.id === "free"}
                       sx={{
-                        fontSize: { xs: "11px", md: "13px" },
-                        "&.Mui-disabled": {
-                          borderColor: "divider",
-                          color: "text.secondary",
-                          opacity: 0.7,
-                        },
+                        borderRadius: 1,
+                        fontWeight: 600,
+                        textTransform: "none",
+                        fontSize: { xs: "12px", md: "13px" },
+                        ...((isProUser && plan.id === "free") && {
+                          "&.Mui-disabled": {
+                            bgcolor: "text.secondary",
+                            color: "background.default",
+                            opacity: 0.6,
+                          },
+                        }),
+                      }}
+                      onClick={() => {
+                        if (plan.link) {
+                          const finalUrl = getStripePaymentUrl(plan.link, user);
+                          window.open(finalUrl, "_blank");
+                        }
                       }}
                     >
-                      Current Plan
+                      {isProUser && plan.id === "free" ? "Included" : "Select Plan"}
                     </Button>
-                    <ManagePlanButton fullWidth size="medium" />
-                  </Box>
-                ) : (
-                  <Button
-                    fullWidth
-                    size="medium"
-                    variant="contained"
-                    color="primary"
-                    disabled={activePlanId === plan.id}
-                    sx={{
-                      mt: 1,
-                      fontSize: { xs: "11px", md: "13px" },
-                      ...(activePlanId === plan.id && {
-                        "&.Mui-disabled": {
-                          bgcolor: "text.secondary",
-                          color: "background.default",
-                          opacity: 0.7,
-                        },
-                      }),
-                    }}
-                    onClick={() => {
-                      if (plan.link) {
-                        const finalUrl = getStripePaymentUrl(plan.link, user);
-                        window.open(finalUrl, "_blank");
-                      }
-                    }}
-                  >
-                    {activePlanId === plan.id ? "Current Plan" : "Select Plan"}
-                  </Button>
-                )}
+                  )}
+                </Box>
               </CardContent>
             </Card>
           </Grid>
-        ))}
-      </Grid>
-    </Box>
+        );
+      })}
+    </Grid>
   );
 }

@@ -57,14 +57,7 @@ export default function ManagePlanButton({
 
       // Success flow
       if (data?.status === "success" && data?.url) {
-        const portalWindow = window.open(data.url, "_blank", "noopener,noreferrer");
-        if (!portalWindow) {
-          setToast({
-            open: true,
-            message: "Popup blocked. Please allow popups to open your Stripe Billing Portal.",
-            severity: "warning",
-          });
-        }
+        window.open(data.url, "_blank", "noopener,noreferrer");
       } else {
         setToast({
           open: true,

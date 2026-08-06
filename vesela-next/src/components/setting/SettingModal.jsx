@@ -17,6 +17,7 @@ import {
 import { X } from "lucide-react";
 
 import SubscriptionContent from "./SubscriptionContent";
+import ChangePasswordContent from "./ChangePasswordContent";
 import AppearanceContent from "./AppearanceContent";
 import PrivacyContent from "./PrivacyContent";
 import TermsContent from "./TermsContent";
@@ -62,12 +63,12 @@ const SettingsModal = ({ open, onClose }) => {
     }
   };
 
-
-
   const renderSection = () => {
     switch (activeSection) {
       case SETTINGS_MODAL.MySubscription:
         return <SubscriptionContent />;
+      case SETTINGS_MODAL.ChangePassword:
+        return <ChangePasswordContent />;
       case SETTINGS_MODAL.Appearance:
         return <AppearanceContent />;
       case SETTINGS_MODAL.Privacy:
@@ -92,6 +93,7 @@ const SettingsModal = ({ open, onClose }) => {
   // ─── Mobile tab items — migrated from VeselaAI ────────────────────────────
   const mobileTabItems = [
     { label: "Plan", value: SETTINGS_MODAL.MySubscription },
+    { label: "Password", value: SETTINGS_MODAL.ChangePassword },
     { label: "Display", value: SETTINGS_MODAL.Appearance },
     { label: "Support", value: SETTINGS_MODAL.Support },
     { label: "FAQ", value: SETTINGS_MODAL.FAQ },
