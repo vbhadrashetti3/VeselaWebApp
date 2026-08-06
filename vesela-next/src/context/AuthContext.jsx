@@ -69,10 +69,13 @@ export const AuthProvider = ({ children }) => {
     return stored;
   });
 
-  const [plan, setPlan] = useState(() => {
+  const [planDetails, setPlanDetails] = useState(() => {
     const stored = localStorageUtil.get(PLAN_DETAILS);
-    if (!stored || typeof stored !== "object" || !stored.plan) return null;
-    return stored.plan;
+    if (!stored || typeof stored !== "object") return null;
+    return stored;
+  });
+  const [plan, setPlan] = useState(() => {
+    return planDetails?.plan ?? null;
   });
   const [isLoadingPlan, setIsLoadingPlan] = useState(false);
   const [planError, setPlanError] = useState(null);
@@ -142,7 +145,6 @@ export const AuthProvider = ({ children }) => {
 
     if (delay <= 0) {
       // Already within the last hour (or expired) - trigger immediate proactive refresh
-      console.log("[Auth] Token is expiring soon or expired. Triggering proactive refresh.");
       fetchFreshAccessToken().then((newToken) => {
         if (newToken) {
           setWsToken(newToken);
@@ -154,9 +156,7 @@ export const AuthProvider = ({ children }) => {
         }
       });
     } else {
-      console.log(`[Auth] Scheduling automatic token refresh in ${Math.round(delay / 1000 / 60)} minutes.`);
       refreshTimeoutRef.current = setTimeout(() => {
-        console.log("[Auth] Timer fired. Triggering automatic token refresh.");
         fetchFreshAccessToken().then((newToken) => {
           if (newToken) {
             setWsToken(newToken);
@@ -195,7 +195,6 @@ export const AuthProvider = ({ children }) => {
           // 1. Try to read token from my-app-auth cookie
           const cookieToken = getCookie("my-app-auth");
           if (cookieToken) {
-            console.log("[Auth] Found my-app-auth cookie on page load.");
             setWsToken(cookieToken);
             saveAuthTokenExpiration(cookieToken);
 
@@ -206,7 +205,6 @@ export const AuthProvider = ({ children }) => {
               const isExpiringSoon = expiresAt - Date.now() < oneHour;
 
               if (isExpiringSoon) {
-                console.log("[Auth] Cookie token is expiring soon. Refreshing on page load.");
                 const freshToken = await fetchFreshAccessToken();
                 if (freshToken) {
                   setWsToken(freshToken);
@@ -219,7 +217,6 @@ export const AuthProvider = ({ children }) => {
                   console.warn("[Auth] Token refresh failed on page load. Will rely on cookie-based session.");
                 }
               } else {
-                console.log("[Auth] Cookie token is still valid. Skipping refresh call on page load.");
                 scheduleRefresh(expiresAt);
               }
             }
@@ -234,7 +231,6 @@ export const AuthProvider = ({ children }) => {
 
             // Fetch a fresh token if wsToken is missing or expiring soon
             if (!currentWsToken || isExpiringSoon) {
-              console.log("[Auth] wsToken is missing or expiring soon. Refreshing access token on session check...");
               const freshToken = await fetchFreshAccessToken();
               if (freshToken) {
                 setWsToken(freshToken);
@@ -249,7 +245,6 @@ export const AuthProvider = ({ children }) => {
                 );
               }
             } else {
-              console.log("[Auth] Stored wsToken is valid. Skipping refresh call on page load.");
               if (!wsToken && currentWsToken) {
                 setWsToken(currentWsToken);
               }
@@ -261,7 +256,7 @@ export const AuthProvider = ({ children }) => {
           // Mark session as ready. User is authenticated regardless of whether
           // the WS token refresh succeeded — that is a secondary concern.
           setIsTokenReady(true);
-         } else if (res.status === 401 || res.status === 403) {
+        } else if (res.status === 401 || res.status === 403) {
           // Definitive unauthenticated response from the backend — clear state.
           setUser(null);
           setWsToken(null);
@@ -404,6 +399,7 @@ export const AuthProvider = ({ children }) => {
       const res = await getPlan();
       if (!res.error && res.status === 200 && res.data) {
         setPlan(res.data.plan);
+        setPlanDetails(res.data);
         localStorageUtil.set(PLAN_DETAILS, res.data);
       } else {
         if (res.status === 401) {
@@ -428,6 +424,7 @@ export const AuthProvider = ({ children }) => {
       fetchPlan();
     } else {
       setPlan(null);
+      setPlanDetails(null);
     }
   }, [user, fetchPlan]);
 
@@ -439,10 +436,12 @@ export const AuthProvider = ({ children }) => {
     isTokenReady,
     wsToken,
     plan,
+    planDetails,
+    canManageStripeBilling: Boolean(planDetails?.can_manage_stripe_billing),
     isLoadingPlan,
     planError,
-    isPro: plan === "pro",
-    isFree: plan === "free" || !plan,
+    isPro: Boolean(plan) && plan !== "free",
+    isFree: !plan || plan === "free",
     fetchPlan,
     login,
     logout,

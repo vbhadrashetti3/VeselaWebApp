@@ -52,6 +52,11 @@ const Sidebar = ({ activeSection, handleClick, compact = false }) => {
       icon: <User size={16} />,
     },
     {
+      text: "Change Password",
+      value: SETTINGS_MODAL.ChangePassword,
+      icon: <Key size={16} />,
+    },
+    {
       text: "Appearance",
       value: SETTINGS_MODAL.Appearance,
       icon: <Sun size={16} />,

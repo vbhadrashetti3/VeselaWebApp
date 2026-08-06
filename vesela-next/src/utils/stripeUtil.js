@@ -3,7 +3,7 @@
  * to a Stripe payment link URL for webhook tracking.
  *
  * Example output:
- * https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007?prefilled_email=vijay@google.com&client_reference_id=3333333
+ * https://buy.stripe.com/3cIaEX5Ktai56dR08h2400a?prefilled_email=vijay@google.com&client_reference_id=3333333
  *
  * @param {string} baseUrl - Base Stripe Payment Link URL
  * @param {object|null} user - User object containing email and pk/id

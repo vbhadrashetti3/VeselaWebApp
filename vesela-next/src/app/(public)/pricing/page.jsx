@@ -80,7 +80,7 @@ export default function PricingPage() {
 
   const handleProSelect = () => {
     if (isAuthenticated) {
-      const stripeUrl = getStripePaymentUrl("https://buy.stripe.com/5kQ8wPdcV75TfOrf3b24007", user);
+      const stripeUrl = getStripePaymentUrl("https://buy.stripe.com/3cIaEX5Ktai56dR08h2400a", user);
       window.open(stripeUrl, "_blank", "noopener,noreferrer");
     } else {
       openModal(MODALS.SIGNUP, { source: "public" });
@@ -96,7 +96,7 @@ export default function PricingPage() {
     }
   };
 
-  const isPro = isAuthenticated && currentPlan === "pro";
+  const isPro = isAuthenticated && Boolean(currentPlan) && currentPlan !== "free";
 
   return (
     <main id="main">
@@ -156,7 +156,7 @@ export default function PricingPage() {
                 type="button"
                 className="button"
                 onClick={handleFreeSelect}
-                disabled={isAuthenticated && currentPlan === "free"}
+                disabled={isPro || (isAuthenticated && currentPlan === "free")}
               >
                 {isAuthenticated && currentPlan === "free" ? "Current Plan" : "Start free"} <span className="arrow">→</span>
               </button>

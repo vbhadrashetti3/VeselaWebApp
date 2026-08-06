@@ -15,6 +15,7 @@ export const MODALS = Object.freeze({
 
 export const SETTINGS_MODAL = Object.freeze({
   MySubscription: "MySubscription",
+  ChangePassword: "ChangePassword",
   Support: "Support",
   Appearance: "Appearance",
   FAQ: "FAQ",
