@@ -104,6 +104,7 @@ export default function PublicHeader() {
             <Link href={isHome ? "#experience" : "/home#experience"}>Experience</Link>
             <Link href={isHome ? "#proof" : "/home#proof"}>Proof</Link>
             <Link href="/pricing" aria-current={pathname === "/pricing" ? "page" : undefined}>Pricing</Link>
+            <Link href="/blog" aria-current={pathname.startsWith("/blog") ? "page" : undefined}>Blog</Link>
           </nav>
 
           <div className="header-actions">
@@ -141,6 +142,7 @@ export default function PublicHeader() {
           <Link href={isHome ? "#experience" : "/home#experience"} onClick={closeMenu}>Experience</Link>
           <Link href={isHome ? "#proof" : "/home#proof"} onClick={closeMenu}>Proof</Link>
           <Link href="/pricing" onClick={closeMenu}>Pricing</Link>
+          <Link href="/blog" onClick={closeMenu}>Blog</Link>
         </div>
 
         <div className="mobile-actions">
