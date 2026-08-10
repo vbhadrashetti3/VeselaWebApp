@@ -1,9 +1,10 @@
 /**
  * HubSpot Blog API Service Layer
- * Abstracts HubSpot v3 CMS Blog Posts API endpoints into clean domain functions.
+ * Abstracts HubSpot CMS Blog Posts API endpoints into clean domain functions.
+ * Supports both v3 endpoints (/cms/v3/blogs/posts) and legacy/versioned endpoints (/cms/blogs/2026-03/posts).
  */
 
-import { hubspotFetch } from "./hubspotClient";
+import { hubspotFetch } from "./hubspotClient.js";
 
 // Sample fallback posts for development when HUBSPOT_ACCESS_TOKEN is not configured
 const SAMPLE_POSTS = [
@@ -90,25 +91,6 @@ const alignmentConfig = {
     tags: ["Engineering", "Next.js", "Performance"],
     readTimeMinutes: 6,
   },
-  {
-    id: "post-4",
-    slug: "ethical-ai-benchmarks-and-evaluation",
-    title: "Understanding Ethical AI Benchmarks: Beyond Standard Accuracy Metrics",
-    summary: "Why traditional accuracy metrics fail to capture alignment quality, and how modern benchmark suites evaluate safety and truthfulness.",
-    htmlContent: `
-      <p>Measuring AI progress has traditionally relied on benchmark datasets focused on code generation or standardized test taking. However, evaluating safety and human preference requires entirely new testing paradigms.</p>
-
-      <h2>Humanity Bench Metrics</h2>
-      <p>Evaluating models across context sensitivity, ethical boundary compliance, and logical reasoning under uncertainty.</p>
-    `,
-    featuredImage: "https://images.unsplash.com/photo-1507146426996-ef05306b995a?auto=format&fit=crop&w=1200&q=80",
-    authorName: "Dr. Elena Rostova",
-    authorAvatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=200&q=80",
-    publishDate: "2026-07-10T11:00:00Z",
-    category: "Research",
-    tags: ["Research", "AI Alignment", "Ethics"],
-    readTimeMinutes: 7,
-  },
 ];
 
 /**
@@ -125,17 +107,20 @@ export function calculateReadTime(html) {
 
 /**
  * Normalizes raw HubSpot post object into clean application schema.
- * @param {Object} rawPost - Raw post object from HubSpot v3 API
+ * @param {Object} rawPost - Raw post object from HubSpot API
  * @returns {BlogPost}
  */
 export function normalizePost(rawPost) {
   if (!rawPost) return null;
 
-  const content = rawPost.postBody || rawPost.postSummary || rawPost.post_body || "";
-  const summary = rawPost.postSummary || rawPost.metaDescription || (content ? content.replace(/<[^>]+>/g, "").slice(0, 160) + "..." : "");
+  const content = rawPost.postBody || rawPost.post_body || rawPost.postSummary || rawPost.rssSummary || "";
+  const rawSummary = rawPost.postSummary || rawPost.rssSummary || rawPost.metaDescription || "";
+  const summary = rawSummary
+    ? rawSummary.replace(/<[^>]+>/g, "").trim()
+    : (content ? content.replace(/<[^>]+>/g, "").slice(0, 160) + "..." : "");
 
   // Author details
-  const authorName = rawPost.blogAuthor?.name || rawPost.authorName || rawPost.authorNameCustom || "Gray Sky AI Team";
+  const authorName = rawPost.authorName || rawPost.blogAuthor?.name || rawPost.authorNameCustom || "Gray Sky AI Team";
   const authorAvatar = rawPost.blogAuthor?.avatar || rawPost.blogAuthor?.hasAvatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80";
 
   // Featured Image
@@ -170,13 +155,9 @@ export function normalizePost(rawPost) {
 /**
  * Fetches paginated blog posts from HubSpot CMS API.
  * Supports filtering by page, search query, category, and tag.
+ * Automatically tries /cms/v3/blogs/posts and falls back to /cms/blogs/2026-03/posts.
  * 
  * @param {Object} [params={}]
- * @param {number} [params.page=1]
- * @param {number} [params.limit=6]
- * @param {string} [params.search=""]
- * @param {string} [params.category=""]
- * @param {string} [params.tag=""]
  * @returns {Promise<{ posts: Array<BlogPost>, total: number, totalPages: number, currentPage: number, categories: Array<string> }>}
  */
 export async function getBlogPosts(params = {}) {
@@ -212,7 +193,6 @@ export async function getBlogPosts(params = {}) {
     const startIndex = (page - 1) * limit;
     const paginatedPosts = filtered.slice(startIndex, startIndex + limit);
 
-    // Extract all unique categories
     const categories = ["All", ...new Set(SAMPLE_POSTS.map((p) => p.category))];
 
     return {
@@ -228,13 +208,20 @@ export async function getBlogPosts(params = {}) {
     const blogId = process.env.HUBSPOT_BLOG_ID;
     const offset = (page - 1) * limit;
     
-    let endpoint = `/cms/v3/blogs/posts?limit=${limit}&offset=${offset}&state=PUBLISHED&sort=-publishDate`;
-    if (blogId) {
-      endpoint += `&contentGroupId=${blogId}`;
+    let rawData = null;
+
+    // Try v3 endpoint first
+    try {
+      let v3Endpoint = `/cms/v3/blogs/posts?limit=${limit}&offset=${offset}&state=PUBLISHED&sort=-publishDate`;
+      if (blogId) v3Endpoint += `&contentGroupId=${blogId}`;
+      rawData = await hubspotFetch(v3Endpoint);
+    } catch (v3Error) {
+      // Fallback to versioned endpoint /cms/blogs/2026-03/posts
+      let versionedEndpoint = `/cms/blogs/2026-03/posts?limit=${limit}&offset=${offset}`;
+      rawData = await hubspotFetch(versionedEndpoint);
     }
 
-    const data = await hubspotFetch(endpoint);
-    const rawResults = data.results || [];
+    const rawResults = rawData?.results || [];
     let posts = rawResults.map(normalizePost);
 
     // Apply search filter if requested
@@ -251,7 +238,7 @@ export async function getBlogPosts(params = {}) {
       posts = posts.filter((p) => p.category.toLowerCase() === category.toLowerCase());
     }
 
-    const total = data.total || posts.length;
+    const total = rawData?.total || posts.length;
     const totalPages = Math.max(1, Math.ceil(total / limit));
 
     // Extract categories
@@ -286,22 +273,31 @@ export async function getBlogPostBySlug(slug) {
   }
 
   try {
-    // Query post by slug using HubSpot v3 Posts endpoint filter
-    const endpoint = `/cms/v3/blogs/posts?slug=${encodeURIComponent(cleanSlug)}&state=PUBLISHED`;
-    const data = await hubspotFetch(endpoint);
-    
-    if (data.results && data.results.length > 0) {
-      return normalizePost(data.results[0]);
-    }
+    // 1. Try v3 endpoint direct search by slug
+    try {
+      const v3Endpoint = `/cms/v3/blogs/posts?slug=${encodeURIComponent(cleanSlug)}&state=PUBLISHED`;
+      const data = await hubspotFetch(v3Endpoint);
+      if (data.results && data.results.length > 0) {
+        return normalizePost(data.results[0]);
+      }
+    } catch (_) {}
 
-    // Try fetching with "blog/" prefix if direct slug fails
-    const altEndpoint = `/cms/v3/blogs/posts?slug=blog/${encodeURIComponent(cleanSlug)}&state=PUBLISHED`;
-    const altData = await hubspotFetch(altEndpoint);
-    if (altData.results && altData.results.length > 0) {
-      return normalizePost(altData.results[0]);
-    }
+    // 2. Try v3 endpoint with "blog/" prefix
+    try {
+      const v3AltEndpoint = `/cms/v3/blogs/posts?slug=blog/${encodeURIComponent(cleanSlug)}&state=PUBLISHED`;
+      const altData = await hubspotFetch(v3AltEndpoint);
+      if (altData.results && altData.results.length > 0) {
+        return normalizePost(altData.results[0]);
+      }
+    } catch (_) {}
 
-    return null;
+    // 3. Fallback to list fetching (/cms/blogs/2026-03/posts) and matching slug
+    const listResult = await getBlogPosts({ limit: 50 });
+    const match = listResult.posts.find(
+      (p) => p.slug === cleanSlug || p.slug === `blog/${cleanSlug}`
+    );
+
+    return match || null;
   } catch (error) {
     console.error(`HubSpot API getBlogPostBySlug (${cleanSlug}) Error:`, error.message);
     return null;
@@ -324,7 +320,6 @@ export async function getRelatedPosts(currentPostId, tags = [], limit = 3) {
       return otherPosts.slice(0, limit);
     }
 
-    // Sort by number of matching tags
     const scored = otherPosts.map((post) => {
       const matchCount = post.tags.filter((t) => tags.includes(t)).length;
       return { post, score: matchCount };
