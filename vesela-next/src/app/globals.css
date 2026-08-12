@@ -1592,3 +1592,41 @@ svg {
     transform: none;
   }
 }
+
+/* ─────────────────────────────────────────────
+ * BLOG STYLES
+ * ───────────────────────────────────────────── */
+
+.article-html-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.article-html-content a:hover {
+  color: var(--ink);
+}
+
+.toc-desktop::-webkit-scrollbar {
+  width: 4px;
+}
+
+.toc-desktop::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.toc-desktop::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+.toc-desktop::-webkit-scrollbar-thumb:hover {
+  background: var(--line-strong);
+}
+
+@media (max-width: 768px) {
+  .blog-listing-page, .blog-detail-page {
+    padding-top: 80px !important;
+  }
+}
