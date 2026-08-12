@@ -259,21 +259,25 @@ export async function getBlogPosts(params = {}) {
 
 /**
  * Fetches a single blog post by slug.
- * @param {string} slug 
+ * Supports string slugs or array of slug segments from Next.js catch-all routes.
+ * @param {string|Array<string>} slug 
  * @returns {Promise<BlogPost|null>}
  */
 export async function getBlogPostBySlug(slug) {
   if (!slug) return null;
-  const cleanSlug = slug.replace(/^\/+|\/+$/g, "").replace(/^blog\//, "");
+  const rawSlug = Array.isArray(slug) ? slug.join("/") : String(slug);
+  const cleanSlug = rawSlug.replace(/^\/+|\/+$/g, "").replace(/^blog\//, "");
+
+  if (!cleanSlug) return null;
 
   // If token is missing, return sample post matching slug
   if (!process.env.HUBSPOT_ACCESS_TOKEN) {
-    const post = SAMPLE_POSTS.find((p) => p.slug === cleanSlug);
+    const post = SAMPLE_POSTS.find((p) => p.slug === cleanSlug || p.slug.endsWith(`/${cleanSlug}`));
     return post || null;
   }
 
   try {
-    // 1. Try v3 endpoint direct search by slug
+    // 1. Try v3 endpoint direct search by exact slug
     try {
       const v3Endpoint = `/cms/v3/blogs/posts?slug=${encodeURIComponent(cleanSlug)}&state=PUBLISHED`;
       const data = await hubspotFetch(v3Endpoint);
@@ -291,10 +295,29 @@ export async function getBlogPostBySlug(slug) {
       }
     } catch (_) {}
 
-    // 3. Fallback to list fetching (/cms/blogs/2026-03/posts) and matching slug
+    // 3. If slug has multiple segments, try searching by the last segment (post filename/slug)
+    if (cleanSlug.includes("/")) {
+      const lastSegment = cleanSlug.split("/").pop();
+      if (lastSegment) {
+        try {
+          const v3SubEndpoint = `/cms/v3/blogs/posts?slug=${encodeURIComponent(lastSegment)}&state=PUBLISHED`;
+          const subData = await hubspotFetch(v3SubEndpoint);
+          if (subData.results && subData.results.length > 0) {
+            return normalizePost(subData.results[0]);
+          }
+        } catch (_) {}
+      }
+    }
+
+    // 4. Fallback to list fetching (/cms/blogs/2026-03/posts) and matching slug
     const listResult = await getBlogPosts({ limit: 50 });
     const match = listResult.posts.find(
-      (p) => p.slug === cleanSlug || p.slug === `blog/${cleanSlug}`
+      (p) =>
+        p.slug === cleanSlug ||
+        p.slug === `blog/${cleanSlug}` ||
+        cleanSlug === `blog/${p.slug}` ||
+        p.slug.endsWith(`/${cleanSlug}`) ||
+        cleanSlug.endsWith(`/${p.slug}`)
     );
 
     return match || null;

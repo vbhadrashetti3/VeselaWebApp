@@ -4,15 +4,16 @@ import { NextResponse } from "next/server";
 export async function GET(request, { params }) {
   try {
     const { slug } = await params;
-    
-    if (!slug) {
+    const slugPath = Array.isArray(slug) ? slug.join("/") : slug || "";
+
+    if (!slugPath) {
       return NextResponse.json(
         { success: false, message: "Article slug is required." },
         { status: 400 }
       );
     }
 
-    const post = await getBlogPostBySlug(slug);
+    const post = await getBlogPostBySlug(slugPath);
 
     if (!post) {
       return NextResponse.json(
@@ -29,7 +30,7 @@ export async function GET(request, { params }) {
       relatedPosts,
     });
   } catch (error) {
-    console.error(`API /api/blog/${params?.slug} GET error:`, error);
+    console.error(`API /api/blog GET error:`, error);
     return NextResponse.json(
       {
         success: false,

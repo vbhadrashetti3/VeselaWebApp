@@ -2,9 +2,17 @@ import { getBlogPostBySlug, getRelatedPosts } from "@/services/hubspot/blogApi";
 import { notFound } from "next/navigation";
 import BlogDetailClient from "./BlogDetailClient";
 
+function getSlugFromParams(paramsSlug) {
+  if (Array.isArray(paramsSlug)) {
+    return paramsSlug.join("/");
+  }
+  return paramsSlug || "";
+}
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const slugPath = getSlugFromParams(slug);
+  const post = await getBlogPostBySlug(slugPath);
 
   if (!post) {
     return {
@@ -43,7 +51,8 @@ export async function generateMetadata({ params }) {
 
 export default async function BlogDetailPage({ params }) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const slugPath = getSlugFromParams(slug);
+  const post = await getBlogPostBySlug(slugPath);
 
   if (!post) {
     notFound();

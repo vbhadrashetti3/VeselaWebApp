@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Container from "@mui/material/Container";
 import Box from "@mui/material/Box";
@@ -31,14 +31,18 @@ export default function BlogDetailClient({ post, relatedPosts = [] }) {
     ? format(new Date(publishDate), "MMMM d, yyyy")
     : "";
 
-  // Sanitize HTML safely
-  const cleanHtml = useMemo(() => {
-    return typeof window !== "undefined"
-      ? DOMPurify.sanitize(htmlContent, {
+  // Sanitize HTML safely post-hydration to prevent SSR/client mismatch
+  const [cleanHtml, setCleanHtml] = useState(htmlContent || "");
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && htmlContent) {
+      setCleanHtml(
+        DOMPurify.sanitize(htmlContent, {
           ADD_TAGS: ["iframe"],
           ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling"],
         })
-      : htmlContent;
+      );
+    }
   }, [htmlContent]);
 
   return (
@@ -136,6 +140,7 @@ export default function BlogDetailClient({ post, relatedPosts = [] }) {
         <Box
           className="article-html-content"
           dangerouslySetInnerHTML={{ __html: cleanHtml }}
+          suppressHydrationWarning
           sx={{
             fontSize: { xs: "1.05rem", sm: "1.125rem" },
             lineHeight: 1.75,
