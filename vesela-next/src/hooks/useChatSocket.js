@@ -12,8 +12,23 @@ const WS_URL = "wss://portal.grayskyai.com/ws/chat/";
 
 const RETRYABLE_CODES = new Set([1001, 1006, 1011, 1012, 1013, 1014]);
 const BASE_BACKOFF_MS = 1000;
+/**
+ * After this many retryable failures while a reply is pending, run a "hard
+ * reconnect" (refresh access token + new socket) — same essentials as page reload.
+ */
+const HARD_RECONNECT_EVERY = 3;
 
 const SILENT_TYPES = new Set(["ping", "pong", "heartbeat", "keepalive"]);
+
+function isConversationExpiredError(data) {
+  return data?.expired === true;
+}
+
+function clearActiveConversation() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("vesela_active_conversation_id");
+  }
+}
 
 export const useChatSocket = (token, userId) => {
   const socketRef = useRef(null);
@@ -27,6 +42,8 @@ export const useChatSocket = (token, userId) => {
 
   const currentAssistantIdRef = useRef(null);
   const messageQueueRef = useRef([]);
+  /** Payload awaiting a server reply (stream_start / done / error). */
+  const pendingPayloadRef = useRef(null);
   const conversationIdRef = useRef(null);
 
   useEffect(() => {
@@ -63,6 +80,101 @@ export const useChatSocket = (token, userId) => {
     }
   }, [isLocked]);
 
+  const clearPendingReply = useCallback(() => {
+    pendingPayloadRef.current = null;
+  }, []);
+
+  const acknowledgeServerReply = useCallback(() => {
+    clearPendingReply();
+    retryCountRef.current = 0;
+  }, [clearPendingReply]);
+
+  const removeIncompleteAssistantBubble = useCallback(() => {
+    const assistantId = currentAssistantIdRef.current;
+    if (!assistantId) return;
+    currentAssistantIdRef.current = null;
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === assistantId);
+      if (idx === -1) return prev;
+      if (prev[idx].message?.trim()) return prev;
+      return prev.filter((_, i) => i !== idx);
+    });
+  }, []);
+
+  const requeuePendingPayload = useCallback(() => {
+    const payload = pendingPayloadRef.current;
+    if (!payload) return;
+    const alreadyQueued = messageQueueRef.current.some(
+      (item) => item.text === payload.text && item.user_id === payload.user_id,
+    );
+    if (!alreadyQueued) {
+      messageQueueRef.current.unshift(payload);
+    }
+  }, []);
+
+  const scheduleReconnect = useCallback((immediate = false) => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      return;
+    }
+    clearTimeout(retryTimerRef.current);
+    const delay = immediate
+      ? 0
+      : Math.min(
+          BASE_BACKOFF_MS * 2 ** retryCountRef.current + Math.random() * 500,
+          30_000,
+        );
+    retryCountRef.current += 1;
+    retryTimerRef.current = setTimeout(() => connectRef.current?.(), delay);
+  }, []);
+
+  const closeSocket = useCallback((clearQueue = false) => {
+    clearTimeout(retryTimerRef.current);
+    retryTimerRef.current = null;
+
+    const ws = socketRef.current;
+    if (ws) {
+      ws.onopen = ws.onmessage = ws.onclose = ws.onerror = null;
+      try {
+        ws.close(1000);
+      } catch {
+        /* ignore */
+      }
+      socketRef.current = null;
+    }
+
+    if (clearQueue) {
+      messageQueueRef.current = [];
+      pendingPayloadRef.current = null;
+      currentAssistantIdRef.current = null;
+      setIsStreaming(false);
+    }
+  }, []);
+
+  /** Mimics the useful part of a page refresh: fresh access token + clean socket. */
+  const hardReconnect = useCallback(async () => {
+    retryCountRef.current = 0;
+    closeSocket(false);
+
+    try {
+      const newToken = await refreshAccessToken({ force: true });
+      tokenRef.current = newToken;
+    } catch {
+      // Network or refresh may fail briefly — still attempt socket with existing token.
+    }
+
+    connectRef.current?.();
+  }, [closeSocket]);
+
+  const failPendingReply = useCallback((message) => {
+    acknowledgeServerReply();
+    setIsStreaming(false);
+    removeIncompleteAssistantBubble();
+    setMessages((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), role: "assistant", message, isError: true },
+    ]);
+  }, [acknowledgeServerReply, removeIncompleteAssistantBubble]);
+
   const handleMessage = useCallback((event) => {
     let data;
     try {
@@ -89,10 +201,12 @@ export const useChatSocket = (token, userId) => {
 
     switch (data.type) {
       case "thinking":
+        acknowledgeServerReply();
         setIsStreaming(true);
         break;
 
       case "stream_start":
+        acknowledgeServerReply();
         setIsStreaming(true);
         {
           const id = crypto.randomUUID();
@@ -123,14 +237,28 @@ export const useChatSocket = (token, userId) => {
 
       case "done":
       case "complete":
+        acknowledgeServerReply();
         setIsStreaming(false);
         currentAssistantIdRef.current = null;
         break;
 
       case "error": {
+        acknowledgeServerReply();
         setIsStreaming(false);
         currentAssistantIdRef.current = null;
         const msg = data.message || "An error occurred.";
+
+        if (isConversationExpiredError(data)) {
+          conversationIdRef.current = null;
+          clearActiveConversation();
+          // Show server message as a normal assistant bubble (not isError — no "Something failed.").
+          setMessages((prev) => [
+            ...prev,
+            { id: crypto.randomUUID(), role: "assistant", message: msg },
+          ]);
+          break;
+        }
+
         setMessages((prev) => [
           ...prev,
           { id: crypto.randomUUID(), role: "assistant", message: msg, isError: true },
@@ -141,33 +269,11 @@ export const useChatSocket = (token, userId) => {
       default:
         console.debug("[WS] Unknown message type:", data.type, data);
     }
-  }, []);
+  }, [acknowledgeServerReply]);
 
   useEffect(() => {
     onMessageRef.current = handleMessage;
   }, [handleMessage]);
-
-  const closeSocket = useCallback((clearQueue = false) => {
-    clearTimeout(retryTimerRef.current);
-    retryTimerRef.current = null;
-
-    const ws = socketRef.current;
-    if (ws) {
-      ws.onopen = ws.onmessage = ws.onclose = ws.onerror = null;
-      try {
-        ws.close(1000);
-      } catch {
-        /* ignore */
-      }
-      socketRef.current = null;
-    }
-
-    if (clearQueue) {
-      messageQueueRef.current = [];
-    }
-    currentAssistantIdRef.current = null;
-    setIsStreaming(false);
-  }, []);
 
   const disconnect = useCallback(
     (clearQueue = false) => {
@@ -245,9 +351,10 @@ export const useChatSocket = (token, userId) => {
           ws.close();
           return;
         }
-        retryCountRef.current = 0;
+        if (!pendingPayloadRef.current) {
+          retryCountRef.current = 0;
+        }
         setStatus("connected");
-        currentAssistantIdRef.current = null;
         flushMessageQueue(ws);
       };
 
@@ -260,53 +367,75 @@ export const useChatSocket = (token, userId) => {
           return;
         }
         socketRef.current = null;
-        currentAssistantIdRef.current = null;
         setStatus("disconnected");
-
-        setIsStreaming((prev) => {
-          if (prev) {
-            setMessages((msgs) => {
-              const last = msgs[msgs.length - 1];
-              if (last?.isError) return msgs;
-              return [
-                ...msgs,
-                {
-                  id: crypto.randomUUID(),
-                  role: "assistant",
-                  message: "Connection lost. Please retry.",
-                  isError: true,
-                },
-              ];
-            });
-          }
-          return false;
-        });
 
         const { code, reason } = event;
         console.warn(`[WS] Closed — code=${code}, reason=${reason || "none"}`);
 
+        const hasPendingReply = Boolean(pendingPayloadRef.current);
+
         if (code === 4001) {
+          if (hasPendingReply) {
+            removeIncompleteAssistantBubble();
+            requeuePendingPayload();
+            setIsStreaming(true);
+          }
           recoverAuthAndReconnect();
           return;
         }
 
         if (code >= 4000 && code < 5000) {
-          handleAuthFailure();
+          if (hasPendingReply) {
+            failPendingReply("Unable to connect. Please try sending your message again.");
+          } else {
+            handleAuthFailure();
+          }
           return;
         }
 
-        if (code === 1000) return;
-
-        if (!RETRYABLE_CODES.has(code) && code !== 0) {
+        if (code === 1000) {
+          if (!hasPendingReply) {
+            currentAssistantIdRef.current = null;
+            setIsStreaming(false);
+          }
           return;
         }
 
-        const delay = Math.min(
-          BASE_BACKOFF_MS * 2 ** retryCountRef.current + Math.random() * 500,
-          30_000,
-        );
-        retryCountRef.current += 1;
-        retryTimerRef.current = setTimeout(() => connectRef.current?.(), delay);
+        // Retryable disconnect — silently reconnect and resend pending message.
+        if (RETRYABLE_CODES.has(code) || code === 0) {
+          if (hasPendingReply) {
+            removeIncompleteAssistantBubble();
+            requeuePendingPayload();
+            setIsStreaming(true);
+
+            // Same token + socket after sleep often fails (DNS/network not ready).
+            // Periodically refresh the session like a page reload would.
+            if (
+              retryCountRef.current > 0 &&
+              retryCountRef.current % HARD_RECONNECT_EVERY === 0
+            ) {
+              hardReconnect();
+              return;
+            }
+
+            scheduleReconnect(retryCountRef.current === 0);
+            return;
+          }
+
+          currentAssistantIdRef.current = null;
+          setIsStreaming(false);
+          // Background idle reconnect — keep retry count low; no user message at stake.
+          if (retryCountRef.current > 12) {
+            retryCountRef.current = 0;
+          }
+          scheduleReconnect(false);
+          return;
+        }
+
+        if (hasPendingReply) {
+          // Non-retryable close with a pending message — try hard reconnect once.
+          hardReconnect();
+        }
       };
 
       ws.onerror = () => {
@@ -316,7 +445,7 @@ export const useChatSocket = (token, userId) => {
       console.error("[WS] Error creating WebSocket instance:", err);
       setStatus("disconnected");
     }
-  }, [flushMessageQueue, recoverAuthAndReconnect]);
+  }, [flushMessageQueue, recoverAuthAndReconnect, removeIncompleteAssistantBubble, requeuePendingPayload, scheduleReconnect, hardReconnect, failPendingReply]);
 
   useEffect(() => {
     connectRef.current = connect;
@@ -326,10 +455,15 @@ export const useChatSocket = (token, userId) => {
     if (typeof window === "undefined") return;
 
     const handleActivity = () => {
-      if (tokenRef.current && (!socketRef.current || socketRef.current.readyState === WebSocket.CLOSED)) {
-        retryCountRef.current = 0;
-        connectRef.current?.();
-      }
+      const needsReconnect =
+        tokenRef.current &&
+        (!socketRef.current || socketRef.current.readyState === WebSocket.CLOSED);
+
+      if (!needsReconnect) return;
+
+      // Tab focus / network back — reset backoff (page reload would do this too).
+      retryCountRef.current = 0;
+      connectRef.current?.();
     };
 
     const handleVisibilityChange = () => {
@@ -391,6 +525,9 @@ export const useChatSocket = (token, userId) => {
         conversation_id: conversationIdRef.current,
         time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       };
+
+      pendingPayloadRef.current = payload;
+      retryCountRef.current = 0;
 
       setMessages((prev) => [
         ...prev,
