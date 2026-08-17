@@ -35,6 +35,7 @@ export default function ChatPage() {
   const {
     messages,
     sendMessage,
+    status,
     isConnected,
     isStreaming: isAuthStreaming,
     isLocked: isAuthLocked,

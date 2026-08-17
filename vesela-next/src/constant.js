@@ -1,4 +1,4 @@
-// TOKEN constant removed — authentication is now fully cookie-based
+// Authentication: access token in sessionStorage (via tokenManager); refresh in HttpOnly cookie
 export const USER_DETAILS = "userdetails";
 export const PLAN_DETAILS = "plan_details";
 export const POST_LOGIN_NAVIGATE_TO = "postLoginNavigateTo";

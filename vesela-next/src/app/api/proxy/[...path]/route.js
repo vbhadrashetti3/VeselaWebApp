@@ -17,6 +17,45 @@ function parseCookieValue(cookieHeader, name) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+/**
+ * Rewrites upstream Set-Cookie headers so auth cookies are stored on the
+ * Next.js frontend domain (e.g. vesela.ai), not lost as host-only portal cookies.
+ *
+ * Django emits host-only cookies for portal.grayskyai.com. Without rewriting
+ * Domain/Path, browsers never persist refresh tokens for the proxy origin and
+ * web refresh silently fails after the access token expires.
+ */
+function rewriteSetCookieForFrontend(setCookieHeader, isSecureRequest) {
+  const segments = setCookieHeader.split(";").map((s) => s.trim());
+  const nameValue = segments[0];
+  if (!nameValue) return setCookieHeader;
+
+  const kept = [];
+  let hasPath = false;
+  let hasSameSite = false;
+  let hasSecure = false;
+
+  for (let i = 1; i < segments.length; i += 1) {
+    const attr = segments[i];
+    const lower = attr.toLowerCase();
+    if (lower.startsWith("domain=")) continue;
+    if (lower.startsWith("path=")) {
+      hasPath = true;
+      kept.push("Path=/");
+      continue;
+    }
+    if (lower.startsWith("samesite=")) hasSameSite = true;
+    if (lower === "secure") hasSecure = true;
+    kept.push(attr);
+  }
+
+  if (!hasPath) kept.push("Path=/");
+  if (!hasSameSite) kept.push("SameSite=Lax");
+  if (isSecureRequest && !hasSecure) kept.push("Secure");
+
+  return [nameValue, ...kept].join("; ");
+}
+
 // Returns true when the error is a network-level connection/timeout failure
 // (Node.js undici errors from fetch, or AbortController cancellation).
 function isNetworkError(err) {
@@ -105,9 +144,16 @@ async function handleRequest(req, context, method) {
     // Forward every Set-Cookie header from the backend back to the browser so
     // auth cookies (my-app-auth, my-refresh-token, csrftoken, sessionid) are
     // stored on the Next.js domain and sent automatically on future requests.
+    const isSecureRequest =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      req.nextUrl.protocol === "https:";
+
     const setCookieHeaders = response.headers.getSetCookie?.() ?? [];
     for (const cookie of setCookieHeaders) {
-      nextResponse.headers.append("Set-Cookie", cookie);
+      nextResponse.headers.append(
+        "Set-Cookie",
+        rewriteSetCookieForFrontend(cookie, isSecureRequest),
+      );
     }
 
     return nextResponse;

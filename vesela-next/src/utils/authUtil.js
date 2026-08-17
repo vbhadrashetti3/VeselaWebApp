@@ -36,25 +36,14 @@ export function getCookie(name) {
 }
 
 /**
- * Resolves the token expiration time in milliseconds.
- * Checks the my-app-auth cookie first, falling back to localStorage.
+ * Resolves the access-token expiration time in milliseconds.
+ * Uses localStorage metadata written by tokenManager (HttpOnly cookies are not JS-readable).
  */
 export function getAuthTokenExpiration() {
-  // 1. Try to read from my-app-auth cookie
-  const cookieVal = getCookie("my-app-auth");
-  if (cookieVal) {
-    const decoded = decodeJwt(cookieVal);
-    if (decoded && decoded.exp) {
-      return decoded.exp * 1000; // convert to ms
-    }
-  }
-
-  // 2. Fallback to localStorage auth_expires_at
   const storedExpiresAt = localStorageUtil.get("auth_expires_at");
   if (storedExpiresAt) {
     return Number(storedExpiresAt);
   }
-
   return null;
 }
 
@@ -67,4 +56,11 @@ export function saveAuthTokenExpiration(token) {
   if (decoded && decoded.exp) {
     localStorageUtil.set("auth_expires_at", decoded.exp * 1000);
   }
+}
+
+/**
+ * Clears cached access-token expiration metadata.
+ */
+export function clearAuthTokenExpiration() {
+  localStorageUtil.remove("auth_expires_at");
 }
