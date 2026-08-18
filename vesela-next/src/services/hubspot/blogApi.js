@@ -339,6 +339,30 @@ export async function getBlogPostBySlug(slug) {
 }
 
 /**
+ * Fetches every published blog post slug for sitemap generation.
+ * Paginates through HubSpot results; safe to call at build or request time.
+ *
+ * @returns {Promise<Array<{ slug: string, publishDate: string }>>}
+ */
+export async function getAllBlogPostsForSitemap() {
+  const allPosts = [];
+  let page = 1;
+  let totalPages = 1;
+
+  while (page <= totalPages) {
+    const result = await getBlogPosts({ page, limit: 100 });
+    allPosts.push(...result.posts);
+    totalPages = result.totalPages;
+    page += 1;
+  }
+
+  return allPosts.map((post) => ({
+    slug: post.slug,
+    publishDate: post.publishDate,
+  }));
+}
+
+/**
  * Fetches related blog articles based on matching tags or category.
  * @param {string} currentPostId 
  * @param {Array<string>} tags 

@@ -6,6 +6,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import ThemeRegistry from "@/theme/ThemeRegistry";
 import GlobalModals from "../components/modals/GlobalModals";
 import Script from "next/script";
+import { SITE_URL } from "@/lib/siteConfig";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -33,10 +34,24 @@ export const viewport = {
 };
 
 export const metadata = {
-  title: "Vesela",
-  description: "Vesela Chat App",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Vesela | Human Alignment AI",
+    template: "%s | Vesela",
+  },
+  description:
+    "A human connection expert designed to deepen your thinking—not replace it. Human alignment AI by Gray Sky AI.",
   icons: {
     icon: "/favicon.webp",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Vesela",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@Vesela_AI",
   },
 };
 

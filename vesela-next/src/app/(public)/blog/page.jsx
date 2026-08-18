@@ -18,6 +18,9 @@ export async function generateMetadata({ searchParams }) {
   return {
     title,
     description,
+    alternates: {
+      canonical: "/blog",
+    },
     openGraph: {
       title,
       description,
