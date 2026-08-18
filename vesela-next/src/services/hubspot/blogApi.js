@@ -6,6 +6,49 @@
 
 import { hubspotFetch } from "./hubspotClient.js";
 
+/** HubSpot content group slug prefix included in raw post slugs (e.g. gray-sky-ai-blog/post-name). */
+const HUBSPOT_BLOG_SLUG_PREFIX = (
+  process.env.HUBSPOT_BLOG_SLUG_PREFIX || "gray-sky-ai-blog"
+).replace(/^\/+|\/+$/g, "");
+
+/**
+ * Converts HubSpot's internal slug to the public URL slug (/blog/post-name).
+ * Strips blog/ and content-group prefixes; multi-segment slugs resolve to the post name.
+ * @param {string} rawSlug
+ * @returns {string}
+ */
+export function normalizeBlogSlug(rawSlug) {
+  if (!rawSlug) return "";
+
+  let slug = String(rawSlug).replace(/^\/+|\/+$/g, "").replace(/^blog\//, "");
+
+  if (HUBSPOT_BLOG_SLUG_PREFIX) {
+    const escapedPrefix = HUBSPOT_BLOG_SLUG_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    slug = slug.replace(new RegExp(`^${escapedPrefix}/`), "");
+  }
+
+  if (slug.includes("/")) {
+    slug = slug.split("/").pop() || slug;
+  }
+
+  return slug;
+}
+
+/** Builds possible HubSpot API slug variants for lookup. */
+function getHubSpotSlugVariants(publicSlug) {
+  const variants = new Set([
+    publicSlug,
+    `blog/${publicSlug}`,
+  ]);
+
+  if (HUBSPOT_BLOG_SLUG_PREFIX) {
+    variants.add(`${HUBSPOT_BLOG_SLUG_PREFIX}/${publicSlug}`);
+    variants.add(`blog/${HUBSPOT_BLOG_SLUG_PREFIX}/${publicSlug}`);
+  }
+
+  return [...variants];
+}
+
 // Sample fallback posts for development when HUBSPOT_ACCESS_TOKEN is not configured
 const SAMPLE_POSTS = [
   {
@@ -130,15 +173,11 @@ export function normalizePost(rawPost) {
   const category = rawPost.topicNames?.[0] || rawPost.blogCategory?.name || rawPost.category || "Insights";
   const tags = rawPost.tagNames || rawPost.topicNames || [category];
 
-  // Slug normalization (strip leading/trailing slashes if present)
-  let slug = rawPost.slug || rawPost.id;
-  if (typeof slug === "string") {
-    slug = slug.replace(/^\/+|\/+$/g, "").replace(/^blog\//, "");
-  }
+  const slug = normalizeBlogSlug(rawPost.slug || rawPost.id);
 
   return {
     id: String(rawPost.id),
-    slug: String(slug),
+    slug,
     title: rawPost.name || rawPost.title || "Untitled Post",
     summary: summary,
     htmlContent: content,
@@ -266,59 +305,31 @@ export async function getBlogPosts(params = {}) {
 export async function getBlogPostBySlug(slug) {
   if (!slug) return null;
   const rawSlug = Array.isArray(slug) ? slug.join("/") : String(slug);
-  const cleanSlug = rawSlug.replace(/^\/+|\/+$/g, "").replace(/^blog\//, "");
+  const cleanSlug = normalizeBlogSlug(rawSlug);
 
   if (!cleanSlug) return null;
 
   // If token is missing, return sample post matching slug
   if (!process.env.HUBSPOT_ACCESS_TOKEN) {
-    const post = SAMPLE_POSTS.find((p) => p.slug === cleanSlug || p.slug.endsWith(`/${cleanSlug}`));
+    const post = SAMPLE_POSTS.find((p) => p.slug === cleanSlug);
     return post || null;
   }
 
   try {
-    // 1. Try v3 endpoint direct search by exact slug
-    try {
-      const v3Endpoint = `/cms/v3/blogs/posts?slug=${encodeURIComponent(cleanSlug)}&state=PUBLISHED`;
-      const data = await hubspotFetch(v3Endpoint);
-      if (data.results && data.results.length > 0) {
-        return normalizePost(data.results[0]);
-      }
-    } catch (_) {}
-
-    // 2. Try v3 endpoint with "blog/" prefix
-    try {
-      const v3AltEndpoint = `/cms/v3/blogs/posts?slug=blog/${encodeURIComponent(cleanSlug)}&state=PUBLISHED`;
-      const altData = await hubspotFetch(v3AltEndpoint);
-      if (altData.results && altData.results.length > 0) {
-        return normalizePost(altData.results[0]);
-      }
-    } catch (_) {}
-
-    // 3. If slug has multiple segments, try searching by the last segment (post filename/slug)
-    if (cleanSlug.includes("/")) {
-      const lastSegment = cleanSlug.split("/").pop();
-      if (lastSegment) {
-        try {
-          const v3SubEndpoint = `/cms/v3/blogs/posts?slug=${encodeURIComponent(lastSegment)}&state=PUBLISHED`;
-          const subData = await hubspotFetch(v3SubEndpoint);
-          if (subData.results && subData.results.length > 0) {
-            return normalizePost(subData.results[0]);
-          }
-        } catch (_) {}
-      }
+    // Try v3 endpoint with each known HubSpot slug variant
+    for (const hubspotSlug of getHubSpotSlugVariants(cleanSlug)) {
+      try {
+        const v3Endpoint = `/cms/v3/blogs/posts?slug=${encodeURIComponent(hubspotSlug)}&state=PUBLISHED`;
+        const data = await hubspotFetch(v3Endpoint);
+        if (data.results?.length > 0) {
+          return normalizePost(data.results[0]);
+        }
+      } catch (_) {}
     }
 
-    // 4. Fallback to list fetching (/cms/blogs/2026-03/posts) and matching slug
+    // Fallback to list fetching and matching by normalized public slug
     const listResult = await getBlogPosts({ limit: 50 });
-    const match = listResult.posts.find(
-      (p) =>
-        p.slug === cleanSlug ||
-        p.slug === `blog/${cleanSlug}` ||
-        cleanSlug === `blog/${p.slug}` ||
-        p.slug.endsWith(`/${cleanSlug}`) ||
-        cleanSlug.endsWith(`/${p.slug}`)
-    );
+    const match = listResult.posts.find((p) => p.slug === cleanSlug);
 
     return match || null;
   } catch (error) {
