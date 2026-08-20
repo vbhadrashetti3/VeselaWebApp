@@ -6,6 +6,7 @@ import {
   refreshAccessToken,
   handleAuthFailure,
   isAccessTokenExpiringSoon,
+  hasPlausibleSession,
 } from "@/lib/tokenManager";
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
@@ -98,12 +99,29 @@ api.interceptors.request.use(async (config) => {
 
 // ─── Response interceptor — reactive 401 refresh ──────────────────────────────
 
+function isRefreshExemptUrl(url = "") {
+  return (
+    url.includes("/dj-rest-auth/token/refresh/") ||
+    url.includes("/dj-rest-auth/login/") ||
+    url.includes("/dj-rest-auth/registration/") ||
+    url.includes("/dj-rest-auth/logout/") ||
+    url.includes("/api/auth/google/") ||
+    url.includes("/api/sales_incoming_vesela/")
+  );
+}
+
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      // Guest / login / refresh failures are not recoverable sessions.
+      // Retrying refresh here caused extra 401s and could hard-redirect visitors.
+      if (isRefreshExemptUrl(originalRequest.url) || !hasPlausibleSession()) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true;
 
       if (isRefreshing) {

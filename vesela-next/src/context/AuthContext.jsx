@@ -20,6 +20,7 @@ import {
   ensureAccessToken,
   refreshAccessToken,
   migrateLegacyTokenStorage,
+  hasPlausibleSession,
   AUTH_REFRESHED_EVENT,
   AUTH_EXPIRED_EVENT,
 } from "@/lib/tokenManager";
@@ -65,16 +66,24 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   // ── Session hydration on mount ────────────────────────────────────────────
-  // On every full page load we:
-  //   1. GET /dj-rest-auth/user/ (always) — confirms the cookie session is still valid.
-  //   2. ensureAccessToken() — returns the cached access JWT from sessionStorage when
-  //      it is still valid (> 1 h until expiry); only POSTs /token/refresh/ when the
-  //      access token is missing, expired, or expiring soon (see tokenManager).
-  // WebSocket needs the access JWT in the query string; refresh credential stays HttpOnly.
+  // When client state suggests a prior login (cached user or access token):
+  //   1. GET /dj-rest-auth/user/ — confirms the cookie session is still valid.
+  //   2. ensureAccessToken() — returns cached access JWT or POSTs /token/refresh/.
+  // Anonymous visitors skip the network call so public pages don't log 401 noise.
   useEffect(() => {
     migrateLegacyTokenStorage();
 
     const checkSession = async () => {
+      if (!hasPlausibleSession()) {
+        clearAccessToken();
+        setUser(null);
+        setWsTokenState(null);
+        setIsTokenReady(false);
+        localStorageUtil.set(USER_DETAILS, {});
+        setIsSessionChecked(true);
+        return;
+      }
+
       try {
         const res = await fetch("/api/proxy/dj-rest-auth/user/", {
           credentials: "include",
@@ -250,13 +259,14 @@ export const AuthProvider = ({ children }) => {
   }, [user, logout]);
 
   useEffect(() => {
+    if (!isSessionChecked) return;
     if (user) {
       fetchPlan();
     } else {
       setPlan(null);
       setPlanDetails(null);
     }
-  }, [user, fetchPlan]);
+  }, [user, fetchPlan, isSessionChecked]);
 
   const value = {
     user,

@@ -15,6 +15,8 @@ import {
   saveAuthTokenExpiration,
   clearAuthTokenExpiration,
 } from "@/utils/authUtil";
+import { localStorageUtil } from "@/utils/localStorageUtil";
+import { USER_DETAILS } from "@/constant";
 
 /** sessionStorage key — tab-scoped only; never use localStorage for JWT access */
 export const ACCESS_STORAGE_KEY = "vesela_access_token";
@@ -121,6 +123,18 @@ export function getAccessToken() {
 
   inMemoryAccessToken = null;
   return null;
+}
+
+/**
+ * True when client state suggests a prior login worth validating.
+ * HttpOnly cookies cannot be read from JS, so this is the only anonymous-safe
+ * signal we have. Do not call /user/ or /token/refresh/ when this is false.
+ */
+export function hasPlausibleSession() {
+  if (getAccessToken()) return true;
+
+  const stored = localStorageUtil.get(USER_DETAILS);
+  return Boolean(stored && typeof stored === "object" && stored.pk);
 }
 
 /**
