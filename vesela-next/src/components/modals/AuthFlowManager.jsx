@@ -36,11 +36,12 @@ const AuthFlowManager = ({
   const rootColorMode = useColorMode();
 
   const isFromChat = modalOptions?.source === "chat";
+  const isLogin = modalOptions?.isLogin;
 
   const localColorMode = rootColorMode;
 
   const modalTheme = useMemo(() => {
-    if (isFromChat) {
+    if (isFromChat || isLogin) {
       return getChatTheme(rootColorMode.mode);
     } else {
       return getAppTheme(rootColorMode.mode);
@@ -88,7 +89,7 @@ const AuthFlowManager = ({
   return (
     <ColorModeContext.Provider value={localColorMode}>
       <ThemeProvider theme={modalTheme}>
-        <GenericModalWrapper width={isFromChat ? 750 : 420} open={true} onClose={onClose}>
+        <GenericModalWrapper width={isFromChat && !isLogin ? 750 : 420} open={true} onClose={onClose}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={modalStepName}

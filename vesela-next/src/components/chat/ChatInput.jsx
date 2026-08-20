@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   Box,
   InputBase,
@@ -22,28 +22,17 @@ export default function ChatInput({
   const [inputValue, setInputValue] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
-  // ── Hydration-safe placeholder ──────────────────────────────────────────────
-  // SSR always renders a fixed string so server and first-client HTML match.
-  // After mount we derive the real value from live props (isConnected, etc.).
-  const SSR_PLACEHOLDER = "Send Message ...";
-  const [placeholder, setPlaceholder] = useState(SSR_PLACEHOLDER);
-  useEffect(() => {
-    queueMicrotask(() => {
-      setPlaceholder(
-        isGuestLocked
-          ? "Limit reached. Log in or upgrade to continue..."
-          : status
-            ? status === "connected"
-              ? "Send Message ..."
-              : status === "connecting"
-                ? "Connecting..."
-                : "Disconnected. Type to queue..."
-            : isConnected
-              ? "Send Message ..."
-              : "Connecting..."
-      );
-    });
-  }, [status, isConnected, isGuestLocked]);
+  const placeholder = isGuestLocked
+    ? "Limit reached. Log in or upgrade to continue..."
+    : status
+      ? status === "connected"
+        ? ""
+        : status === "connecting"
+          ? "Connecting..."
+          : "Disconnected. Type to queue..."
+      : isConnected
+        ? ""
+        : "Connecting...";
 
   const containerRef = useRef(null);
   const inputRef = useRef(null);
