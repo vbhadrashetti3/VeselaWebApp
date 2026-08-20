@@ -80,7 +80,7 @@ export default function ChatPage() {
     } else {
       sendGuestMessage(pending).then((result) => {
         if (!result.ok && result.reason === "locked") {
-          openModal(MODALS.LOGIN, { source: "chat" });
+          openModal(MODALS.LOGIN, { source: "chat", isLogin: true });
         }
       });
     }

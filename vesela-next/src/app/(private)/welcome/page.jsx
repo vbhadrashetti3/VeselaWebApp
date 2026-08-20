@@ -198,7 +198,7 @@ const WelcomePage = () => {
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder="Send Message..."
+              placeholder=""
               sx={{
                 color: isLight ? "#000000" : "#ffffff",
                 fontSize: { xs: "15px", sm: "16px" },

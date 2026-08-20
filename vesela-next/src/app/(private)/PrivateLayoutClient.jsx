@@ -2,7 +2,7 @@
 
 import { Box } from "@mui/material";
 import { ChatThemeRegistry } from "@/theme/ThemeRegistry";
-import AuthGuard from "@/AuthGuard";
+
 
 /**
  * Client shell for authenticated routes. SEO metadata (noindex) lives in layout.jsx.
@@ -10,17 +10,15 @@ import AuthGuard from "@/AuthGuard";
 export default function PrivateLayoutClient({ children }) {
   return (
     <ChatThemeRegistry>
-      <AuthGuard>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            minHeight: "100vh",
-          }}
-        >
-          {children}
-        </Box>
-      </AuthGuard>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+        }}
+      >
+        {children}
+      </Box>
     </ChatThemeRegistry>
   );
 }
