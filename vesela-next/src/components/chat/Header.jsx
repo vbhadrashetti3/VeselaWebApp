@@ -23,6 +23,7 @@ import {
   Settings,
   OpenInNew as Link,
   Logout as LogoutIcon,
+  Login as LoginIcon,
 } from "@mui/icons-material";
 import VeselaLogoBlack from "../../../public/vesela_black_lottie.json";
 import VeselaLogoWhite from "../../../public/vesela_white_lottie.json";
@@ -33,6 +34,8 @@ import SettingsModal from "../setting/SettingModal";
 import { useRouter } from "next/navigation";
 import { useLogout } from "@/hooks/useLogout";
 import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
+import { MODALS } from "../modals/modalConstants";
 
 export default function Header() {
   const [anchorEl, setAnchorEl] = useState(null);
@@ -41,14 +44,26 @@ export default function Header() {
   const [settingsModal, setSettingsModal] = useState(false);
   const router = useRouter();
   const { logout } = useLogout();
-  const { isAuthenticated } = useAuth();
-  const token = isAuthenticated; // alias for menu item disabled checks
+  const { isAuthenticated, user } = useAuth();
+  const { openModal } = useModal();
+  const token = isAuthenticated;
   const theme = useTheme();
+  const signedInLabel = user?.email || user?.username || "Signed in";
 
   const handleOpenMenu = (event) => setAnchorEl(event.currentTarget);
   const handleCloseMenu = () => setAnchorEl(null);
 
   const headerMenuItems = [
+    ...(token
+      ? [
+        {
+          label: signedInLabel,
+          icon: <LoginIcon sx={{ fontSize: 18 }} />,
+          action: () => {},
+          disabled: true,
+        },
+      ]
+      : []),
     {
       label: "New Chat",
       icon: <Plus sx={{ fontSize: 18 }} />,
@@ -91,7 +106,14 @@ export default function Header() {
           disabled: false,
         },
       ]
-      : []),
+      : [
+        {
+          label: "Sign in",
+          icon: <LoginIcon sx={{ fontSize: 18 }} />,
+          action: () => openModal(MODALS.LOGIN, { source: "chat" }),
+          disabled: false,
+        },
+      ]),
   ];
 
   return (

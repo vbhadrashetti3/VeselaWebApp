@@ -92,7 +92,11 @@ export const ChatSessionProvider = ({ children }) => {
 
     setGuestMessages(parseStored(STORAGE_KEYS.guestMessages, []));
 
-    setGuestKey(parseStored(STORAGE_KEYS.guestKey, ""));
+    const storedKey = parseStored(STORAGE_KEYS.guestKey, "");
+    setGuestKey(storedKey);
+    if (storedKey) {
+      setHasInitializedSession(true);
+    }
 
     setGuestSignupRequired(
       parseStored(STORAGE_KEYS.guestSignupRequired, false),
@@ -213,19 +217,48 @@ export const ChatSessionProvider = ({ children }) => {
         // API BODY
         // ---------------------------------------------------
 
-        const body = hasInitializedSession
-          ? {
-            text: trimmed,
-            key: guestKey || "",
-          }
-          : {
+        let sessionKey = guestKey || "";
+
+        // First turn must handshake with "initial_message" (portal contract),
+        // then send the user's actual text so home-page input is not dropped.
+        if (!hasInitializedSession || !sessionKey) {
+          const init = await post("/api/sales_incoming_vesela/", {
             text: "initial_message",
             key: "",
-          };
+          });
+
+          const initKey = init?.data?.response?.key;
+          if (init.error || init.status !== 201 || !initKey) {
+            setGuestMessages((prev) => {
+              const idx = prev.findIndex((m) => m.id === assistantMessageId);
+              if (idx === -1) return prev;
+              const next = [...prev];
+              next[idx] = {
+                ...next[idx],
+                message: "I could not answer right now. Please retry.",
+                isError: true,
+                retryText: trimmed,
+              };
+              return next;
+            });
+
+            return {
+              ok: false,
+              reason: "api",
+            };
+          }
+
+          sessionKey = initKey;
+          setGuestKey(sessionKey);
+          setHasInitializedSession(true);
+        }
 
         const { status, data, error } = await post(
           "/api/sales_incoming_vesela/",
-          body,
+          {
+            text: trimmed,
+            key: sessionKey,
+          },
         );
 
         // ---------------------------------------------------

@@ -18,6 +18,10 @@ const BASE_BACKOFF_MS = 1000;
  * reconnect" (refresh access token + new socket) — same essentials as page reload.
  */
 const HARD_RECONNECT_EVERY = 3;
+/** Stop idle reconnects after this many failures and lock the composer. */
+const MAX_IDLE_RETRIES = 8;
+/** Stop pending-message reconnects after this many failures and lock the composer. */
+const MAX_PENDING_RETRIES = 9;
 
 const SILENT_TYPES = new Set(["ping", "pong", "heartbeat", "keepalive"]);
 
@@ -78,6 +82,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
 
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState("disconnected");
+  const [connectionFailed, setConnectionFailed] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLocked, setIsLocked] = useState(() => {
     if (isPro) return false;
@@ -407,6 +412,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
         if (!pendingPayloadRef.current) {
           retryCountRef.current = 0;
         }
+        setConnectionFailed(false);
         setStatus("connected");
         flushMessageQueue(ws);
       };
@@ -463,6 +469,12 @@ export const useChatSocket = (token, userId, isPro = false) => {
 
             // Same token + socket after sleep often fails (DNS/network not ready).
             // Periodically refresh the session like a page reload would.
+            if (retryCountRef.current >= MAX_PENDING_RETRIES) {
+              failPendingReply("Unable to connect. Please try sending your message again.");
+              setConnectionFailed(true);
+              return;
+            }
+
             if (
               retryCountRef.current > 0 &&
               retryCountRef.current % HARD_RECONNECT_EVERY === 0
@@ -477,9 +489,9 @@ export const useChatSocket = (token, userId, isPro = false) => {
 
           currentAssistantIdRef.current = null;
           setIsStreaming(false);
-          // Background idle reconnect — keep retry count low; no user message at stake.
-          if (retryCountRef.current > 12) {
-            retryCountRef.current = 0;
+          if (retryCountRef.current >= MAX_IDLE_RETRIES) {
+            setConnectionFailed(true);
+            return;
           }
           scheduleReconnect(false);
           return;
@@ -602,6 +614,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
 
   const handleUserReconnect = useCallback(() => {
     retryCountRef.current = 0;
+    setConnectionFailed(false);
     clearTimeout(retryTimerRef.current);
     retryTimerRef.current = null;
     closeSocket(false);
@@ -620,6 +633,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
     isConnected: status === "connected",
     isStreaming,
     isLocked,
+    connectionFailed,
     reconnect: handleUserReconnect,
   };
 };

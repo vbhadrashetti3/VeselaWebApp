@@ -17,6 +17,7 @@ export default function ChatInput({
   isConnected,
   status,
   isGuestLocked = false,
+  lockPlaceholder,
 }) {
   const theme = useTheme();
   const [inputValue, setInputValue] = useState("");
@@ -31,19 +32,13 @@ export default function ChatInput({
     queueMicrotask(() => {
       setPlaceholder(
         isGuestLocked
-          ? "Limit reached. Log in or upgrade to continue..."
-          : status
-            ? status === "connected"
-              ? "Send Message ..."
-              : status === "connecting"
-                ? "Connecting..."
-                : "Disconnected. Type to queue..."
-            : isConnected
-              ? "Send Message ..."
-              : "Connecting..."
+          ? (lockPlaceholder || "Limit reached. Log in or upgrade to continue...")
+          : status === "connected" || isConnected
+            ? "Send Message ..."
+            : "Connecting..."
       );
     });
-  }, [status, isConnected, isGuestLocked]);
+  }, [status, isConnected, isGuestLocked, lockPlaceholder]);
 
   const containerRef = useRef(null);
   const inputRef = useRef(null);

@@ -16,7 +16,7 @@ import {
   clearAuthTokenExpiration,
 } from "@/utils/authUtil";
 import { localStorageUtil } from "@/utils/localStorageUtil";
-import { USER_DETAILS } from "@/constant";
+import { USER_DETAILS, PROMPT_LOGIN } from "@/constant";
 
 /** sessionStorage key — tab-scoped only; never use localStorage for JWT access */
 export const ACCESS_STORAGE_KEY = "vesela_access_token";
@@ -241,10 +241,16 @@ export async function ensureAccessToken() {
 
 /**
  * Unrecoverable auth failure — clear token and notify listeners.
+ * Marks the tab so the home page can open the login modal after redirect.
  */
 export function handleAuthFailure() {
   clearAccessToken();
   if (!isBrowser()) return;
+  try {
+    sessionStorage.setItem(PROMPT_LOGIN, "1");
+  } catch {
+    /* ignore */
+  }
   window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
 }
 

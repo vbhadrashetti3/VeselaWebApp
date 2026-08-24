@@ -21,9 +21,12 @@ import {
   refreshAccessToken,
   migrateLegacyTokenStorage,
   hasPlausibleSession,
+  handleAuthFailure,
   AUTH_REFRESHED_EVENT,
   AUTH_EXPIRED_EVENT,
 } from "@/lib/tokenManager";
+
+const PRIVATE_REAUTH_PATHS = new Set(["/chat", "/welcome", "/change-password"]);
 
 // ─── Context ───────────────────────────────────────────────────────────────
 
@@ -108,18 +111,10 @@ export const AuthProvider = ({ children }) => {
           } else {
             // Refresh cookie missing/expired — end session cleanly.
             console.warn("[Auth] Valid session but token refresh failed. Logging out.");
-            clearAccessToken();
-            setUser(null);
-            setWsTokenState(null);
-            setIsTokenReady(false);
-            localStorageUtil.set(USER_DETAILS, {});
+            handleAuthFailure();
           }
         } else if (res.status === 401 || res.status === 403) {
-          clearAccessToken();
-          setUser(null);
-          setWsTokenState(null);
-          setIsTokenReady(false);
-          localStorageUtil.set(USER_DETAILS, {});
+          handleAuthFailure();
         } else {
           console.warn(
             `[Auth] Session check returned ${res.status} — preserving cached state.`,
@@ -157,6 +152,9 @@ export const AuthProvider = ({ children }) => {
       localStorageUtil.set(PLAN_DETAILS, {});
       if (typeof window !== "undefined") {
         localStorage.removeItem(AUTH_LIMIT_LOCKED);
+        if (PRIVATE_REAUTH_PATHS.has(window.location.pathname)) {
+          router.replace("/?login=1");
+        }
       }
     };
 
@@ -175,7 +173,7 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener(AUTH_EXPIRED_EVENT, handleExpired);
       window.removeEventListener(AUTH_REFRESHED_EVENT, handleRefreshed);
     };
-  }, []);
+  }, [router]);
 
   // ── login ────────────────────────────────────────────────────────────────
   const login = useCallback((newUser, accessToken = null) => {

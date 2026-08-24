@@ -35,10 +35,11 @@ export default function ChatPage() {
   const {
     messages,
     sendMessage,
-    status,
     isConnected,
     isStreaming: isAuthStreaming,
     isLocked: isAuthLocked,
+    connectionFailed,
+    reconnect,
   } = useChatSocket(socketToken, userId, isPro);
 
   const {
@@ -64,6 +65,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (pendingFiredRef.current) return;
+    if (!isSessionChecked) return;
 
     // If authenticated, wait until the socket is connected
     if (isAuthenticated && !isConnected) {
@@ -84,7 +86,7 @@ export default function ChatPage() {
         }
       });
     }
-  }, [isAuthenticated, isConnected, consumePendingHeroMessage, sendMessage, sendGuestMessage, openModal]);
+  }, [isSessionChecked, isAuthenticated, isConnected, consumePendingHeroMessage, sendMessage, sendGuestMessage, openModal]);
 
   const mergedMessages = useMemo(
     () => (isAuthenticated ? [...guestMessages, ...messages] : guestMessages),
@@ -122,9 +124,27 @@ export default function ChatPage() {
 
   const isLimitLocked = isAuthenticated ? isAuthLocked && !isPro : guestSignupRequired;
   const isStreaming = isAuthenticated ? isAuthStreaming : isGuestStreaming;
+  const isConnectionLocked = isAuthenticated && connectionFailed;
+  const isComposerLocked = isLimitLocked || isConnectionLocked;
+  const inputStatus = !isAuthenticated
+    ? "connected"
+    : isConnectionLocked
+      ? "disconnected"
+      : isConnected
+        ? "connected"
+        : "connecting";
 
   return (
     <>
+      {isMounted && !isAuthenticated && !isLimitLocked && (
+        <GuestLimitBanner
+          open
+          variant="label"
+          onClick={() => openModal(MODALS.LOGIN, { source: "chat" })}
+          message="You're chatting as a guest. Sign in to continue with your Vesela."
+        />
+      )}
+
       {isMounted && isLimitLocked && (
         <GuestLimitBanner
           open={isLimitLocked}
@@ -138,6 +158,14 @@ export default function ChatPage() {
               ? "Free message limit reached. Upgrade to Pro to continue."
               : "Free guest limit reached. Login or upgrade to continue."
           }
+        />
+      )}
+
+      {isMounted && isConnectionLocked && (
+        <GuestLimitBanner
+          open={isConnectionLocked}
+          onClick={() => reconnect()}
+          message="Unable to connect. Tap to retry."
         />
       )}
 
@@ -198,9 +226,14 @@ export default function ChatPage() {
 
         <ChatInput
           onSend={handleSend}
-          isConnected={isAuthenticated ? isConnected : true}
-          status={isAuthenticated ? status : "connected"}
-          isGuestLocked={isLimitLocked}
+          isConnected={!isAuthenticated || isConnected}
+          status={inputStatus}
+          isGuestLocked={isComposerLocked}
+          lockPlaceholder={
+            isConnectionLocked
+              ? "Unable to connect. Tap the banner to retry..."
+              : undefined
+          }
         />
       </Box>
     </>

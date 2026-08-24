@@ -13,8 +13,11 @@ export default function GuestLimitBanner({
   open,
   onClick,
   message = "Free guest limit reached. Login or upgrade to continue.",
+  variant = "card",
 }) {
   if (!open) return null;
+
+  const isLabel = variant === "label";
 
   return (
     <Box
@@ -31,28 +34,46 @@ export default function GuestLimitBanner({
         <Box
           role="button"
           onClick={onClick}
-          sx={{
-            p: 1.2,
-            borderRadius: 2,
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            cursor: "pointer",
-            border: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.paper",
-            backdropFilter: "blur(12px)",
-            boxShadow: 3,
-          }}
+          sx={
+            isLabel
+              ? {
+                  px: 2,
+                  py: 0.75,
+                  cursor: "pointer",
+                  background: "transparent",
+                  border: 0,
+                  boxShadow: "none",
+                }
+              : {
+                  p: 1.2,
+                  borderRadius: 2,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  cursor: "pointer",
+                  border: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "background.paper",
+                  backdropFilter: "blur(12px)",
+                  boxShadow: 3,
+                }
+          }
         >
-          <LockOutlinedIcon
-            fontSize="small"
-            color="primary"
-          />
+          {!isLabel && (
+            <LockOutlinedIcon
+              fontSize="small"
+              color="primary"
+            />
+          )}
 
           <Typography
             variant="caption"
             color="text.secondary"
+            sx={{
+              display: "block",
+              width: "100%",
+              textAlign: isLabel ? "center" : "left",
+            }}
           >
             {message}
           </Typography>
