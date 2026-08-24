@@ -141,7 +141,7 @@ export default function ChatPage() {
           open
           variant="label"
           onClick={() => openModal(MODALS.LOGIN, { source: "chat" })}
-          message="You're chatting as a guest. Sign in to continue with your Vesela."
+          message="You are chatting with Vesela's assistant about our services. Make an account or sign in to talk to Vesela"
         />
       )}
 
