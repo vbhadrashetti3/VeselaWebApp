@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AUTH_LIMIT_LOCKED } from "@/constant";
 import {
   refreshAccessToken,
   handleAuthFailure,
@@ -30,7 +31,24 @@ function clearActiveConversation() {
   }
 }
 
-export const useChatSocket = (token, userId) => {
+function utcDateString() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function msUntilNextUtcMidnight() {
+  const now = new Date();
+  return (
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1) -
+    now.getTime()
+  );
+}
+
+function readAuthLimitLocked() {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(AUTH_LIMIT_LOCKED) === utcDateString();
+}
+
+export const useChatSocket = (token, userId, isPro = false) => {
   const socketRef = useRef(null);
   const retryCountRef = useRef(0);
   const retryTimerRef = useRef(null);
@@ -62,23 +80,55 @@ export const useChatSocket = (token, userId) => {
   const [status, setStatus] = useState("disconnected");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLocked, setIsLocked] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("vesela_auth_limit_locked") === "true";
+    if (isPro) return false;
+    return readAuthLimitLocked();
   });
+
+  const isProRef = useRef(isPro);
 
   useEffect(() => {
     userIdRef.current = userId;
     tokenRef.current = token;
-  }, [userId, token]);
+    isProRef.current = isPro;
+  }, [userId, token, isPro]);
+
+  useEffect(() => {
+    if (isPro && isLocked) {
+      setIsLocked(false);
+    }
+  }, [isPro, isLocked]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (isLocked) {
-      localStorage.setItem("vesela_auth_limit_locked", "true");
-    } else {
-      localStorage.removeItem("vesela_auth_limit_locked");
+    if (isPro || !isLocked) {
+      localStorage.removeItem(AUTH_LIMIT_LOCKED);
+      return;
     }
-  }, [isLocked]);
+    localStorage.setItem(AUTH_LIMIT_LOCKED, utcDateString());
+  }, [isLocked, isPro]);
+
+  // Backend free-plan cap resets at UTC midnight; drop a stale same-day lock then.
+  useEffect(() => {
+    if (typeof window === "undefined" || isPro) return;
+
+    const unlockIfNewUtcDay = () => {
+      if (localStorage.getItem(AUTH_LIMIT_LOCKED) !== utcDateString()) {
+        setIsLocked(false);
+      }
+    };
+
+    const timer = setTimeout(() => setIsLocked(false), msUntilNextUtcMidnight());
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") unlockIfNewUtcDay();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [isPro]);
 
   const clearPendingReply = useCallback(() => {
     pendingPayloadRef.current = null;
@@ -195,7 +245,7 @@ export const useChatSocket = (token, userId) => {
       }
     }
 
-    if (data.daily_limit_reached === true) {
+    if (data.daily_limit_reached === true && !isProRef.current) {
       setIsLocked(true);
     }
 
@@ -240,6 +290,9 @@ export const useChatSocket = (token, userId) => {
         acknowledgeServerReply();
         setIsStreaming(false);
         currentAssistantIdRef.current = null;
+        if (data.daily_limit_reached !== true) {
+          setIsLocked(false);
+        }
         break;
 
       case "error": {

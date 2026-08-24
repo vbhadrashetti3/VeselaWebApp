@@ -6,6 +6,8 @@ export const POST_LOGIN_NAVIGATE_TO = "postLoginNavigateTo";
 // knows to send them to /chat instead of /welcome on future visits.
 export const WELCOME_COMPLETED = "welcomeCompleted";
 export const ASSESSMENT_STORAGE_KEY = "assessmentData";
+// Free-plan daily cap lock. Value is the UTC date (YYYY-MM-DD) it was set.
+export const AUTH_LIMIT_LOCKED = "vesela_auth_limit_locked";
 
 // Golden Ratio layout: conversation takes φ/(1+φ) ≈ 61.8% of viewport
 // clamp(min, fluid, max) — scales from mobile comfort to ultrawide cap

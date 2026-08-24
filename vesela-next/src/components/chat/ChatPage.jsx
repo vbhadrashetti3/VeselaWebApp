@@ -15,7 +15,7 @@ import { useModal } from "@/context/ModalContext";
 import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
-  const { isAuthenticated, isSessionChecked, isTokenReady, wsToken, userId } = useAuth();
+  const { isAuthenticated, isSessionChecked, isTokenReady, wsToken, userId, isPro } = useAuth();
   const theme = useTheme();
 
   const [isMounted, setIsMounted] = useState(false);
@@ -39,7 +39,7 @@ export default function ChatPage() {
     isConnected,
     isStreaming: isAuthStreaming,
     isLocked: isAuthLocked,
-  } = useChatSocket(socketToken, userId);
+  } = useChatSocket(socketToken, userId, isPro);
 
   const {
     consumePendingHeroMessage,
@@ -120,7 +120,7 @@ export default function ChatPage() {
     }
   };
 
-  const isLimitLocked = isAuthenticated ? isAuthLocked : guestSignupRequired;
+  const isLimitLocked = isAuthenticated ? isAuthLocked && !isPro : guestSignupRequired;
   const isStreaming = isAuthenticated ? isAuthStreaming : isGuestStreaming;
 
   return (

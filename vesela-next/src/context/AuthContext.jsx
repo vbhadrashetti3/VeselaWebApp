@@ -10,7 +10,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { localStorageUtil } from "@/utils/localStorageUtil";
-import { USER_DETAILS, PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO, WELCOME_COMPLETED } from "@/constant";
+import { USER_DETAILS, PLAN_DETAILS, POST_LOGIN_NAVIGATE_TO, WELCOME_COMPLETED, AUTH_LIMIT_LOCKED } from "@/constant";
 import { post } from "@/lib/apiService";
 import { getPlan } from "@/services/auth.service";
 import {
@@ -155,6 +155,9 @@ export const AuthProvider = ({ children }) => {
       setIsTokenReady(false);
       localStorageUtil.set(USER_DETAILS, {});
       localStorageUtil.set(PLAN_DETAILS, {});
+      if (typeof window !== "undefined") {
+        localStorage.removeItem(AUTH_LIMIT_LOCKED);
+      }
     };
 
     const handleRefreshed = (e) => {
@@ -221,6 +224,7 @@ export const AuthProvider = ({ children }) => {
       localStorageUtil.remove(WELCOME_COMPLETED);
       if (typeof window !== "undefined") {
         localStorage.removeItem("vesela_active_conversation_id");
+        localStorage.removeItem(AUTH_LIMIT_LOCKED);
       }
       localStorageUtil.set(USER_DETAILS, {});
       localStorageUtil.set(PLAN_DETAILS, {});
@@ -245,6 +249,10 @@ export const AuthProvider = ({ children }) => {
         setPlan(res.data.plan);
         setPlanDetails(res.data);
         localStorageUtil.set(PLAN_DETAILS, res.data);
+        // Paid plans are not subject to the free daily cap; drop any stale UI lock.
+        if (res.data.plan && res.data.plan !== "free" && typeof window !== "undefined") {
+          localStorage.removeItem(AUTH_LIMIT_LOCKED);
+        }
       } else if (res.status === 401) {
         logout();
       } else {
