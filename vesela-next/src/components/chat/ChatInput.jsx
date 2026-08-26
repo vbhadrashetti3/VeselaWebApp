@@ -34,7 +34,7 @@ export default function ChatInput({
         isGuestLocked
           ? (lockPlaceholder || "Limit reached. Log in or upgrade to continue...")
           : status === "connected" || isConnected
-            ? "Send Message ..."
+            ? ""
             : "Connecting..."
       );
     });
