@@ -14,8 +14,6 @@ import { Mic, Send } from "lucide-react";
 
 export default function ChatInput({
   onSend,
-  isConnected,
-  status,
   isGuestLocked = false,
   lockPlaceholder,
 }) {
@@ -25,7 +23,7 @@ export default function ChatInput({
 
   // ── Hydration-safe placeholder ──────────────────────────────────────────────
   // SSR always renders a fixed string so server and first-client HTML match.
-  // After mount we derive the real value from live props (isConnected, etc.).
+  // Token refresh / socket reconnect stay off-screen — never show "Connecting...".
   const SSR_PLACEHOLDER = "Send Message ...";
   const [placeholder, setPlaceholder] = useState(SSR_PLACEHOLDER);
   useEffect(() => {
@@ -33,12 +31,10 @@ export default function ChatInput({
       setPlaceholder(
         isGuestLocked
           ? (lockPlaceholder || "Limit reached. Log in or upgrade to continue...")
-          : status === "connected" || isConnected
-            ? ""
-            : "Connecting..."
+          : ""
       );
     });
-  }, [status, isConnected, isGuestLocked, lockPlaceholder]);
+  }, [isGuestLocked, lockPlaceholder]);
 
   const containerRef = useRef(null);
   const inputRef = useRef(null);

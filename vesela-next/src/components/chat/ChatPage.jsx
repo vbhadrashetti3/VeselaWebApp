@@ -15,7 +15,7 @@ import { useModal } from "@/context/ModalContext";
 import { MODALS } from "../modals/modalConstants";
 
 export default function ChatPage() {
-  const { isAuthenticated, isSessionChecked, isTokenReady, wsToken, userId, isPro } = useAuth();
+  const { isAuthenticated, isSessionChecked, wsToken, userId, isPro } = useAuth();
   const theme = useTheme();
 
   const [isMounted, setIsMounted] = useState(false);
@@ -23,12 +23,10 @@ export default function ChatPage() {
     setIsMounted(true);
   }, []);
 
-  // Only connect the WebSocket once:
-  // 1. The session check is complete (isSessionChecked) so we know the user is authenticated.
-  // 2. The token refresh check has fully settled (isTokenReady) so wsToken holds a valid JWT.
-  // Passing null keeps the socket disconnected; the hook will connect as soon as we pass a real token.
-  // We never fall back to "cookie-auth" — the server requires a JWT in the query-string.
-  const socketToken = isSessionChecked && isAuthenticated && isTokenReady
+  // Connect as soon as we know the user is signed in. An expired wsToken is OK —
+  // the socket hook refreshes in the background. Waiting on isTokenReady used to
+  // leave the composer on "Connecting..." and drop queued sends.
+  const socketToken = isSessionChecked && isAuthenticated
     ? (wsToken || null)
     : null;
 
@@ -126,13 +124,6 @@ export default function ChatPage() {
   const isStreaming = isAuthenticated ? isAuthStreaming : isGuestStreaming;
   const isConnectionLocked = isAuthenticated && connectionFailed;
   const isComposerLocked = isLimitLocked || isConnectionLocked;
-  const inputStatus = !isAuthenticated
-    ? "connected"
-    : isConnectionLocked
-      ? "disconnected"
-      : isConnected
-        ? "connected"
-        : "connecting";
 
   return (
     <>
@@ -226,8 +217,6 @@ export default function ChatPage() {
 
         <ChatInput
           onSend={handleSend}
-          isConnected={!isAuthenticated || isConnected}
-          status={inputStatus}
           isGuestLocked={isComposerLocked}
           lockPlaceholder={
             isConnectionLocked
