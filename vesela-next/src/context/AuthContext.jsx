@@ -17,14 +17,25 @@ import {
   getAccessToken,
   setAccessToken,
   clearAccessToken,
-  ensureAccessToken,
   refreshAccessToken,
   migrateLegacyTokenStorage,
   hasPlausibleSession,
   handleAuthFailure,
+  isAccessTokenExpiringSoon,
+  isUnrecoverableAuthError,
   AUTH_REFRESHED_EVENT,
   AUTH_EXPIRED_EVENT,
 } from "@/lib/tokenManager";
+
+async function fetchSessionUser(access) {
+  return fetch("/api/proxy/dj-rest-auth/user/", {
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(access ? { Authorization: `Bearer ${access}` } : {}),
+    },
+  });
+}
 
 const PRIVATE_REAUTH_PATHS = new Set(["/chat", "/welcome", "/change-password"]);
 
@@ -61,6 +72,7 @@ export const AuthProvider = ({ children }) => {
   );
 
   const isFetchingPlanRef = useRef(false);
+  const isRecoveringSessionRef = useRef(false);
 
   useEffect(() => {
     if (user) {
@@ -68,11 +80,44 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
+  const applyAccessToken = useCallback((access) => {
+    if (!access) return;
+    setWsTokenState(access);
+    setIsTokenReady(true);
+  }, []);
+
+  /**
+   * Mint a valid access JWT from the HttpOnly refresh cookie when the current
+   * access token is missing or close to expiry. Only logs out on 401/403.
+   * @returns {Promise<string|null>}
+   */
+  const recoverAccessToken = useCallback(async () => {
+    const current = getAccessToken();
+    if (current && !isAccessTokenExpiringSoon(current)) {
+      applyAccessToken(current);
+      return current;
+    }
+
+    try {
+      const access = await refreshAccessToken({ force: true });
+      applyAccessToken(access);
+      return access;
+    } catch (err) {
+      if (isUnrecoverableAuthError(err)) {
+        handleAuthFailure();
+        return null;
+      }
+      console.warn("[Auth] Token refresh failed transiently — preserving session.");
+      const fallback = getAccessToken();
+      if (fallback) applyAccessToken(fallback);
+      return fallback;
+    }
+  }, [applyAccessToken]);
+
   // ── Session hydration on mount ────────────────────────────────────────────
-  // When client state suggests a prior login (cached user or access token):
-  //   1. GET /dj-rest-auth/user/ — confirms the cookie session is still valid.
-  //   2. ensureAccessToken() — returns cached access JWT or POSTs /token/refresh/.
-  // Anonymous visitors skip the network call so public pages don't log 401 noise.
+  // Refresh FIRST, then GET /user/ with the new Bearer token.
+  // GET /user/ authenticates with access, not refresh — calling it first on an
+  // expired access JWT logs the user out while the 7-day refresh cookie is valid.
   useEffect(() => {
     migrateLegacyTokenStorage();
 
@@ -88,58 +133,74 @@ export const AuthProvider = ({ children }) => {
       }
 
       try {
-        const res = await fetch("/api/proxy/dj-rest-auth/user/", {
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            ...(getAccessToken()
-              ? { Authorization: `Bearer ${getAccessToken()}` }
-              : {}),
-          },
-        });
+        const access = await recoverAccessToken();
+        if (!access) {
+          return;
+        }
+
+        const res = await fetchSessionUser(access);
 
         if (res.ok) {
           const data = await res.json();
           setUser(data);
           localStorageUtil.set(USER_DETAILS, data);
-
-          // Step 2: access token for WebSocket / Bearer (refresh only if needed).
-          const access = await ensureAccessToken();
-          if (access) {
-            setWsTokenState(access);
-            setIsTokenReady(true);
-          } else {
-            // Refresh cookie missing/expired — end session cleanly.
-            console.warn("[Auth] Valid session but token refresh failed. Logging out.");
-            handleAuthFailure();
-          }
         } else if (res.status === 401 || res.status === 403) {
           handleAuthFailure();
         } else {
           console.warn(
             `[Auth] Session check returned ${res.status} — preserving cached state.`,
           );
-          // Best-effort token recovery when backend is flaky but user cache exists.
-          const access = await ensureAccessToken();
-          if (access) {
-            setWsTokenState(access);
-            setIsTokenReady(true);
-          }
         }
       } catch {
         console.warn("[Auth] Session check fetch failed — preserving cached state.");
-        const access = await ensureAccessToken();
-        if (access) {
-          setWsTokenState(access);
-          setIsTokenReady(true);
-        }
+        const access = getAccessToken();
+        if (access) applyAccessToken(access);
       } finally {
         setIsSessionChecked(true);
       }
     };
 
     checkSession();
+    // Mount-only hydrate; recoverAccessToken is used from this closure.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── Tab focus / visibility: refresh expired access, stay on this page ─────
+  // Do not reload — token rotation already reconnects the chat WebSocket.
+  useEffect(() => {
+    if (!isSessionChecked) return;
+
+    const recoverIfNeeded = async () => {
+      if (isRecoveringSessionRef.current) return;
+      if (!hasPlausibleSession()) return;
+
+      const current = getAccessToken();
+      if (current && !isAccessTokenExpiringSoon(current)) return;
+
+      isRecoveringSessionRef.current = true;
+      try {
+        await recoverAccessToken();
+      } finally {
+        isRecoveringSessionRef.current = false;
+      }
+    };
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        recoverIfNeeded();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", recoverIfNeeded);
+    window.addEventListener("online", recoverIfNeeded);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", recoverIfNeeded);
+      window.removeEventListener("online", recoverIfNeeded);
+    };
+  }, [isSessionChecked, recoverAccessToken]);
 
   // ── Cross-module auth events (axios / WebSocket / tokenManager) ───────────
   useEffect(() => {

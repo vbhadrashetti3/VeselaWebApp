@@ -7,6 +7,7 @@ import {
   handleAuthFailure,
   isAccessTokenExpiringSoon,
   hasPlausibleSession,
+  isUnrecoverableAuthError,
 } from "@/lib/tokenManager";
 
 // ─── Axios instance ───────────────────────────────────────────────────────────
@@ -54,9 +55,11 @@ async function runQueuedRefresh() {
     releaseRefreshLock(null);
   } catch (refreshError) {
     releaseRefreshLock(refreshError);
-    handleAuthFailure();
-    if (typeof window !== "undefined") {
-      window.location.href = "/";
+    if (isUnrecoverableAuthError(refreshError)) {
+      handleAuthFailure();
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
     }
     throw refreshError;
   }

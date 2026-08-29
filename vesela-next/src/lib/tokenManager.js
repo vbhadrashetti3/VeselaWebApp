@@ -88,8 +88,10 @@ function scheduleProactiveRefresh(token) {
   const delay = refreshAt - Date.now();
 
   const runRefresh = () => {
-    refreshAccessToken({ force: true }).catch(() => {
-      handleAuthFailure();
+    refreshAccessToken({ force: true }).catch((err) => {
+      if (isUnrecoverableAuthError(err)) {
+        handleAuthFailure();
+      }
     });
   };
 
@@ -200,14 +202,18 @@ export async function refreshAccessToken({ force = false } = {}) {
     });
 
     if (!res.ok) {
-      throw new Error(`Token refresh failed (${res.status})`);
+      const error = new Error(`Token refresh failed (${res.status})`);
+      error.status = res.status;
+      throw error;
     }
 
     const data = await res.json();
     const newAccess = data.access ?? data.access_token ?? null;
 
     if (!newAccess) {
-      throw new Error("Token refresh response missing access");
+      const error = new Error("Token refresh response missing access");
+      error.status = 401;
+      throw error;
     }
 
     setAccessToken(newAccess);
@@ -237,6 +243,15 @@ export async function ensureAccessToken() {
   } catch {
     return null;
   }
+}
+
+/**
+ * True when refresh/session recovery was rejected by the backend (not a blip).
+ * Network/5xx must not log the user out — tab focus will retry.
+ */
+export function isUnrecoverableAuthError(error) {
+  const status = error?.status ?? error?.response?.status;
+  return status === 401 || status === 403;
 }
 
 /**

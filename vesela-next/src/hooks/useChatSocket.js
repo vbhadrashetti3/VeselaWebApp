@@ -5,6 +5,8 @@ import { AUTH_LIMIT_LOCKED } from "@/constant";
 import {
   refreshAccessToken,
   handleAuthFailure,
+  isAccessTokenExpired,
+  isUnrecoverableAuthError,
 } from "@/lib/tokenManager";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -22,6 +24,9 @@ const HARD_RECONNECT_EVERY = 3;
 const MAX_IDLE_RETRIES = 8;
 /** Stop pending-message reconnects after this many failures and lock the composer. */
 const MAX_PENDING_RETRIES = 9;
+/** If the socket stays in CONNECTING, refresh the access token and try a new socket. */
+const CONNECTING_WATCHDOG_MS = 12_000;
+const MAX_CONNECTING_WATCHDOGS = 2;
 
 const SILENT_TYPES = new Set(["ping", "pong", "heartbeat", "keepalive"]);
 
@@ -61,6 +66,8 @@ export const useChatSocket = (token, userId, isPro = false) => {
   const tokenRef = useRef(token);
   const prevTokenRef = useRef(null);
   const isAuthRecoveringRef = useRef(false);
+  const connectingWatchdogRef = useRef(null);
+  const connectingWatchdogCountRef = useRef(0);
 
   const currentAssistantIdRef = useRef(null);
   const messageQueueRef = useRef([]);
@@ -185,6 +192,8 @@ export const useChatSocket = (token, userId, isPro = false) => {
   const closeSocket = useCallback((clearQueue = false) => {
     clearTimeout(retryTimerRef.current);
     retryTimerRef.current = null;
+    clearTimeout(connectingWatchdogRef.current);
+    connectingWatchdogRef.current = null;
 
     const ws = socketRef.current;
     if (ws) {
@@ -213,8 +222,14 @@ export const useChatSocket = (token, userId, isPro = false) => {
     try {
       const newToken = await refreshAccessToken({ force: true });
       tokenRef.current = newToken;
-    } catch {
-      // Network or refresh may fail briefly — still attempt socket with existing token.
+    } catch (err) {
+      if (isUnrecoverableAuthError(err)) {
+        handleAuthFailure();
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
+        }
+        return;
+      }
     }
 
     connectRef.current?.();
@@ -360,19 +375,29 @@ export const useChatSocket = (token, userId, isPro = false) => {
       tokenRef.current = newToken;
       closeSocket(false);
       connectRef.current?.();
-    } catch {
-      handleAuthFailure();
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
+    } catch (err) {
+      if (isUnrecoverableAuthError(err)) {
+        handleAuthFailure();
+        if (typeof window !== "undefined") {
+          window.location.href = "/";
+        }
+        return;
       }
+      if (retryCountRef.current >= MAX_IDLE_RETRIES) {
+        setConnectionFailed(true);
+        setStatus("disconnected");
+        return;
+      }
+      // Network/5xx — keep the user on chat and retry the socket.
+      scheduleReconnect(false);
     } finally {
       isAuthRecoveringRef.current = false;
     }
-  }, [closeSocket]);
+  }, [closeSocket, scheduleReconnect]);
 
   const connect = useCallback(() => {
     const currentToken = tokenRef.current;
-    if (!currentToken) {
+    if (!currentToken || isAccessTokenExpired(currentToken)) {
       recoverAuthAndReconnect();
       return;
     }
@@ -398,6 +423,20 @@ export const useChatSocket = (token, userId, isPro = false) => {
     retryTimerRef.current = null;
 
     setStatus("connecting");
+    clearTimeout(connectingWatchdogRef.current);
+    connectingWatchdogRef.current = setTimeout(() => {
+      if (isDisposedRef.current) return;
+      if (socketRef.current?.readyState === WebSocket.OPEN) return;
+
+      connectingWatchdogCountRef.current += 1;
+      if (connectingWatchdogCountRef.current > MAX_CONNECTING_WATCHDOGS) {
+        setConnectionFailed(true);
+        setStatus("disconnected");
+        return;
+      }
+      // Refresh access and open a new socket — do not send the user to login.
+      hardReconnect();
+    }, CONNECTING_WATCHDOG_MS);
 
     try {
       const url = `${WS_URL}?token=${encodeURIComponent(currentToken)}`;
@@ -409,6 +448,9 @@ export const useChatSocket = (token, userId, isPro = false) => {
           ws.close();
           return;
         }
+        clearTimeout(connectingWatchdogRef.current);
+        connectingWatchdogRef.current = null;
+        connectingWatchdogCountRef.current = 0;
         if (!pendingPayloadRef.current) {
           retryCountRef.current = 0;
         }
@@ -447,7 +489,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
           if (hasPendingReply) {
             failPendingReply("Unable to connect. Please try sending your message again.");
           } else {
-            handleAuthFailure();
+            recoverAuthAndReconnect();
           }
           return;
         }
@@ -520,13 +562,16 @@ export const useChatSocket = (token, userId, isPro = false) => {
     if (typeof window === "undefined") return;
 
     const handleActivity = () => {
-      const needsReconnect =
-        tokenRef.current &&
-        (!socketRef.current || socketRef.current.readyState === WebSocket.CLOSED);
+      const token = tokenRef.current;
+      if (!token) return;
 
-      if (!needsReconnect) return;
+      if (isAccessTokenExpired(token)) {
+        recoverAuthAndReconnect();
+        return;
+      }
 
-      // Tab focus / network back — reset backoff (page reload would do this too).
+      if (socketRef.current?.readyState === WebSocket.OPEN) return;
+
       retryCountRef.current = 0;
       connectRef.current?.();
     };
@@ -546,7 +591,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
       window.removeEventListener("focus", handleActivity);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [recoverAuthAndReconnect]);
 
   useEffect(() => {
     const prevToken = prevTokenRef.current;
@@ -614,6 +659,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
 
   const handleUserReconnect = useCallback(() => {
     retryCountRef.current = 0;
+    connectingWatchdogCountRef.current = 0;
     setConnectionFailed(false);
     clearTimeout(retryTimerRef.current);
     retryTimerRef.current = null;
