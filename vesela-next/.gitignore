@@ -25,6 +25,10 @@
 .DS_Store
 *.pem
 
+# voice orb media — served from a CDN/bucket, too large for git history.
+# Set NEXT_PUBLIC_VOICE_ASSET_BASE_URL to the hosted location.
+/public/voice/*.mp4
+
 # debug
 npm-debug.log*
 yarn-debug.log*

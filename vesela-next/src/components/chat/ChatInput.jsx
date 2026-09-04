@@ -14,6 +14,8 @@ import { Mic, Send } from "lucide-react";
 
 export default function ChatInput({
   onSend,
+  onVoiceClick,
+  voiceDisabled = false,
   isGuestLocked = false,
   lockPlaceholder,
 }) {
@@ -180,15 +182,20 @@ export default function ChatInput({
             }}
           >
             <Tooltip
-              title="Voice input is coming soon!"
+              title={
+                voiceDisabled
+                  ? "Voice is unavailable right now"
+                  : "Talk with Vesela"
+              }
               arrow
               placement="top"
             >
               <Box component="span" sx={{ display: "inline-flex" }}>
                 <IconButton
                   size="small"
-                  disabled
-                  aria-label="Voice input coming soon"
+                  disabled={voiceDisabled}
+                  onClick={onVoiceClick}
+                  aria-label="Start audio conversation"
                   sx={{
                     color: theme.palette.text.secondary,
                     width: 34,
@@ -196,7 +203,11 @@ export default function ChatInput({
                     backgroundColor: isLight
                       ? "rgba(0, 0, 0, 0.04)"
                       : "rgba(255, 255, 255, 0.05)",
-                    pointerEvents: "none",
+                    "&:hover": {
+                      backgroundColor: isLight
+                        ? "rgba(0, 0, 0, 0.08)"
+                        : "rgba(255, 255, 255, 0.1)",
+                    },
                   }}
                 >
                   <Mic size={16} />

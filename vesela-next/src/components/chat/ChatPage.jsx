@@ -7,9 +7,11 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import ChatBubble from "./ChatBubble";
 import ChatInput from "./ChatInput";
 import GuestLimitBanner from "./GuestLimitBanner";
+import VoiceOverlay from "@/components/voice/VoiceOverlay";
 
 import { useAuth } from "@/context/AuthContext";
 import { useChatSocket } from "@/hooks/useChatSocket";
+import { useVoiceSession } from "@/hooks/useVoiceSession";
 import { CHAT_CONTAINER_MAX_WIDTH } from "@/constant";
 import { useChatSession } from "@/context/ChatSessionContext";
 import { useModal } from "@/context/ModalContext";
@@ -40,6 +42,9 @@ export default function ChatPage() {
     connectionFailed,
     conversationExpired,
     reconnect,
+    adoptConversationId,
+    appendTranscriptTurn,
+    hydrateFromConversation,
   } = useChatSocket(socketToken, userId, isPro);
 
   const router = useRouter();
@@ -77,6 +82,27 @@ export default function ChatPage() {
   } = useChatSession();
 
   const { openModal } = useModal();
+  const [voiceOpen, setVoiceOpen] = useState(false);
+
+  const handleVoiceExpired = () => {
+    setVoiceOpen(false);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("vesela_active_conversation_id");
+    }
+    router.push("/welcome");
+  };
+
+  const {
+    status: voiceStatus,
+    error: voiceError,
+    activityLevel,
+    start: startVoice,
+    hangup: hangupVoice,
+  } = useVoiceSession({
+    onConversationId: adoptConversationId,
+    onTranscriptTurn: appendTranscriptTurn,
+    onExpired: handleVoiceExpired,
+  });
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -87,6 +113,7 @@ export default function ChatPage() {
   // ─── Pending hero message ──────────────────────────────────────────────────
   // One-shot: fires when connection is established (if authenticated) or immediately (if guest)
   const pendingFiredRef = useRef(false);
+  const hydratedRef = useRef(false);
 
   useEffect(() => {
     if (pendingFiredRef.current) return;
@@ -112,6 +139,18 @@ export default function ChatPage() {
       });
     }
   }, [isSessionChecked, isAuthenticated, isConnected, consumePendingHeroMessage, sendMessage, sendGuestMessage, openModal]);
+
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    if (!isAuthenticated || !isSessionChecked) return;
+    const saved =
+      typeof window !== "undefined"
+        ? localStorage.getItem("vesela_active_conversation_id")
+        : null;
+    if (!saved) return;
+    hydratedRef.current = true;
+    hydrateFromConversation(saved);
+  }, [isAuthenticated, isSessionChecked, hydrateFromConversation]);
 
   const mergedMessages = useMemo(
     () => (isAuthenticated ? [...guestMessages, ...messages] : guestMessages),
@@ -152,6 +191,26 @@ export default function ChatPage() {
   const isConnectionLocked = isAuthenticated && connectionFailed;
   const isExpiredLocked = Boolean(conversationExpired);
   const isComposerLocked = isLimitLocked || isConnectionLocked || isExpiredLocked;
+
+  const handleVoiceClick = () => {
+    if (!isAuthenticated) {
+      openModal(MODALS.LOGIN, { source: "chat" });
+      return;
+    }
+    if (!isPro) {
+      openModal(MODALS.PLANS, { source: "chat" });
+      return;
+    }
+    if (isConnectionLocked || isExpiredLocked || isStreaming) return;
+
+    setVoiceOpen(true);
+    void startVoice();
+  };
+
+  const handleVoiceClose = async () => {
+    await hangupVoice();
+    setVoiceOpen(false);
+  };
 
   return (
     <>
@@ -250,6 +309,8 @@ export default function ChatPage() {
 
         <ChatInput
           onSend={handleSend}
+          onVoiceClick={handleVoiceClick}
+          voiceDisabled={isConnectionLocked || isExpiredLocked || isStreaming}
           isGuestLocked={isComposerLocked}
           lockPlaceholder={
             isConnectionLocked
@@ -260,6 +321,15 @@ export default function ChatPage() {
           }
         />
       </Box>
+
+      {voiceOpen && (
+        <VoiceOverlay
+          themeMode={theme.palette.mode}
+          activityLevel={activityLevel}
+          error={voiceStatus === "error" ? voiceError : null}
+          onClose={handleVoiceClose}
+        />
+      )}
     </>
   );
 }

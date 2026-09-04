@@ -6,6 +6,7 @@ const BASE_URL = "https://portal.grayskyai.com";
 // Kept below the default Next.js serverless function limit (25s) but short
 // enough that auth checks don't block the user for a long time on a slow network.
 const UPSTREAM_TIMEOUT_MS = 8000;
+const VOICE_UPSTREAM_TIMEOUT_MS = 20000;
 
 // Headers the browser sends that must be forwarded to the backend
 const FORWARDED_REQUEST_HEADERS = ["content-type", "accept", "accept-language"];
@@ -73,14 +74,18 @@ function isNetworkError(err) {
 
 // ─── Common handler ───────────────────────────────────────────────────────────
 async function handleRequest(req, context, method) {
-  // AbortController lets us cancel the upstream fetch after UPSTREAM_TIMEOUT_MS.
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+  let timeoutId = null;
 
   try {
     // Next 15+: params is async
     const resolvedParams = await context.params;
     const path = resolvedParams.path.filter(Boolean).join("/");
+    const timeoutMs = path.startsWith("api/voice/")
+      ? VOICE_UPSTREAM_TIMEOUT_MS
+      : UPSTREAM_TIMEOUT_MS;
+
+    timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     // Preserve query params
     const search = req.nextUrl.search;
@@ -158,7 +163,7 @@ async function handleRequest(req, context, method) {
 
     return nextResponse;
   } catch (error) {
-    clearTimeout(timeoutId);
+    if (timeoutId) clearTimeout(timeoutId);
 
     const networkFailure = isNetworkError(error);
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AUTH_LIMIT_LOCKED } from "@/constant";
+import { get } from "@/lib/apiService";
 import {
   refreshAccessToken,
   handleAuthFailure,
@@ -674,6 +675,50 @@ export const useChatSocket = (token, userId, isPro = false) => {
     }
   }, [closeSocket, connect, recoverAuthAndReconnect]);
 
+  const adoptConversationId = useCallback((id) => {
+    if (id == null || id === "") return;
+    conversationIdRef.current = id;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("vesela_active_conversation_id", String(id));
+    }
+  }, []);
+
+  const appendTranscriptTurn = useCallback((userText, assistantText) => {
+    const next = [];
+    if (userText) {
+      next.push({ id: crypto.randomUUID(), role: "user", message: userText });
+    }
+    if (assistantText) {
+      next.push({
+        id: crypto.randomUUID(),
+        role: "assistant",
+        message: assistantText,
+      });
+    }
+    if (next.length === 0) return;
+    setMessages((prev) => [...prev, ...next]);
+  }, []);
+
+  const hydrateFromConversation = useCallback(async (chatId) => {
+    if (!chatId) return;
+    const { status, data } = await get(`/api/chats/${chatId}/`);
+    if (status !== 200) return;
+
+    const formatted =
+      data?.Chats?.filter((item) => item?.content?.trim()).map((item) => ({
+        id: item.date || crypto.randomUUID(),
+        role: item?.role?.toLowerCase() === "assistant" ? "assistant" : "user",
+        message: item.content,
+      })) || [];
+
+    if (formatted.length === 0) return;
+    conversationIdRef.current = chatId;
+    // Never clobber live state: a queued hero message or an in-flight stream can
+    // land before this fetch resolves, and replacing the list would drop both the
+    // user bubble and the assistant id the chunk handler is appending to.
+    setMessages((prev) => (prev.length === 0 ? formatted : prev));
+  }, []);
+
   return {
     messages,
     sendMessage,
@@ -684,5 +729,8 @@ export const useChatSocket = (token, userId, isPro = false) => {
     connectionFailed,
     conversationExpired,
     reconnect: handleUserReconnect,
+    adoptConversationId,
+    appendTranscriptTurn,
+    hydrateFromConversation,
   };
 };

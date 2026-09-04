@@ -2,13 +2,18 @@
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Box, InputBase, IconButton, useTheme } from "@mui/material";
-import { ArrowUp } from "lucide-react";
+import { Box, InputBase, IconButton, Tooltip, useTheme } from "@mui/material";
+import { ArrowUp, Mic } from "lucide-react";
 import { motion } from "framer-motion";
 import { useColorMode } from "@/theme/ThemeRegistry";
 import { useChatSession } from "@/context/ChatSessionContext";
+import { useAuth } from "@/context/AuthContext";
+import { useModal } from "@/context/ModalContext";
+import { MODALS } from "@/components/modals/modalConstants";
 import GenericLottie from "@/components/ui/GenericLottie";
 import Header from "@/components/chat/Header";
+import VoiceOverlay from "@/components/voice/VoiceOverlay";
+import { useVoiceSession } from "@/hooks/useVoiceSession";
 import { localStorageUtil } from "@/utils/localStorageUtil";
 import { WELCOME_COMPLETED } from "@/constant";
 
@@ -26,6 +31,17 @@ const WelcomePage = () => {
   const router = useRouter();
   const { mode } = useColorMode();
   const { setPendingHeroMessage } = useChatSession();
+  const { isPro } = useAuth();
+  const { openModal } = useModal();
+  const [voiceOpen, setVoiceOpen] = useState(false);
+
+  const {
+    status: voiceStatus,
+    error: voiceError,
+    activityLevel,
+    start: startVoice,
+    hangup: hangupVoice,
+  } = useVoiceSession();
 
   const animationData = mode === "dark" ? VeselaLogoWhite : VeselaLogoBlack;
   const isTyping = text.length > 0;
@@ -52,6 +68,25 @@ const WelcomePage = () => {
     setPendingHeroMessage(text.trim());
     router.push("/chat");
   }, [text, setPendingHeroMessage, router]);
+
+  const handleVoiceClick = useCallback(
+    (e) => {
+      e.stopPropagation();
+      if (!isPro) {
+        openModal(MODALS.PLANS, { source: "welcome" });
+        return;
+      }
+      setVoiceOpen(true);
+      void startVoice();
+    },
+    [isPro, openModal, startVoice],
+  );
+
+  const handleVoiceClose = useCallback(async () => {
+    await hangupVoice();
+    setVoiceOpen(false);
+    router.push("/chat");
+  }, [hangupVoice, router]);
 
   const handleKeyDown = useCallback(
     (e) => {
@@ -218,6 +253,30 @@ const WelcomePage = () => {
               }}
             />
 
+            <Tooltip title="Talk with Vesela" arrow placement="top">
+              <Box component="span" sx={{ display: "inline-flex", flexShrink: 0, mr: 0.75 }}>
+                <IconButton
+                  onClick={handleVoiceClick}
+                  aria-label="Start audio conversation"
+                  sx={{
+                    width: 38,
+                    height: 38,
+                    color: isLight ? "rgba(0, 0, 0, 0.55)" : "rgba(255, 255, 255, 0.65)",
+                    backgroundColor: isLight
+                      ? "rgba(0, 0, 0, 0.04)"
+                      : "rgba(255, 255, 255, 0.08)",
+                    "&:hover": {
+                      backgroundColor: isLight
+                        ? "rgba(0, 0, 0, 0.08)"
+                        : "rgba(255, 255, 255, 0.14)",
+                    },
+                  }}
+                >
+                  <Mic size={18} />
+                </IconButton>
+              </Box>
+            </Tooltip>
+
             {/* Circular Send Button with Up Arrow */}
             <IconButton
               onClick={(e) => {
@@ -274,6 +333,15 @@ const WelcomePage = () => {
           </Box>
         </motion.div>
       </Box>
+
+      {voiceOpen && (
+        <VoiceOverlay
+          themeMode={theme.palette.mode}
+          activityLevel={activityLevel}
+          error={voiceStatus === "error" ? voiceError : null}
+          onClose={handleVoiceClose}
+        />
+      )}
     </motion.div>
   );
 };
