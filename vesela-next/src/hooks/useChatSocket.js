@@ -90,6 +90,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
   const [messages, setMessages] = useState([]);
   const [status, setStatus] = useState("disconnected");
   const [connectionFailed, setConnectionFailed] = useState(false);
+  const [conversationExpired, setConversationExpired] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLocked, setIsLocked] = useState(() => {
     if (isPro) return false;
@@ -324,10 +325,11 @@ export const useChatSocket = (token, userId, isPro = false) => {
         if (isConversationExpiredError(data)) {
           conversationIdRef.current = null;
           clearActiveConversation();
+          setConversationExpired(true);
           // Show server message as a normal assistant bubble (not isError — no "Something failed.").
           setMessages((prev) => [
             ...prev,
-            { id: crypto.randomUUID(), role: "assistant", message: msg },
+            { id: crypto.randomUUID(), role: "assistant", message: msg, isExpired: true },
           ]);
           break;
         }
@@ -680,6 +682,7 @@ export const useChatSocket = (token, userId, isPro = false) => {
     isStreaming,
     isLocked,
     connectionFailed,
+    conversationExpired,
     reconnect: handleUserReconnect,
   };
 };

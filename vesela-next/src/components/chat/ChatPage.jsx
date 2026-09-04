@@ -1,6 +1,7 @@
 "use client";
 
 import { Box, useTheme } from "@mui/material";
+import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import ChatBubble from "./ChatBubble";
@@ -37,8 +38,34 @@ export default function ChatPage() {
     isStreaming: isAuthStreaming,
     isLocked: isAuthLocked,
     connectionFailed,
+    conversationExpired,
     reconnect,
   } = useChatSocket(socketToken, userId, isPro);
+
+  const router = useRouter();
+  const [expiredCountdown, setExpiredCountdown] = useState(null);
+  const countdownDisplay = conversationExpired ? (expiredCountdown ?? 3) : null;
+
+  // Expired thread: same destination as hamburger "New Chat", after a 3-2-1 beat.
+  useEffect(() => {
+    if (!conversationExpired) return undefined;
+
+    let remaining = 3;
+    const interval = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("vesela_active_conversation_id");
+        }
+        router.push("/welcome");
+        return;
+      }
+      setExpiredCountdown(remaining);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [conversationExpired, router]);
 
   const {
     consumePendingHeroMessage,
@@ -123,7 +150,8 @@ export default function ChatPage() {
   const isLimitLocked = isAuthenticated ? isAuthLocked && !isPro : guestSignupRequired;
   const isStreaming = isAuthenticated ? isAuthStreaming : isGuestStreaming;
   const isConnectionLocked = isAuthenticated && connectionFailed;
-  const isComposerLocked = isLimitLocked || isConnectionLocked;
+  const isExpiredLocked = Boolean(conversationExpired);
+  const isComposerLocked = isLimitLocked || isConnectionLocked || isExpiredLocked;
 
   return (
     <>
@@ -207,6 +235,11 @@ export default function ChatPage() {
                       : undefined
                   }
                   isStreaming={isLastAssistant && isStreaming}
+                  footer={
+                    msg.isExpired && countdownDisplay != null
+                      ? `Starting a new chat… ${countdownDisplay}`
+                      : undefined
+                  }
                 />
               );
             })}
@@ -221,7 +254,9 @@ export default function ChatPage() {
           lockPlaceholder={
             isConnectionLocked
               ? "Unable to connect. Tap the banner to retry..."
-              : undefined
+              : isExpiredLocked
+                ? "Starting a new chat..."
+                : undefined
           }
         />
       </Box>

@@ -13,6 +13,7 @@ export default function ChatBubble({
   isStreaming,
   isError,
   onRetry,
+  footer,
 }) {
   const theme = useTheme();
   const isAI = role === "assistant";
@@ -82,6 +83,19 @@ export default function ChatBubble({
             <span style={{ whiteSpace: "pre-wrap" }}>{message}</span>
           )}
         </div>
+
+        {footer && (
+          <div
+            style={{
+              marginTop: "8px",
+              fontSize: "12px",
+              color: "var(--muted)",
+              lineHeight: 1.4,
+            }}
+          >
+            {footer}
+          </div>
+        )}
 
         {/* Error UI */}
         {isError && (
